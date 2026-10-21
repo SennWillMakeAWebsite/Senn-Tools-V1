@@ -1,0 +1,2378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Senn Tools V1 - kumpulan tools untuk image, video, document, converter, dan utility."
+  >
+
+  <meta name="theme-color" content="#08090d">
+
+  <title>Senn Hub — Senn Tools V1</title>
+
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+  >
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- ========================================
+       BACKGROUND
+  ========================================= -->
+  <div class="background-effects" aria-hidden="true">
+    <div class="background-grid"></div>
+    <div class="background-glow glow-one"></div>
+    <div class="background-glow glow-two"></div>
+    <div class="noise"></div>
+  </div>
+
+
+  <!-- ========================================
+       APP
+  ========================================= -->
+  <div class="app">
+
+    <!-- ========================================
+         SIDEBAR
+    ========================================= -->
+    <aside class="sidebar" id="sidebar">
+
+      <div class="sidebar-top">
+
+        <a href="#" class="brand" data-page="home">
+          <div class="brand-icon">
+            <span>S</span>
+          </div>
+
+          <div class="brand-text">
+            <strong>SENN HUB</strong>
+            <small>SENN TOOLS V1</small>
+          </div>
+        </a>
+
+        <button
+          class="sidebar-close"
+          id="sidebarClose"
+          aria-label="Tutup menu"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+      </div>
+
+
+      <!-- Navigation -->
+      <nav class="sidebar-nav">
+
+        <p class="nav-label">Workspace</p>
+
+        <button
+          class="nav-item active"
+          data-page="home"
+          type="button"
+        >
+          <i class="fa-solid fa-house"></i>
+          <span>Home</span>
+        </button>
+
+        <button
+          class="nav-item"
+          data-page="all-tools"
+          type="button"
+        >
+          <i class="fa-solid fa-border-all"></i>
+          <span>All Tools</span>
+        </button>
+
+        <button
+          class="nav-item"
+          data-page="recent"
+          type="button"
+        >
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Recent</span>
+        </button>
+
+        <button
+          class="nav-item"
+          data-page="favorites"
+          type="button"
+        >
+          <i class="fa-regular fa-star"></i>
+          <span>Favorites</span>
+        </button>
+
+
+        <p class="nav-label nav-label-space">
+          Categories
+        </p>
+
+        <button
+          class="nav-item"
+          data-category-filter="image"
+          type="button"
+        >
+          <i class="fa-regular fa-image"></i>
+          <span>Image</span>
+        </button>
+
+        <button
+          class="nav-item"
+          data-category-filter="video"
+          type="button"
+        >
+          <i class="fa-solid fa-film"></i>
+          <span>Video</span>
+        </button>
+
+        <button
+          class="nav-item"
+          data-category-filter="document"
+          type="button"
+        >
+          <i class="fa-regular fa-file-lines"></i>
+          <span>Document</span>
+        </button>
+
+        <button
+          class="nav-item"
+          data-category-filter="converter"
+          type="button"
+        >
+          <i class="fa-solid fa-arrow-right-arrow-left"></i>
+          <span>Converter</span>
+        </button>
+
+        <button
+          class="nav-item"
+          data-category-filter="utility"
+          type="button"
+        >
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>Utility</span>
+        </button>
+
+      </nav>
+
+
+      <!-- Sidebar footer -->
+      <div class="sidebar-footer">
+
+        <div class="system-status">
+          <span class="status-dot"></span>
+
+          <div>
+            <strong>System Online</strong>
+            <small>Ready to process</small>
+          </div>
+        </div>
+
+        <div class="version">
+          SENN TOOLS / V1.0
+        </div>
+
+      </div>
+
+    </aside>
+
+
+    <!-- Mobile overlay -->
+    <div
+      class="sidebar-overlay"
+      id="sidebarOverlay"
+    ></div>
+
+
+    <!-- ========================================
+         MAIN
+    ========================================= -->
+    <main class="main">
+
+      <!-- ========================================
+           TOPBAR
+      ========================================= -->
+      <header class="topbar">
+
+        <div class="topbar-left">
+
+          <button
+            class="menu-button"
+            id="menuButton"
+            aria-label="Buka menu"
+          >
+            <i class="fa-solid fa-bars"></i>
+          </button>
+
+          <div class="mobile-brand">
+            <strong>SENN HUB</strong>
+            <span>/ TOOLS</span>
+          </div>
+
+        </div>
+
+
+        <div class="topbar-actions">
+
+          <button
+            class="icon-button"
+            id="searchToggle"
+            aria-label="Cari tools"
+          >
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+
+          <button
+            class="icon-button"
+            id="themeButton"
+            aria-label="Ubah tema"
+          >
+            <i class="fa-regular fa-moon"></i>
+          </button>
+
+          <button
+            class="profile-button"
+            type="button"
+          >
+            <div class="profile-avatar">
+              S
+            </div>
+
+            <div class="profile-info">
+              <strong>Senn</strong>
+              <span>Owner</span>
+            </div>
+          </button>
+
+        </div>
+
+      </header>
+
+
+      <!-- ========================================
+           CONTENT
+      ========================================= -->
+      <div class="content">
+
+        <!-- ========================================
+             HOME PAGE
+        ========================================= -->
+        <section
+          class="page active-page"
+          id="homePage"
+          data-page-section="home"
+        >
+
+          <!-- HERO -->
+          <section class="hero">
+
+            <div class="hero-badge">
+              <span class="hero-badge-dot"></span>
+              SENN TOOLS V1
+            </div>
+
+            <h1>
+              One place.
+              <span>Every tool.</span>
+            </h1>
+
+            <p class="hero-description">
+              Process images, videos, documents and more
+              without jumping between random websites.
+            </p>
+
+
+            <!-- Search -->
+            <div class="search-wrapper">
+
+              <i class="fa-solid fa-magnifying-glass"></i>
+
+              <input
+                type="text"
+                id="toolSearch"
+                placeholder="Search tools..."
+                autocomplete="off"
+              >
+
+              <div class="search-shortcut">
+                /
+              </div>
+
+            </div>
+
+          </section>
+
+
+          <!-- ========================================
+               SMART DROP
+          ========================================= -->
+          <section class="smart-section">
+
+            <div
+              class="smart-drop"
+              id="smartDrop"
+            >
+
+              <input
+                type="file"
+                id="globalFileInput"
+                hidden
+              >
+
+              <div class="drop-visual">
+
+                <div class="drop-icon">
+                  <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                </div>
+
+                <div class="drop-pulse pulse-one"></div>
+                <div class="drop-pulse pulse-two"></div>
+
+              </div>
+
+
+              <div class="drop-content">
+
+                <div class="drop-label">
+                  SMART DROP
+                </div>
+
+                <h2>
+                  Drop anything here.
+                </h2>
+
+                <p>
+                  We'll detect your file and show the
+                  tools that actually make sense.
+                </p>
+
+                <button
+                  class="primary-button"
+                  id="browseButton"
+                  type="button"
+                >
+                  <i class="fa-regular fa-folder-open"></i>
+                  Browse File
+                </button>
+
+                <span class="drop-support">
+                  Images · Videos · PDF · Documents
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <!-- Selected file -->
+            <div
+              class="file-detection hidden"
+              id="fileDetection"
+            >
+
+              <div class="file-preview">
+
+                <div
+                  class="file-preview-placeholder"
+                  id="filePreviewPlaceholder"
+                >
+                  <i class="fa-regular fa-file"></i>
+                </div>
+
+                <img
+                  id="filePreviewImage"
+                  alt="File preview"
+                  hidden
+                >
+
+              </div>
+
+
+              <div class="file-information">
+
+                <div class="detected-badge">
+                  <i class="fa-solid fa-check"></i>
+                  <span id="detectedType">
+                    FILE DETECTED
+                  </span>
+                </div>
+
+                <h3 id="detectedName">
+                  filename.jpg
+                </h3>
+
+                <div class="file-meta">
+
+                  <span id="detectedSize">
+                    0 MB
+                  </span>
+
+                  <span class="meta-divider"></span>
+
+                  <span id="detectedFormat">
+                    UNKNOWN
+                  </span>
+
+                  <span
+                    class="meta-extra"
+                    id="detectedDimensions"
+                  ></span>
+
+                </div>
+
+              </div>
+
+
+              <div class="file-actions">
+
+                <button
+                  class="secondary-button"
+                  id="changeFileButton"
+                  type="button"
+                >
+                  Change
+                </button>
+
+                <button
+                  class="icon-button danger-hover"
+                  id="removeFileButton"
+                  type="button"
+                  aria-label="Hapus file"
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+
+              </div>
+
+
+              <div class="recommended-tools">
+
+                <div class="recommended-heading">
+                  <span>Recommended tools</span>
+
+                  <small>
+                    Based on your file
+                  </small>
+                </div>
+
+                <div
+                  class="recommended-grid"
+                  id="recommendedGrid"
+                >
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+
+          <!-- ========================================
+               POPULAR TOOLS
+          ========================================= -->
+          <section class="section">
+
+            <div class="section-heading">
+
+              <div>
+                <span class="section-eyebrow">
+                  GET STARTED
+                </span>
+
+                <h2>Popular Tools</h2>
+              </div>
+
+              <button
+                class="text-button"
+                data-page="all-tools"
+                type="button"
+              >
+                View all
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+
+            </div>
+
+
+            <div class="featured-grid">
+
+              <!-- Photo Enhancer -->
+              <article
+                class="featured-card tool-card"
+                data-tool="photo-enhancer"
+                data-category="image"
+                data-search="photo enhancer image enhance sharpen denoise"
+              >
+
+                <div class="featured-top">
+
+                  <div class="tool-icon image-tool">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                  </div>
+
+                  <button
+                    class="favorite-button"
+                    data-favorite="photo-enhancer"
+                    aria-label="Favorite"
+                  >
+                    <i class="fa-regular fa-star"></i>
+                  </button>
+
+                </div>
+
+                <div class="featured-content">
+
+                  <span class="tool-category">
+                    IMAGE
+                  </span>
+
+                  <h3>Photo Enhancer</h3>
+
+                  <p>
+                    Improve clarity, sharpness and overall
+                    image quality.
+                  </p>
+
+                </div>
+
+                <div class="tool-footer">
+                  <span>
+                    JPG · PNG · WEBP
+                  </span>
+
+                  <i class="fa-solid fa-arrow-right"></i>
+                </div>
+
+              </article>
+
+
+              <!-- Image Upscaler -->
+              <article
+                class="featured-card tool-card"
+                data-tool="image-upscaler"
+                data-category="image"
+                data-search="image photo upscale upscaler 2x 4x 1080p 2k 4k"
+              >
+
+                <div class="featured-top">
+
+                  <div class="tool-icon image-tool">
+                    <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+                  </div>
+
+                  <button
+                    class="favorite-button"
+                    data-favorite="image-upscaler"
+                    aria-label="Favorite"
+                  >
+                    <i class="fa-regular fa-star"></i>
+                  </button>
+
+                </div>
+
+                <div class="featured-content">
+
+                  <div class="tool-title-row">
+                    <span class="tool-category">
+                      IMAGE
+                    </span>
+
+                    <span class="new-badge">
+                      POPULAR
+                    </span>
+                  </div>
+
+                  <h3>Image Upscaler</h3>
+
+                  <p>
+                    Upscale images to 1080p, 2K or 4K
+                    resolution.
+                  </p>
+
+                </div>
+
+                <div class="tool-footer">
+                  <span>
+                    2× · 4× · 4K
+                  </span>
+
+                  <i class="fa-solid fa-arrow-right"></i>
+                </div>
+
+              </article>
+
+
+              <!-- Video Upscaler -->
+              <article
+                class="featured-card tool-card"
+                data-tool="video-upscaler"
+                data-category="video"
+                data-search="video upscale upscaler 720p 1080p 2k 4k"
+              >
+
+                <div class="featured-top">
+
+                  <div class="tool-icon video-tool">
+                    <i class="fa-solid fa-film"></i>
+                  </div>
+
+                  <button
+                    class="favorite-button"
+                    data-favorite="video-upscaler"
+                    aria-label="Favorite"
+                  >
+                    <i class="fa-regular fa-star"></i>
+                  </button>
+
+                </div>
+
+                <div class="featured-content">
+
+                  <span class="tool-category">
+                    VIDEO
+                  </span>
+
+                  <h3>Video Upscaler</h3>
+
+                  <p>
+                    Increase video resolution and prepare
+                    higher-quality output.
+                  </p>
+
+                </div>
+
+                <div class="tool-footer">
+                  <span>
+                    720P · 1080P · 2K · 4K
+                  </span>
+
+                  <i class="fa-solid fa-arrow-right"></i>
+                </div>
+
+              </article>
+
+
+              <!-- Compressor -->
+              <article
+                class="featured-card tool-card"
+                data-tool="compressor"
+                data-category="converter"
+                data-search="compress compressor image video reduce size"
+              >
+
+                <div class="featured-top">
+
+                  <div class="tool-icon converter-tool">
+                    <i class="fa-solid fa-compress"></i>
+                  </div>
+
+                  <button
+                    class="favorite-button"
+                    data-favorite="compressor"
+                    aria-label="Favorite"
+                  >
+                    <i class="fa-regular fa-star"></i>
+                  </button>
+
+                </div>
+
+                <div class="featured-content">
+
+                  <span class="tool-category">
+                    CONVERTER
+                  </span>
+
+                  <h3>Smart Compressor</h3>
+
+                  <p>
+                    Reduce file size while keeping useful
+                    visual quality.
+                  </p>
+
+                </div>
+
+                <div class="tool-footer">
+                  <span>
+                    IMAGE · VIDEO
+                  </span>
+
+                  <i class="fa-solid fa-arrow-right"></i>
+                </div>
+
+              </article>
+
+            </div>
+
+          </section>
+
+
+          <!-- ========================================
+               CATEGORIES
+          ========================================= -->
+          <section class="section">
+
+            <div class="section-heading">
+
+              <div>
+                <span class="section-eyebrow">
+                  EXPLORE
+                </span>
+
+                <h2>Categories</h2>
+              </div>
+
+            </div>
+
+
+            <div class="category-grid">
+
+              <button
+                class="category-card"
+                data-category-filter="image"
+                type="button"
+              >
+
+                <div class="category-icon image-tool">
+                  <i class="fa-regular fa-image"></i>
+                </div>
+
+                <div class="category-content">
+                  <h3>Image</h3>
+                  <p>
+                    Enhance, upscale, resize, convert and more.
+                  </p>
+                </div>
+
+                <div class="category-count">
+                  12 tools
+                </div>
+
+                <i class="fa-solid fa-arrow-right category-arrow"></i>
+
+              </button>
+
+
+              <button
+                class="category-card"
+                data-category-filter="video"
+                type="button"
+              >
+
+                <div class="category-icon video-tool">
+                  <i class="fa-solid fa-video"></i>
+                </div>
+
+                <div class="category-content">
+                  <h3>Video</h3>
+                  <p>
+                    Compress, trim, upscale and process video.
+                  </p>
+                </div>
+
+                <div class="category-count">
+                  10 tools
+                </div>
+
+                <i class="fa-solid fa-arrow-right category-arrow"></i>
+
+              </button>
+
+
+              <button
+                class="category-card"
+                data-category-filter="document"
+                type="button"
+              >
+
+                <div class="category-icon document-tool">
+                  <i class="fa-regular fa-file-lines"></i>
+                </div>
+
+                <div class="category-content">
+                  <h3>Document</h3>
+                  <p>
+                    Merge, split, compress and manage PDFs.
+                  </p>
+                </div>
+
+                <div class="category-count">
+                  8 tools
+                </div>
+
+                <i class="fa-solid fa-arrow-right category-arrow"></i>
+
+              </button>
+
+
+              <button
+                class="category-card"
+                data-category-filter="converter"
+                type="button"
+              >
+
+                <div class="category-icon converter-tool">
+                  <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                </div>
+
+                <div class="category-content">
+                  <h3>Converter</h3>
+                  <p>
+                    Convert images, videos, audio and data.
+                  </p>
+                </div>
+
+                <div class="category-count">
+                  9 tools
+                </div>
+
+                <i class="fa-solid fa-arrow-right category-arrow"></i>
+
+              </button>
+
+
+              <button
+                class="category-card"
+                data-category-filter="utility"
+                type="button"
+              >
+
+                <div class="category-icon utility-tool">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+
+                <div class="category-content">
+                  <h3>Utility</h3>
+                  <p>
+                    QR, JSON, Base64, metadata and generators.
+                  </p>
+                </div>
+
+                <div class="category-count">
+                  14 tools
+                </div>
+
+                <i class="fa-solid fa-arrow-right category-arrow"></i>
+
+              </button>
+
+            </div>
+
+          </section>
+
+
+          <!-- ========================================
+               RECENT ACTIVITY
+          ========================================= -->
+          <section class="section">
+
+            <div class="section-heading">
+
+              <div>
+                <span class="section-eyebrow">
+                  HISTORY
+                </span>
+
+                <h2>Recent Activity</h2>
+              </div>
+
+              <button
+                class="text-button"
+                data-page="recent"
+                type="button"
+              >
+                Open history
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+
+            </div>
+
+
+            <div
+              class="recent-preview"
+              id="recentPreview"
+            >
+
+              <div class="empty-state">
+
+                <div class="empty-icon">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+
+                <h3>No activity yet</h3>
+
+                <p>
+                  Tools you've used will appear here.
+                </p>
+
+              </div>
+
+            </div>
+
+          </section>
+
+        </section>
+
+
+        <!-- ========================================
+             ALL TOOLS PAGE
+        ========================================= -->
+        <section
+          class="page"
+          id="allToolsPage"
+          data-page-section="all-tools"
+        >
+
+          <div class="page-header">
+
+            <div>
+              <span class="section-eyebrow">
+                SENN TOOLS
+              </span>
+
+              <h1>All Tools</h1>
+
+              <p>
+                Everything available inside Senn Tools V1.
+              </p>
+            </div>
+
+
+            <div class="page-search">
+
+              <i class="fa-solid fa-magnifying-glass"></i>
+
+              <input
+                type="text"
+                id="allToolsSearch"
+                placeholder="Search all tools..."
+              >
+
+            </div>
+
+          </div>
+
+
+          <!-- FILTER -->
+          <div
+            class="filter-row"
+            id="filterRow"
+          >
+
+            <button
+              class="filter-button active"
+              data-filter="all"
+              type="button"
+            >
+              All
+            </button>
+
+            <button
+              class="filter-button"
+              data-filter="image"
+              type="button"
+            >
+              Image
+            </button>
+
+            <button
+              class="filter-button"
+              data-filter="video"
+              type="button"
+            >
+              Video
+            </button>
+
+            <button
+              class="filter-button"
+              data-filter="document"
+              type="button"
+            >
+              Document
+            </button>
+
+            <button
+              class="filter-button"
+              data-filter="converter"
+              type="button"
+            >
+              Converter
+            </button>
+
+            <button
+              class="filter-button"
+              data-filter="utility"
+              type="button"
+            >
+              Utility
+            </button>
+
+          </div>
+
+
+          <!-- ========================================
+               ALL TOOL CARDS
+          ========================================= -->
+          <div
+            class="tools-grid"
+            id="allToolsGrid"
+          >
+
+            <!-- IMAGE -->
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="photo-enhancer"
+              data-category="image"
+              data-search="photo enhancer image sharpen denoise clarity"
+            >
+
+              <div class="mini-tool-icon image-tool">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </div>
+
+              <div>
+                <h3>Photo Enhancer</h3>
+                <p>Improve image clarity.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="photo-enhancer"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="image-upscaler"
+              data-category="image"
+              data-search="image upscaler upscale 2x 4x 1080p 2k 4k"
+            >
+
+              <div class="mini-tool-icon image-tool">
+                <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+              </div>
+
+              <div>
+                <h3>Image Upscaler</h3>
+                <p>Upscale images up to 4K.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="image-upscaler"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="image-compressor"
+              data-category="image"
+              data-search="image compressor compress reduce size"
+            >
+
+              <div class="mini-tool-icon image-tool">
+                <i class="fa-solid fa-compress"></i>
+              </div>
+
+              <div>
+                <h3>Image Compressor</h3>
+                <p>Reduce image file size.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="image-compressor"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="image-resizer"
+              data-category="image"
+              data-search="image resize resizer width height"
+            >
+
+              <div class="mini-tool-icon image-tool">
+                <i class="fa-solid fa-expand"></i>
+              </div>
+
+              <div>
+                <h3>Image Resizer</h3>
+                <p>Change image dimensions.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="image-resizer"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="image-converter"
+              data-category="image"
+              data-search="image converter jpg png webp convert"
+            >
+
+              <div class="mini-tool-icon image-tool">
+                <i class="fa-solid fa-repeat"></i>
+              </div>
+
+              <div>
+                <h3>Image Converter</h3>
+                <p>JPG, PNG and WEBP.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="image-converter"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="background-remover"
+              data-category="image"
+              data-search="background remover remove transparent image"
+            >
+
+              <div class="mini-tool-icon image-tool">
+                <i class="fa-solid fa-scissors"></i>
+              </div>
+
+              <div>
+                <h3>Background Remover</h3>
+                <p>Remove image backgrounds.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="background-remover"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <!-- VIDEO -->
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="video-upscaler"
+              data-category="video"
+              data-search="video upscaler upscale 720p 1080p 2k 4k"
+            >
+
+              <div class="mini-tool-icon video-tool">
+                <i class="fa-solid fa-film"></i>
+              </div>
+
+              <div>
+                <h3>Video Upscaler</h3>
+                <p>Increase video resolution.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="video-upscaler"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="video-compressor"
+              data-category="video"
+              data-search="video compressor compress reduce size"
+            >
+
+              <div class="mini-tool-icon video-tool">
+                <i class="fa-solid fa-compress"></i>
+              </div>
+
+              <div>
+                <h3>Video Compressor</h3>
+                <p>Reduce video file size.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="video-compressor"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="video-trimmer"
+              data-category="video"
+              data-search="video trim trimmer cut cutter"
+            >
+
+              <div class="mini-tool-icon video-tool">
+                <i class="fa-solid fa-scissors"></i>
+              </div>
+
+              <div>
+                <h3>Video Trimmer</h3>
+                <p>Cut parts of a video.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="video-trimmer"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="video-to-audio"
+              data-category="video"
+              data-search="video audio mp3 extract audio"
+            >
+
+              <div class="mini-tool-icon video-tool">
+                <i class="fa-solid fa-music"></i>
+              </div>
+
+              <div>
+                <h3>Video to Audio</h3>
+                <p>Extract audio from video.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="video-to-audio"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="video-thumbnail"
+              data-category="video"
+              data-search="video thumbnail frame extract image"
+            >
+
+              <div class="mini-tool-icon video-tool">
+                <i class="fa-regular fa-image"></i>
+              </div>
+
+              <div>
+                <h3>Thumbnail Extractor</h3>
+                <p>Capture frames from video.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="video-thumbnail"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <!-- DOCUMENT -->
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="image-to-pdf"
+              data-category="document"
+              data-search="image to pdf jpg png document convert"
+            >
+
+              <div class="mini-tool-icon document-tool">
+                <i class="fa-regular fa-file-pdf"></i>
+              </div>
+
+              <div>
+                <h3>Image to PDF</h3>
+                <p>Turn images into PDF.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="image-to-pdf"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="merge-pdf"
+              data-category="document"
+              data-search="merge pdf combine document"
+            >
+
+              <div class="mini-tool-icon document-tool">
+                <i class="fa-solid fa-layer-group"></i>
+              </div>
+
+              <div>
+                <h3>Merge PDF</h3>
+                <p>Combine multiple PDFs.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="merge-pdf"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="split-pdf"
+              data-category="document"
+              data-search="split pdf pages separate document"
+            >
+
+              <div class="mini-tool-icon document-tool">
+                <i class="fa-solid fa-table-columns"></i>
+              </div>
+
+              <div>
+                <h3>Split PDF</h3>
+                <p>Separate PDF pages.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="split-pdf"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="compress-pdf"
+              data-category="document"
+              data-search="compress pdf reduce size document"
+            >
+
+              <div class="mini-tool-icon document-tool">
+                <i class="fa-solid fa-compress"></i>
+              </div>
+
+              <div>
+                <h3>Compress PDF</h3>
+                <p>Reduce PDF file size.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="compress-pdf"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="pdf-to-image"
+              data-category="document"
+              data-search="pdf to image jpg png convert"
+            >
+
+              <div class="mini-tool-icon document-tool">
+                <i class="fa-regular fa-images"></i>
+              </div>
+
+              <div>
+                <h3>PDF to Image</h3>
+                <p>Export PDF pages as images.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="pdf-to-image"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <!-- CONVERTER -->
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="media-converter"
+              data-category="converter"
+              data-search="media converter image video audio convert"
+            >
+
+              <div class="mini-tool-icon converter-tool">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+              </div>
+
+              <div>
+                <h3>Media Converter</h3>
+                <p>Convert common media formats.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="media-converter"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="json-csv"
+              data-category="converter"
+              data-search="json csv converter data"
+            >
+
+              <div class="mini-tool-icon converter-tool">
+                <i class="fa-solid fa-code"></i>
+              </div>
+
+              <div>
+                <h3>JSON / CSV</h3>
+                <p>Convert structured data.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="json-csv"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="audio-converter"
+              data-category="converter"
+              data-search="audio converter mp3 wav m4a"
+            >
+
+              <div class="mini-tool-icon converter-tool">
+                <i class="fa-solid fa-headphones"></i>
+              </div>
+
+              <div>
+                <h3>Audio Converter</h3>
+                <p>Convert common audio formats.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="audio-converter"
+                type="button"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <!-- UTILITY -->
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="qr-generator"
+              data-category="utility"
+              data-search="qr code generator create"
+            >
+
+              <div class="mini-tool-icon utility-tool">
+                <i class="fa-solid fa-qrcode"></i>
+              </div>
+
+              <div>
+                <h3>QR Generator</h3>
+                <p>Create QR codes.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="qr-generator"
+                               type="button"
+                aria-label="Favorite QR Generator"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="json-formatter"
+              data-category="utility"
+              data-search="json formatter beautify validate code"
+            >
+
+              <div class="mini-tool-icon utility-tool">
+                <i class="fa-solid fa-code"></i>
+              </div>
+
+              <div>
+                <h3>JSON Formatter</h3>
+                <p>Format and validate JSON.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="json-formatter"
+                type="button"
+                aria-label="Favorite JSON Formatter"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="base64"
+              data-category="utility"
+              data-search="base64 encode decode text encoder decoder"
+            >
+
+              <div class="mini-tool-icon utility-tool">
+                <i class="fa-solid fa-terminal"></i>
+              </div>
+
+              <div>
+                <h3>Base64</h3>
+                <p>Encode or decode Base64.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="base64"
+                type="button"
+                aria-label="Favorite Base64"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="metadata-viewer"
+              data-category="utility"
+              data-search="metadata exif viewer file information inspect"
+            >
+
+              <div class="mini-tool-icon utility-tool">
+                <i class="fa-solid fa-circle-info"></i>
+              </div>
+
+              <div>
+                <h3>Metadata Viewer</h3>
+                <p>Inspect file information.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="metadata-viewer"
+                type="button"
+                aria-label="Favorite Metadata Viewer"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="password-generator"
+              data-category="utility"
+              data-search="password generator random secure password"
+            >
+
+              <div class="mini-tool-icon utility-tool">
+                <i class="fa-solid fa-key"></i>
+              </div>
+
+              <div>
+                <h3>Password Generator</h3>
+                <p>Create random passwords.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="password-generator"
+                type="button"
+                aria-label="Favorite Password Generator"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="word-counter"
+              data-category="utility"
+              data-search="word counter character text count words letters"
+            >
+
+              <div class="mini-tool-icon utility-tool">
+                <i class="fa-solid fa-font"></i>
+              </div>
+
+              <div>
+                <h3>Word Counter</h3>
+                <p>Count words and characters.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="word-counter"
+                type="button"
+                aria-label="Favorite Word Counter"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="color-converter"
+              data-category="utility"
+              data-search="color converter hex rgb hsl colour"
+            >
+
+              <div class="mini-tool-icon utility-tool">
+                <i class="fa-solid fa-palette"></i>
+              </div>
+
+              <div>
+                <h3>Color Converter</h3>
+                <p>Convert HEX, RGB and HSL.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="color-converter"
+                type="button"
+                aria-label="Favorite Color Converter"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="timestamp-converter"
+              data-category="utility"
+              data-search="timestamp unix time date converter"
+            >
+
+              <div class="mini-tool-icon utility-tool">
+                <i class="fa-regular fa-clock"></i>
+              </div>
+
+              <div>
+                <h3>Timestamp Converter</h3>
+                <p>Convert Unix timestamps and dates.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="timestamp-converter"
+                type="button"
+                aria-label="Favorite Timestamp Converter"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="uuid-generator"
+              data-category="utility"
+              data-search="uuid generator id random identifier"
+            >
+
+              <div class="mini-tool-icon utility-tool">
+                <i class="fa-solid fa-fingerprint"></i>
+              </div>
+
+              <div>
+                <h3>UUID Generator</h3>
+                <p>Generate unique UUID values.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="uuid-generator"
+                type="button"
+                aria-label="Favorite UUID Generator"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="hash-generator"
+              data-category="utility"
+              data-search="hash generator sha checksum text"
+            >
+
+              <div class="mini-tool-icon utility-tool">
+                <i class="fa-solid fa-hashtag"></i>
+              </div>
+
+              <div>
+                <h3>Hash Generator</h3>
+                <p>Generate hashes from text.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="hash-generator"
+                type="button"
+                aria-label="Favorite Hash Generator"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <article
+              class="mini-tool-card tool-card"
+              data-tool="url-parser"
+              data-category="utility"
+              data-search="url parser link inspect domain query parameter"
+            >
+
+              <div class="mini-tool-icon utility-tool">
+                <i class="fa-solid fa-link"></i>
+              </div>
+
+              <div>
+                <h3>URL Parser</h3>
+                <p>Inspect parts of a URL.</p>
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="url-parser"
+                type="button"
+                aria-label="Favorite URL Parser"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+          </div>
+
+
+          <!-- ========================================
+               NO SEARCH RESULTS
+          ========================================= -->
+          <div
+            class="no-results hidden"
+            id="noResults"
+          >
+
+            <div class="empty-icon">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+
+            <h3>No tools found</h3>
+
+            <p>
+              Apparently even Senn Tools can't find
+              something that doesn't exist.
+            </p>
+
+          </div>
+
+        </section>
+
+
+        <!-- ========================================
+             RECENT PAGE
+        ========================================= -->
+        <section
+          class="page"
+          id="recentPage"
+          data-page-section="recent"
+        >
+
+          <div class="page-header">
+
+            <div>
+
+              <span class="section-eyebrow">
+                HISTORY
+              </span>
+
+              <h1>Recent Activity</h1>
+
+              <p>
+                Files and tools you've recently used.
+              </p>
+
+            </div>
+
+
+            <button
+              class="secondary-button"
+              id="clearHistoryButton"
+              type="button"
+            >
+              <i class="fa-regular fa-trash-can"></i>
+              Clear History
+            </button>
+
+          </div>
+
+
+          <div
+            class="history-list"
+            id="historyList"
+          >
+
+            <div class="empty-state large-empty">
+
+              <div class="empty-icon">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+              </div>
+
+              <h3>Your history is empty</h3>
+
+              <p>
+                Process something and it'll show up here.
+              </p>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ========================================
+             FAVORITES PAGE
+        ========================================= -->
+        <section
+          class="page"
+          id="favoritesPage"
+          data-page-section="favorites"
+        >
+
+          <div class="page-header">
+
+            <div>
+
+              <span class="section-eyebrow">
+                YOUR TOOLS
+              </span>
+
+              <h1>Favorites</h1>
+
+              <p>
+                Keep frequently used tools close.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div
+            class="tools-grid"
+            id="favoritesGrid"
+          >
+          </div>
+
+
+          <div
+            class="empty-state large-empty"
+            id="favoritesEmpty"
+          >
+
+            <div class="empty-icon">
+              <i class="fa-regular fa-star"></i>
+            </div>
+
+            <h3>No favorites yet</h3>
+
+            <p>
+              Tap the star on a tool to save it here.
+            </p>
+
+          </div>
+
+        </section>
+
+
+        <!-- ========================================
+             TOOL WORKSPACE
+        ========================================= -->
+        <section
+          class="page"
+          id="toolWorkspace"
+          data-page-section="tool"
+        >
+
+          <button
+            class="back-button"
+            id="backFromTool"
+            type="button"
+          >
+            <i class="fa-solid fa-arrow-left"></i>
+            Back
+          </button>
+
+
+          <div class="workspace-header">
+
+            <div
+              class="workspace-icon"
+              id="workspaceIcon"
+            >
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+
+
+            <div>
+
+              <span
+                class="section-eyebrow"
+                id="workspaceCategory"
+              >
+                IMAGE
+              </span>
+
+              <h1 id="workspaceTitle">
+                Photo Enhancer
+              </h1>
+
+              <p id="workspaceDescription">
+                Improve image quality.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <!--
+            Isi setiap tool nanti dirender oleh script.js.
+
+            Contoh:
+            Image Upscaler
+            Video Upscaler
+            Compressor
+            QR Generator
+            Base64
+            dan seterusnya.
+          -->
+
+          <div
+            class="workspace-content"
+            id="workspaceContent"
+          >
+
+            <div class="workspace-placeholder">
+
+              <div class="workspace-placeholder-icon">
+                <i class="fa-solid fa-code"></i>
+              </div>
+
+              <h2>Tool workspace ready.</h2>
+
+              <p>
+                Select a tool and its controls will
+                appear here.
+              </p>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      </div>
+
+
+      <!-- ========================================
+           FOOTER
+      ========================================= -->
+      <footer class="footer">
+
+        <div class="footer-brand">
+
+          <strong>
+            SENN HUB
+          </strong>
+
+          <span>
+            / SENN TOOLS V1
+          </span>
+
+        </div>
+
+        <p>
+          Built for useful things.
+        </p>
+
+      </footer>
+
+    </main>
+
+  </div>
+
+
+  <!-- ========================================
+       GLOBAL SEARCH
+  ========================================= -->
+  <div
+    class="search-modal"
+    id="searchModal"
+    aria-hidden="true"
+  >
+
+    <div
+      class="search-modal-backdrop"
+      data-close-search
+    ></div>
+
+
+    <div
+      class="search-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Search Senn Tools"
+    >
+
+      <div class="global-search-input">
+
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+          type="text"
+          id="globalSearchInput"
+          placeholder="Search Senn Tools..."
+          autocomplete="off"
+        >
+
+        <button
+          class="search-close"
+          data-close-search
+          type="button"
+          aria-label="Close search"
+        >
+          ESC
+        </button>
+
+      </div>
+
+
+      <div
+        class="global-search-results"
+        id="globalSearchResults"
+      >
+
+        <div class="search-hint">
+
+          <i class="fa-solid fa-terminal"></i>
+
+          <span>
+            Start typing to find a tool.
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================
+       PROCESSING OVERLAY
+  ========================================= -->
+  <div
+    class="processing-overlay"
+    id="processingOverlay"
+    aria-hidden="true"
+  >
+
+    <div class="processing-card">
+
+      <div class="processing-animation">
+
+        <div class="processing-ring"></div>
+
+        <div class="processing-icon">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+
+      </div>
+
+
+      <div class="processing-information">
+
+        <span class="section-eyebrow">
+          PROCESSING
+        </span>
+
+        <h2 id="processingTitle">
+          Working on your file...
+        </h2>
+
+        <p id="processingDescription">
+          Keep this page open while Senn Tools processes
+          your file.
+        </p>
+
+      </div>
+
+
+      <div class="processing-progress">
+
+        <div class="progress-information">
+
+          <span id="processingStatus">
+            Preparing
+          </span>
+
+          <span id="processingPercent">
+            0%
+          </span>
+
+        </div>
+
+
+        <div class="progress-track">
+
+          <div
+            class="progress-bar"
+            id="processingBar"
+          ></div>
+
+        </div>
+
+      </div>
+
+
+      <button
+        class="secondary-button processing-cancel"
+        id="cancelProcessingButton"
+        type="button"
+      >
+        Cancel
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================
+       CONFIRMATION MODAL
+  ========================================= -->
+  <div
+    class="confirmation-modal"
+    id="confirmationModal"
+    aria-hidden="true"
+  >
+
+    <div
+      class="confirmation-backdrop"
+      data-close-confirmation
+    ></div>
+
+
+    <div class="confirmation-card">
+
+      <div class="confirmation-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+
+
+      <div class="confirmation-content">
+
+        <h2 id="confirmationTitle">
+          Are you sure?
+        </h2>
+
+        <p id="confirmationMessage">
+          This action cannot be undone.
+        </p>
+
+      </div>
+
+
+      <div class="confirmation-actions">
+
+        <button
+          class="secondary-button"
+          data-close-confirmation
+          type="button"
+        >
+          Cancel
+        </button>
+
+        <button
+          class="danger-button"
+          id="confirmationAccept"
+          type="button"
+        >
+          Continue
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================
+       TOAST NOTIFICATIONS
+  ========================================= -->
+  <div
+    class="toast-container"
+    id="toastContainer"
+    aria-live="polite"
+    aria-atomic="true"
+  ></div>
+
+
+  <!-- ========================================
+       NOSCRIPT
+  ========================================= -->
+  <noscript>
+
+    <div class="noscript-warning">
+
+      <strong>
+        JavaScript is disabled.
+      </strong>
+
+      <p>
+        Senn Tools needs JavaScript to work.
+      </p>
+
+    </div>
+
+  </noscript>
+
+
+  <!-- ========================================
+       MAIN JAVASCRIPT
+  ========================================= -->
+  <script src="script.js"></script>
+
+</body>
+</html>
