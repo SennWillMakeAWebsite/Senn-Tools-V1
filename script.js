@@ -16554,3 +16554,2346 @@ console.log(
    - Audio Converter
    - Remaining media tools
 ========================================================= */
+
+/* =========================================================
+   SENN TOOLS V1
+   PART 5A
+   MEDIA ENGINE + VIDEO COMPRESSOR + VIDEO TRIMMER
+========================================================= */
+
+
+/* =========================================================
+   159. MEDIA ENGINE STATE
+========================================================= */
+
+const sennMediaEngine = {
+  ffmpeg: null,
+  loadingPromise: null,
+  loaded: false,
+  activeTask: false,
+  progressHandler: null
+};
+
+
+/* =========================================================
+   160. FFMPEG MODULE LOADER
+========================================================= */
+
+async function ensureFFmpegEngine() {
+  if (
+    sennMediaEngine.loaded &&
+    sennMediaEngine.ffmpeg
+  ) {
+    return sennMediaEngine.ffmpeg;
+  }
+
+  if (
+    sennMediaEngine.loadingPromise
+  ) {
+    return (
+      sennMediaEngine
+        .loadingPromise
+    );
+  }
+
+  sennMediaEngine.loadingPromise =
+    (async () => {
+      try {
+        const ffmpegModule =
+          await import(
+            "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.15/dist/esm/index.js"
+          );
+
+        const utilModule =
+          await import(
+            "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.2/dist/esm/index.js"
+          );
+
+        const {
+          FFmpeg
+        } =
+          ffmpegModule;
+
+        const {
+          toBlobURL
+        } =
+          utilModule;
+
+        if (
+          typeof FFmpeg !==
+          "function"
+        ) {
+          throw new Error(
+            "FFmpeg class is unavailable."
+          );
+        }
+
+        const ffmpeg =
+          new FFmpeg();
+
+        const baseURL =
+          "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm";
+
+        const coreURL =
+          await toBlobURL(
+            `${baseURL}/ffmpeg-core.js`,
+            "text/javascript"
+          );
+
+        const wasmURL =
+          await toBlobURL(
+            `${baseURL}/ffmpeg-core.wasm`,
+            "application/wasm"
+          );
+
+        ffmpeg.on(
+          "log",
+          ({
+            message
+          }) => {
+            console.debug(
+              "[SENN MEDIA]",
+              message
+            );
+          }
+        );
+
+        ffmpeg.on(
+          "progress",
+          ({
+            progress
+          }) => {
+            const percentage =
+              Math.min(
+                Math.max(
+                  Math.round(
+                    (
+                      Number(
+                        progress
+                      ) || 0
+                    ) *
+                      100
+                  ),
+                  0
+                ),
+                100
+              );
+
+            if (
+              typeof
+                sennMediaEngine
+                  .progressHandler ===
+              "function"
+            ) {
+              sennMediaEngine
+                .progressHandler(
+                  percentage
+                );
+            }
+          }
+        );
+
+        await ffmpeg.load({
+          coreURL,
+          wasmURL
+        });
+
+        sennMediaEngine.ffmpeg =
+          ffmpeg;
+
+        sennMediaEngine.loaded =
+          true;
+
+        return ffmpeg;
+      } catch (error) {
+        sennMediaEngine.ffmpeg =
+          null;
+
+        sennMediaEngine.loaded =
+          false;
+
+        throw new Error(
+          getFriendlyToolError(
+            error,
+            "The media engine could not be loaded."
+          )
+        );
+      } finally {
+        sennMediaEngine.loadingPromise =
+          null;
+      }
+    })();
+
+  return (
+    sennMediaEngine
+      .loadingPromise
+  );
+}
+
+
+/* =========================================================
+   161. MEDIA FILE HELPERS
+========================================================= */
+
+function isVideoFile(
+  file
+) {
+  if (!file) {
+    return false;
+  }
+
+  const mimeType =
+    String(
+      file.type ||
+      ""
+    ).toLowerCase();
+
+  const extension =
+    getFileExtension(
+      file.name
+    ).toLowerCase();
+
+  return (
+    mimeType.startsWith(
+      "video/"
+    ) ||
+    [
+      "mp4",
+      "webm",
+      "mov",
+      "m4v",
+      "avi",
+      "mkv",
+      "ogv"
+    ].includes(
+      extension
+    )
+  );
+}
+
+
+function getMediaExtension(
+  file,
+  fallback =
+    "mp4"
+) {
+  const extension =
+    getFileExtension(
+      file?.name ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+  if (
+    extension &&
+    /^[a-z0-9]+$/i.test(
+      extension
+    )
+  ) {
+    return extension;
+  }
+
+  return fallback;
+}
+
+
+function createMediaTempName(
+  prefix,
+  extension
+) {
+  const random =
+    (
+      crypto.randomUUID?.() ||
+      `${Date.now()}-${Math.random()}`
+    )
+      .replaceAll(
+        ".",
+        "-"
+      );
+
+  return (
+    `${prefix}-${random}.${extension}`
+  );
+}
+
+
+/* =========================================================
+   162. READ MEDIA FILE
+========================================================= */
+
+async function mediaFileToUint8Array(
+  file
+) {
+  if (!file) {
+    throw new Error(
+      "No media file selected."
+    );
+  }
+
+  const buffer =
+    await file.arrayBuffer();
+
+  return new Uint8Array(
+    buffer
+  );
+}
+
+
+/* =========================================================
+   163. SAFE FFMPEG FILE CLEANUP
+========================================================= */
+
+async function deleteFFmpegFileSafe(
+  ffmpeg,
+  fileName
+) {
+  if (
+    !ffmpeg ||
+    !fileName
+  ) {
+    return;
+  }
+
+  try {
+    await ffmpeg.deleteFile(
+      fileName
+    );
+  } catch {
+    // File may already be gone.
+  }
+}
+
+
+/* =========================================================
+   164. MEDIA TASK RUNNER
+========================================================= */
+
+async function runMediaTask(
+  callback,
+  options = {}
+) {
+  if (
+    sennMediaEngine.activeTask
+  ) {
+    throw new Error(
+      "Another media task is already running."
+    );
+  }
+
+  sennMediaEngine.activeTask =
+    true;
+
+  state.processingCancelled =
+    false;
+
+  try {
+    return await runToolTask(
+      async ({
+        update,
+        throwIfCancelled
+      }) => {
+        update(
+          2,
+          "Loading media engine..."
+        );
+
+        const ffmpeg =
+          await ensureFFmpegEngine();
+
+        throwIfCancelled();
+
+        sennMediaEngine
+          .progressHandler =
+          (
+            percentage
+          ) => {
+            update(
+              Math.max(
+                5,
+                percentage
+              ),
+              options.progressMessage ||
+                "Processing media..."
+            );
+          };
+
+        update(
+          5,
+          "Preparing media..."
+        );
+
+        return await callback(
+          ffmpeg,
+          {
+            update,
+            throwIfCancelled
+          }
+        );
+      },
+      {
+        title:
+          options.title ||
+          "Media Processing",
+
+        message:
+          options.message ||
+          "Preparing media engine...",
+
+        completeMessage:
+          options.completeMessage ||
+          "Media processing complete"
+      }
+    );
+  } finally {
+    sennMediaEngine
+      .progressHandler =
+      null;
+
+    sennMediaEngine.activeTask =
+      false;
+  }
+}
+
+
+/* =========================================================
+   165. VIDEO METADATA READER
+========================================================= */
+
+function readVideoMetadata(
+  file
+) {
+  return new Promise(
+    (
+      resolve,
+      reject
+    ) => {
+      if (
+        !isVideoFile(
+          file
+        )
+      ) {
+        reject(
+          new Error(
+            "Choose a valid video file."
+          )
+        );
+
+        return;
+      }
+
+      const video =
+        document.createElement(
+          "video"
+        );
+
+      const url =
+        URL.createObjectURL(
+          file
+        );
+
+      video.preload =
+        "metadata";
+
+      video.muted =
+        true;
+
+      video.playsInline =
+        true;
+
+      const cleanup =
+        () => {
+          URL.revokeObjectURL(
+            url
+          );
+
+          video.removeAttribute(
+            "src"
+          );
+
+          video.load();
+        };
+
+      video.addEventListener(
+        "loadedmetadata",
+        () => {
+          const metadata = {
+            duration:
+              Number.isFinite(
+                video.duration
+              )
+                ? video.duration
+                : 0,
+
+            width:
+              video.videoWidth ||
+              0,
+
+            height:
+              video.videoHeight ||
+              0,
+
+            size:
+              file.size,
+
+            type:
+              file.type ||
+              "video",
+
+            name:
+              file.name
+          };
+
+          cleanup();
+
+          resolve(
+            metadata
+          );
+        },
+        {
+          once: true
+        }
+      );
+
+      video.addEventListener(
+        "error",
+        () => {
+          cleanup();
+
+          reject(
+            new Error(
+              "The browser could not read this video's metadata."
+            )
+          );
+        },
+        {
+          once: true
+        }
+      );
+
+      video.src =
+        url;
+    }
+  );
+}
+
+
+/* =========================================================
+   166. MEDIA TIME FORMATTER
+========================================================= */
+
+function formatMediaTime(
+  seconds
+) {
+  const safeSeconds =
+    Math.max(
+      0,
+      Number(
+        seconds
+      ) || 0
+    );
+
+  const hours =
+    Math.floor(
+      safeSeconds /
+      3600
+    );
+
+  const minutes =
+    Math.floor(
+      (
+        safeSeconds %
+        3600
+      ) /
+      60
+    );
+
+  const remainingSeconds =
+    Math.floor(
+      safeSeconds %
+      60
+    );
+
+  const secondText =
+    String(
+      remainingSeconds
+    ).padStart(
+      2,
+      "0"
+    );
+
+  const minuteText =
+    String(
+      minutes
+    ).padStart(
+      2,
+      "0"
+    );
+
+  if (
+    hours > 0
+  ) {
+    return (
+      `${hours}:` +
+      `${minuteText}:` +
+      `${secondText}`
+    );
+  }
+
+  return (
+    `${minutes}:` +
+    `${secondText}`
+  );
+}
+
+
+/* =========================================================
+   167. VIDEO FILE CARD
+========================================================= */
+
+function createVideoFileCardHTML(
+  file,
+  metadata = null
+) {
+  const resolution =
+    metadata &&
+    metadata.width &&
+    metadata.height
+      ? `${metadata.width} × ${metadata.height}`
+      : "Reading resolution...";
+
+  const duration =
+    metadata
+      ? formatMediaTime(
+          metadata.duration
+        )
+      : "Reading duration...";
+
+  return `
+    <div
+      class="tool-file-card"
+      style="
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      "
+    >
+
+      <div
+        class="tool-file-icon"
+      >
+        <i class="fa-solid fa-film"></i>
+      </div>
+
+      <div
+        style="
+          min-width: 0;
+          flex: 1;
+        "
+      >
+
+        <strong
+          style="
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          "
+        >
+          ${escapeHTML(
+            file.name
+          )}
+        </strong>
+
+        <small>
+          ${escapeHTML(
+            formatBytes(
+              file.size
+            )
+          )}
+          •
+          ${escapeHTML(
+            resolution
+          )}
+          •
+          ${escapeHTML(
+            duration
+          )}
+        </small>
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   168. VIDEO PREVIEW COMPONENT
+========================================================= */
+
+function createVideoPreview(
+  file,
+  container
+) {
+  if (
+    !file ||
+    !container
+  ) {
+    return null;
+  }
+
+  const oldURL =
+    container.dataset
+      .videoObjectUrl;
+
+  if (oldURL) {
+    URL.revokeObjectURL(
+      oldURL
+    );
+  }
+
+  const url =
+    URL.createObjectURL(
+      file
+    );
+
+  container.dataset
+    .videoObjectUrl =
+    url;
+
+  container.innerHTML = `
+    <video
+      controls
+      playsinline
+      preload="metadata"
+      style="
+        display: block;
+        width: 100%;
+        max-height: 460px;
+        background: #000;
+        border-radius: 14px;
+      "
+    >
+      <source
+        src="${url}"
+        type="${escapeHTML(
+          file.type ||
+          "video/mp4"
+        )}"
+      >
+    </video>
+  `;
+
+  return (
+    container.querySelector(
+      "video"
+    )
+  );
+}
+
+
+/* =========================================================
+   169. VIDEO COMPRESSOR UI
+========================================================= */
+
+function renderVideoCompressor() {
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-upload-panel">
+
+        <div
+          class="workspace-placeholder-icon"
+        >
+          <i class="fa-solid fa-file-video"></i>
+        </div>
+
+        <h2>
+          Video Compressor
+        </h2>
+
+        <p>
+          Reduce video file size
+          directly in your browser.
+        </p>
+
+        <input
+          class="video-compress-input"
+          type="file"
+          accept="video/*,.mp4,.webm,.mov,.m4v"
+          hidden
+        >
+
+        <button
+          class="tool-button primary video-compress-select"
+          type="button"
+        >
+          <i class="fa-solid fa-file-arrow-up"></i>
+          Choose Video
+        </button>
+
+      </div>
+
+      <div
+        class="tool-panel video-compress-panel"
+        hidden
+      >
+
+        <div
+          class="video-compress-file"
+        ></div>
+
+        <div
+          class="video-compress-preview"
+          style="margin-top: 18px;"
+        ></div>
+
+        <div
+          class="tool-controls"
+          style="margin-top: 18px;"
+        >
+
+          <div class="tool-control">
+
+            <label>
+              Compression
+            </label>
+
+            <select
+              class="tool-select video-compress-level"
+            >
+              <option value="light">
+                Light
+              </option>
+
+              <option
+                value="balanced"
+                selected
+              >
+                Balanced
+              </option>
+
+              <option value="strong">
+                Strong
+              </option>
+            </select>
+
+          </div>
+
+          <div class="tool-control">
+
+            <label>
+              Output Resolution
+            </label>
+
+            <select
+              class="tool-select video-compress-resolution"
+            >
+              <option
+                value="original"
+                selected
+              >
+                Original
+              </option>
+
+              <option value="1080">
+                Max 1080p
+              </option>
+
+              <option value="720">
+                Max 720p
+              </option>
+
+              <option value="480">
+                Max 480p
+              </option>
+            </select>
+
+          </div>
+
+        </div>
+
+        <div
+          class="tool-notice"
+          style="margin-top: 18px;"
+        >
+          <i class="fa-solid fa-circle-info"></i>
+
+          <span>
+            Video processing runs
+            locally in your browser.
+            Large videos may use
+            significant memory.
+          </span>
+        </div>
+
+        <div
+          class="tool-actions"
+          style="margin-top: 18px;"
+        >
+
+          <button
+            class="tool-button primary video-compress-run"
+            type="button"
+          >
+            <i class="fa-solid fa-compress"></i>
+            Compress Video
+          </button>
+
+          <button
+            class="tool-button video-compress-clear"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+        <div
+          class="video-compress-result"
+        ></div>
+
+      </div>
+
+    </div>
+  `;
+
+  const input =
+    workspaceContent.querySelector(
+      ".video-compress-input"
+    );
+
+  const selectButton =
+    workspaceContent.querySelector(
+      ".video-compress-select"
+    );
+
+  const panel =
+    workspaceContent.querySelector(
+      ".video-compress-panel"
+    );
+
+  const fileContainer =
+    workspaceContent.querySelector(
+      ".video-compress-file"
+    );
+
+  const previewContainer =
+    workspaceContent.querySelector(
+      ".video-compress-preview"
+    );
+
+  const levelSelect =
+    workspaceContent.querySelector(
+      ".video-compress-level"
+    );
+
+  const resolutionSelect =
+    workspaceContent.querySelector(
+      ".video-compress-resolution"
+    );
+
+  const runButton =
+    workspaceContent.querySelector(
+      ".video-compress-run"
+    );
+
+  const clearButton =
+    workspaceContent.querySelector(
+      ".video-compress-clear"
+    );
+
+  const result =
+    workspaceContent.querySelector(
+      ".video-compress-result"
+    );
+
+  let selectedVideo =
+    null;
+
+  let metadata =
+    null;
+
+
+  async function loadVideo(
+    file
+  ) {
+    if (
+      !isVideoFile(
+        file
+      )
+    ) {
+      showToast(
+        "Invalid video",
+        "Choose a supported video file.",
+        "warning"
+      );
+
+      return;
+    }
+
+    selectedVideo =
+      file;
+
+    metadata =
+      null;
+
+    panel.hidden =
+      false;
+
+    result.innerHTML =
+      "";
+
+    fileContainer.innerHTML =
+      createVideoFileCardHTML(
+        file
+      );
+
+    createVideoPreview(
+      file,
+      previewContainer
+    );
+
+    try {
+      metadata =
+        await readVideoMetadata(
+          file
+        );
+
+      if (
+        selectedVideo !==
+        file
+      ) {
+        return;
+      }
+
+      fileContainer.innerHTML =
+        createVideoFileCardHTML(
+          file,
+          metadata
+        );
+    } catch (error) {
+      console.warn(
+        "[SENN TOOLS] Video metadata:",
+        error
+      );
+    }
+  }
+
+
+  selectButton.addEventListener(
+    "click",
+    () => {
+      input.click();
+    }
+  );
+
+
+  input.addEventListener(
+    "change",
+    () => {
+      const file =
+        input.files?.[0];
+
+      if (file) {
+        loadVideo(
+          file
+        );
+      }
+    }
+  );
+
+
+  clearButton.addEventListener(
+    "click",
+    () => {
+      selectedVideo =
+        null;
+
+      metadata =
+        null;
+
+      input.value =
+        "";
+
+      panel.hidden =
+        true;
+
+      result.innerHTML =
+        "";
+
+      fileContainer.innerHTML =
+        "";
+
+      const oldURL =
+        previewContainer.dataset
+          .videoObjectUrl;
+
+      if (oldURL) {
+        URL.revokeObjectURL(
+          oldURL
+        );
+
+        delete previewContainer
+          .dataset
+          .videoObjectUrl;
+      }
+
+      previewContainer.innerHTML =
+        "";
+    }
+  );
+
+
+  runButton.addEventListener(
+    "click",
+    async () => {
+      if (
+        !selectedVideo
+      ) {
+        return;
+      }
+
+      const originalHTML =
+        runButton.innerHTML;
+
+      runButton.disabled =
+        true;
+
+      runButton.innerHTML = `
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Compressing...
+      `;
+
+      try {
+        const output =
+          await compressVideoFile(
+            selectedVideo,
+            {
+              level:
+                levelSelect.value,
+
+              resolution:
+                resolutionSelect.value
+            }
+          );
+
+        const baseName =
+          getBaseFileName(
+            selectedVideo.name
+          );
+
+        const difference =
+          selectedVideo.size -
+          output.size;
+
+        const percentage =
+          selectedVideo.size > 0
+            ? (
+                difference /
+                selectedVideo.size
+              ) *
+              100
+            : 0;
+
+        result.innerHTML = `
+          <div
+            class="tool-notice ${
+              difference > 0
+                ? "success"
+                : ""
+            }"
+            style="margin-top: 18px;"
+          >
+
+            <i class="fa-solid fa-chart-simple"></i>
+
+            <span>
+              Original:
+              ${escapeHTML(
+                formatBytes(
+                  selectedVideo.size
+                )
+              )}
+              •
+              Output:
+              ${escapeHTML(
+                formatBytes(
+                  output.size
+                )
+              )}
+              ${
+                difference > 0
+                  ? `• ${percentage.toFixed(
+                      1
+                    )}% smaller`
+                  : "• Output was not smaller"
+              }
+            </span>
+
+          </div>
+        `;
+
+        downloadBlob(
+          output,
+          `${baseName}-compressed.mp4`
+        );
+
+        addHistory(
+          "video-compressor",
+          {
+            fileName:
+              selectedVideo.name
+          }
+        );
+
+        showToast(
+          "Video processed",
+          difference > 0
+            ? `${percentage.toFixed(
+                1
+              )}% smaller.`
+            : "Compression completed, but the result was not smaller.",
+          difference > 0
+            ? "success"
+            : "info"
+        );
+      } catch (error) {
+        if (
+          error?.name ===
+          "SennProcessingCancelled"
+        ) {
+          return;
+        }
+
+        console.error(
+          "[SENN TOOLS] Video Compressor:",
+          error
+        );
+
+        showToast(
+          "Compression failed",
+          getFriendlyToolError(
+            error,
+            "Unable to compress this video."
+          ),
+          "error"
+        );
+      } finally {
+        runButton.disabled =
+          false;
+
+        runButton.innerHTML =
+          originalHTML;
+      }
+    }
+  );
+
+
+  const smartFile =
+    getCurrentSelectedFile();
+
+  if (
+    smartFile &&
+    isVideoFile(
+      smartFile
+    )
+  ) {
+    loadVideo(
+      smartFile
+    );
+  }
+}
+
+
+/* =========================================================
+   170. VIDEO COMPRESSION ENGINE
+========================================================= */
+
+async function compressVideoFile(
+  file,
+  options = {}
+) {
+  return runMediaTask(
+    async (
+      ffmpeg,
+      {
+        update,
+        throwIfCancelled
+      }
+    ) => {
+      const inputExtension =
+        getMediaExtension(
+          file,
+          "mp4"
+        );
+
+      const inputName =
+        createMediaTempName(
+          "input",
+          inputExtension
+        );
+
+      const outputName =
+        createMediaTempName(
+          "compressed",
+          "mp4"
+        );
+
+      try {
+        update(
+          7,
+          "Loading video..."
+        );
+
+        await ffmpeg.writeFile(
+          inputName,
+          await mediaFileToUint8Array(
+            file
+          )
+        );
+
+        throwIfCancelled();
+
+        const level =
+          options.level ||
+          "balanced";
+
+        const crfMap = {
+          light: "24",
+          balanced: "28",
+          strong: "32"
+        };
+
+        const presetMap = {
+          light: "fast",
+          balanced: "veryfast",
+          strong: "veryfast"
+        };
+
+        const args = [
+          "-i",
+          inputName,
+          "-map",
+          "0:v:0",
+          "-map",
+          "0:a?",
+          "-c:v",
+          "libx264",
+          "-preset",
+          presetMap[
+            level
+          ] ||
+            "veryfast",
+          "-crf",
+          crfMap[
+            level
+          ] ||
+            "28"
+        ];
+
+        const resolution =
+          String(
+            options.resolution ||
+            "original"
+          );
+
+        if (
+          resolution !==
+          "original"
+        ) {
+          const height =
+            Math.max(
+              144,
+              Number(
+                resolution
+              ) || 720
+            );
+
+          args.push(
+            "-vf",
+            `scale=-2:'min(${height},ih)'`
+          );
+        }
+
+        args.push(
+          "-c:a",
+          "aac",
+          "-b:a",
+          level ===
+            "strong"
+            ? "96k"
+            : "128k",
+          "-movflags",
+          "+faststart",
+          "-pix_fmt",
+          "yuv420p",
+          outputName
+        );
+
+        update(
+          10,
+          "Compressing video..."
+        );
+
+        await ffmpeg.exec(
+          args
+        );
+
+        throwIfCancelled();
+
+        update(
+          96,
+          "Preparing download..."
+        );
+
+        const data =
+          await ffmpeg.readFile(
+            outputName
+          );
+
+        return new Blob(
+          [
+            data
+          ],
+          {
+            type:
+              "video/mp4"
+          }
+        );
+      } finally {
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          inputName
+        );
+
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          outputName
+        );
+      }
+    },
+    {
+      title:
+        "Compressing Video",
+
+      message:
+        "Preparing video...",
+
+      progressMessage:
+        "Compressing video...",
+
+      completeMessage:
+        "Video compression complete"
+    }
+  );
+}
+
+
+/* =========================================================
+   171. VIDEO TRIMMER UI
+========================================================= */
+
+function renderVideoTrimmer() {
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-upload-panel">
+
+        <div
+          class="workspace-placeholder-icon"
+        >
+          <i class="fa-solid fa-scissors"></i>
+        </div>
+
+        <h2>
+          Video Trimmer
+        </h2>
+
+        <p>
+          Cut a section from your video
+          using start and end times.
+        </p>
+
+        <input
+          class="video-trim-input"
+          type="file"
+          accept="video/*,.mp4,.webm,.mov,.m4v"
+          hidden
+        >
+
+        <button
+          class="tool-button primary video-trim-select"
+          type="button"
+        >
+          <i class="fa-solid fa-file-arrow-up"></i>
+          Choose Video
+        </button>
+
+      </div>
+
+      <div
+        class="tool-panel video-trim-panel"
+        hidden
+      >
+
+        <div
+          class="video-trim-file"
+        ></div>
+
+        <div
+          class="video-trim-preview"
+          style="margin-top: 18px;"
+        ></div>
+
+        <div
+          class="tool-controls"
+          style="margin-top: 18px;"
+        >
+
+          <div class="tool-control">
+
+            <label>
+              Start
+            </label>
+
+            <input
+              class="tool-input video-trim-start"
+              type="number"
+              value="0"
+              min="0"
+              step="0.1"
+            >
+
+            <small>
+              Seconds
+            </small>
+
+          </div>
+
+          <div class="tool-control">
+
+            <label>
+              End
+            </label>
+
+            <input
+              class="tool-input video-trim-end"
+              type="number"
+              value="0"
+              min="0"
+              step="0.1"
+            >
+
+            <small>
+              Seconds
+            </small>
+
+          </div>
+
+        </div>
+
+        <div
+          class="video-trim-summary tool-notice"
+          style="margin-top: 18px;"
+        >
+
+          <i class="fa-regular fa-clock"></i>
+
+          <span>
+            Select a video to calculate
+            the trim duration.
+          </span>
+
+        </div>
+
+        <div
+          class="tool-actions"
+          style="margin-top: 18px;"
+        >
+
+          <button
+            class="tool-button video-trim-use-current"
+            type="button"
+          >
+            <i class="fa-solid fa-location-crosshairs"></i>
+            Start = Current
+          </button>
+
+          <button
+            class="tool-button video-trim-use-end"
+            type="button"
+          >
+            <i class="fa-solid fa-location-crosshairs"></i>
+            End = Current
+          </button>
+
+          <button
+            class="tool-button primary video-trim-run"
+            type="button"
+          >
+            <i class="fa-solid fa-scissors"></i>
+            Trim Video
+          </button>
+
+          <button
+            class="tool-button video-trim-clear"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+        <div
+          class="video-trim-result"
+        ></div>
+
+      </div>
+
+    </div>
+  `;
+
+  const input =
+    workspaceContent.querySelector(
+      ".video-trim-input"
+    );
+
+  const selectButton =
+    workspaceContent.querySelector(
+      ".video-trim-select"
+    );
+
+  const panel =
+    workspaceContent.querySelector(
+      ".video-trim-panel"
+    );
+
+  const fileContainer =
+    workspaceContent.querySelector(
+      ".video-trim-file"
+    );
+
+  const previewContainer =
+    workspaceContent.querySelector(
+      ".video-trim-preview"
+    );
+
+  const startInput =
+    workspaceContent.querySelector(
+      ".video-trim-start"
+    );
+
+  const endInput =
+    workspaceContent.querySelector(
+      ".video-trim-end"
+    );
+
+  const summary =
+    workspaceContent.querySelector(
+      ".video-trim-summary span"
+    );
+
+  const useCurrentButton =
+    workspaceContent.querySelector(
+      ".video-trim-use-current"
+    );
+
+  const useEndButton =
+    workspaceContent.querySelector(
+      ".video-trim-use-end"
+    );
+
+  const runButton =
+    workspaceContent.querySelector(
+      ".video-trim-run"
+    );
+
+  const clearButton =
+    workspaceContent.querySelector(
+      ".video-trim-clear"
+    );
+
+  const result =
+    workspaceContent.querySelector(
+      ".video-trim-result"
+    );
+
+  let selectedVideo =
+    null;
+
+  let metadata =
+    null;
+
+  let previewVideo =
+    null;
+
+
+  function updateSummary() {
+    if (!metadata) {
+      return;
+    }
+
+    const start =
+      Math.max(
+        0,
+        Number(
+          startInput.value
+        ) || 0
+      );
+
+    const end =
+      Math.min(
+        metadata.duration,
+        Math.max(
+          0,
+          Number(
+            endInput.value
+          ) || 0
+        )
+      );
+
+    const duration =
+      Math.max(
+        0,
+        end -
+        start
+      );
+
+    summary.textContent =
+      `Start ${formatMediaTime(
+        start
+      )} • ` +
+      `End ${formatMediaTime(
+        end
+      )} • ` +
+      `Output ${formatMediaTime(
+        duration
+      )}`;
+  }
+
+
+  async function loadVideo(
+    file
+  ) {
+    if (
+      !isVideoFile(
+        file
+      )
+    ) {
+      showToast(
+        "Invalid video",
+        "Choose a supported video file.",
+        "warning"
+      );
+
+      return;
+    }
+
+    selectedVideo =
+      file;
+
+    metadata =
+      null;
+
+    panel.hidden =
+      false;
+
+    result.innerHTML =
+      "";
+
+    fileContainer.innerHTML =
+      createVideoFileCardHTML(
+        file
+      );
+
+    previewVideo =
+      createVideoPreview(
+        file,
+        previewContainer
+      );
+
+    try {
+      metadata =
+        await readVideoMetadata(
+          file
+        );
+
+      if (
+        selectedVideo !==
+        file
+      ) {
+        return;
+      }
+
+      startInput.value =
+        "0";
+
+      endInput.value =
+        metadata.duration.toFixed(
+          2
+        );
+
+      startInput.max =
+        String(
+          metadata.duration
+        );
+
+      endInput.max =
+        String(
+          metadata.duration
+        );
+
+      fileContainer.innerHTML =
+        createVideoFileCardHTML(
+          file,
+          metadata
+        );
+
+      updateSummary();
+    } catch (error) {
+      showToast(
+        "Metadata unavailable",
+        getFriendlyToolError(
+          error,
+          "Unable to read video duration."
+        ),
+        "warning"
+      );
+    }
+  }
+
+
+  selectButton.addEventListener(
+    "click",
+    () => {
+      input.click();
+    }
+  );
+
+
+  input.addEventListener(
+    "change",
+    () => {
+      const file =
+        input.files?.[0];
+
+      if (file) {
+        loadVideo(
+          file
+        );
+      }
+    }
+  );
+
+
+  startInput.addEventListener(
+    "input",
+    updateSummary
+  );
+
+  endInput.addEventListener(
+    "input",
+    updateSummary
+  );
+
+
+  useCurrentButton.addEventListener(
+    "click",
+    () => {
+      if (
+        !previewVideo ||
+        !metadata
+      ) {
+        return;
+      }
+
+      startInput.value =
+        Math.min(
+          previewVideo.currentTime,
+          metadata.duration
+        ).toFixed(
+          2
+        );
+
+      updateSummary();
+    }
+  );
+
+
+  useEndButton.addEventListener(
+    "click",
+    () => {
+      if (
+        !previewVideo ||
+        !metadata
+      ) {
+        return;
+      }
+
+      endInput.value =
+        Math.min(
+          previewVideo.currentTime,
+          metadata.duration
+        ).toFixed(
+          2
+        );
+
+      updateSummary();
+    }
+  );
+
+
+  clearButton.addEventListener(
+    "click",
+    () => {
+      selectedVideo =
+        null;
+
+      metadata =
+        null;
+
+      previewVideo =
+        null;
+
+      input.value =
+        "";
+
+      panel.hidden =
+        true;
+
+      fileContainer.innerHTML =
+        "";
+
+      result.innerHTML =
+        "";
+
+      startInput.value =
+        "0";
+
+      endInput.value =
+        "0";
+
+      const oldURL =
+        previewContainer.dataset
+          .videoObjectUrl;
+
+      if (oldURL) {
+        URL.revokeObjectURL(
+          oldURL
+        );
+
+        delete previewContainer
+          .dataset
+          .videoObjectUrl;
+      }
+
+      previewContainer.innerHTML =
+        "";
+    }
+  );
+
+
+  runButton.addEventListener(
+    "click",
+    async () => {
+      if (
+        !selectedVideo ||
+        !metadata
+      ) {
+        return;
+      }
+
+      const start =
+        Math.max(
+          0,
+          Number(
+            startInput.value
+          ) || 0
+        );
+
+      const end =
+        Math.min(
+          metadata.duration,
+          Number(
+            endInput.value
+          ) ||
+            metadata.duration
+        );
+
+      if (
+        end <= start
+      ) {
+        showToast(
+          "Invalid trim range",
+          "End time must be greater than start time.",
+          "warning"
+        );
+
+        return;
+      }
+
+      const originalHTML =
+        runButton.innerHTML;
+
+      runButton.disabled =
+        true;
+
+      runButton.innerHTML = `
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Trimming...
+      `;
+
+      try {
+        const output =
+          await trimVideoFile(
+            selectedVideo,
+            start,
+            end
+          );
+
+        const baseName =
+          getBaseFileName(
+            selectedVideo.name
+          );
+
+        downloadBlob(
+          output,
+          `${baseName}-trimmed.mp4`
+        );
+
+        result.innerHTML = `
+          <div
+            class="tool-notice success"
+            style="margin-top: 18px;"
+          >
+            <i class="fa-solid fa-circle-check"></i>
+
+            <span>
+              Trimmed video:
+              ${escapeHTML(
+                formatMediaTime(
+                  end -
+                  start
+                )
+              )}
+              •
+              ${escapeHTML(
+                formatBytes(
+                  output.size
+                )
+              )}
+            </span>
+          </div>
+        `;
+
+        addHistory(
+          "video-trimmer",
+          {
+            fileName:
+              selectedVideo.name
+          }
+        );
+
+        showToast(
+          "Video trimmed",
+          "The trimmed video is ready.",
+          "success"
+        );
+      } catch (error) {
+        if (
+          error?.name ===
+          "SennProcessingCancelled"
+        ) {
+          return;
+        }
+
+        console.error(
+          "[SENN TOOLS] Video Trimmer:",
+          error
+        );
+
+        showToast(
+          "Trim failed",
+          getFriendlyToolError(
+            error,
+            "Unable to trim this video."
+          ),
+          "error"
+        );
+      } finally {
+        runButton.disabled =
+          false;
+
+        runButton.innerHTML =
+          originalHTML;
+      }
+    }
+  );
+
+
+  const smartFile =
+    getCurrentSelectedFile();
+
+  if (
+    smartFile &&
+    isVideoFile(
+      smartFile
+    )
+  ) {
+    loadVideo(
+      smartFile
+    );
+  }
+}
+
+
+/* =========================================================
+   172. VIDEO TRIM ENGINE
+========================================================= */
+
+async function trimVideoFile(
+  file,
+  start,
+  end
+) {
+  const duration =
+    Math.max(
+      0.01,
+      end -
+      start
+    );
+
+  return runMediaTask(
+    async (
+      ffmpeg,
+      {
+        update,
+        throwIfCancelled
+      }
+    ) => {
+      const extension =
+        getMediaExtension(
+          file,
+          "mp4"
+        );
+
+      const inputName =
+        createMediaTempName(
+          "trim-input",
+          extension
+        );
+
+      const outputName =
+        createMediaTempName(
+          "trim-output",
+          "mp4"
+        );
+
+      try {
+        update(
+          7,
+          "Loading video..."
+        );
+
+        await ffmpeg.writeFile(
+          inputName,
+          await mediaFileToUint8Array(
+            file
+          )
+        );
+
+        throwIfCancelled();
+
+        update(
+          10,
+          "Trimming video..."
+        );
+
+        await ffmpeg.exec([
+          "-ss",
+          String(
+            start
+          ),
+          "-i",
+          inputName,
+          "-t",
+          String(
+            duration
+          ),
+          "-map",
+          "0:v:0",
+          "-map",
+          "0:a?",
+          "-c:v",
+          "libx264",
+          "-preset",
+          "veryfast",
+          "-crf",
+          "23",
+          "-c:a",
+          "aac",
+          "-b:a",
+          "128k",
+          "-movflags",
+          "+faststart",
+          "-pix_fmt",
+          "yuv420p",
+          outputName
+        ]);
+
+        throwIfCancelled();
+
+        update(
+          96,
+          "Preparing trimmed video..."
+        );
+
+        const data =
+          await ffmpeg.readFile(
+            outputName
+          );
+
+        return new Blob(
+          [
+            data
+          ],
+          {
+            type:
+              "video/mp4"
+          }
+        );
+      } finally {
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          inputName
+        );
+
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          outputName
+        );
+      }
+    },
+    {
+      title:
+        "Trimming Video",
+
+      message:
+        "Preparing video...",
+
+      progressMessage:
+        "Trimming video...",
+
+      completeMessage:
+        "Video trim complete"
+    }
+  );
+}
+
+
+/* =========================================================
+   173. PART 5A RENDERERS
+========================================================= */
+
+const part5ARenderers = {
+  "video-compressor":
+    renderVideoCompressor,
+
+  "video-trimmer":
+    renderVideoTrimmer
+};
+
+
+/* =========================================================
+   174. PART 5A ROUTER
+========================================================= */
+
+const previousPart4FinalRenderToolWorkspace =
+  renderToolWorkspace;
+
+renderToolWorkspace =
+  function (
+    toolId
+  ) {
+    const renderer =
+      part5ARenderers[
+        toolId
+      ];
+
+    if (renderer) {
+      renderer();
+
+      return;
+    }
+
+    previousPart4FinalRenderToolWorkspace(
+      toolId
+    );
+  };
+
+
+/* =========================================================
+   175. PART 5A STATUS
+========================================================= */
+
+function getPart5AStatus() {
+  return {
+    ffmpegEngine:
+      typeof ensureFFmpegEngine ===
+      "function",
+
+    mediaRunner:
+      typeof runMediaTask ===
+      "function",
+
+    videoMetadata:
+      typeof readVideoMetadata ===
+      "function",
+
+    videoCompressor:
+      typeof renderVideoCompressor ===
+      "function",
+
+    videoTrimmer:
+      typeof renderVideoTrimmer ===
+      "function"
+  };
+}
+
+
+/* =========================================================
+   176. PART 5A READY
+========================================================= */
+
+console.log(
+  "[SENN TOOLS] Part 5A ready.",
+  getPart5AStatus()
+);
+
+
+/* =========================================================
+   PART 5A END
+
+   ADDED:
+   ✓ FFmpeg WebAssembly loader
+    ✓ Single-thread browser media engine
+   ✓ Media task runner
+   ✓ Media progress bridge
+   ✓ Video validation
+   ✓ Video metadata reader
+   ✓ Video preview
+   ✓ Video Compressor
+   ✓ Light / Balanced / Strong compression
+   ✓ Optional 1080p / 720p / 480p scaling
+   ✓ Video Trimmer
+   ✓ Current playback time → trim controls
+   ✓ Smart Drop video integration
+   ✓ Part 5A router override
+
+   NEXT PART 5B:
+   - Video → Audio
+   - Audio Converter
+   - Media Converter
+========================================================= */
