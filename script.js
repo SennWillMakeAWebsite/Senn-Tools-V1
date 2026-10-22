@@ -13007,15 +13007,6 @@ function validatePDFPageNumber(
     );
   }
 }
-   
-  if (
-    page > totalPages
-  ) {
-    throw new Error(
-      `Page ${page} does not exist. This PDF has ${totalPages} pages.`
-    );
-  }
-}
 
 
 /* =========================================================
