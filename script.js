@@ -15082,3 +15082,1475 @@ console.log(
    - Smart Drop → workspace sync polish
    - Final Part 4 integration
 ========================================================= */
+
+/* =========================================================
+   SENN TOOLS V1
+   PART 4B-3
+   QR + PROCESSING + PART 4 FINAL INTEGRATION
+========================================================= */
+
+
+/* =========================================================
+   139. QR LIBRARY LOADER
+========================================================= */
+
+async function ensureQRCodeGenerator() {
+  if (
+    typeof window.qrcode ===
+    "function"
+  ) {
+    return window.qrcode;
+  }
+
+  await loadExternalScript(
+    "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js",
+    () =>
+      typeof window.qrcode ===
+      "function"
+  );
+
+  if (
+    typeof window.qrcode !==
+    "function"
+  ) {
+    throw new Error(
+      "QR engine could not be initialized."
+    );
+  }
+
+  return window.qrcode;
+}
+
+
+/* =========================================================
+   140. STANDARDS QR GENERATOR
+========================================================= */
+
+function renderStandardsQRGenerator() {
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-panel">
+
+        <div
+          class="tool-panel-header"
+          style="margin-bottom: 18px;"
+        >
+          <div>
+            <h2>
+              QR Generator
+            </h2>
+
+            <p>
+              Generate a real scannable
+              QR code from text or URLs.
+            </p>
+          </div>
+        </div>
+
+        <div class="tool-controls">
+
+          <div
+            class="tool-control full"
+          >
+            <label>
+              Content
+            </label>
+
+            <textarea
+              class="tool-textarea qr-standard-input"
+              rows="6"
+              placeholder="Enter text or URL..."
+            ></textarea>
+          </div>
+
+          <div class="tool-control">
+            <label>
+              Size
+            </label>
+
+            <select
+              class="tool-select qr-standard-size"
+            >
+              <option value="256">
+                256 × 256
+              </option>
+
+              <option
+                value="512"
+                selected
+              >
+                512 × 512
+              </option>
+
+              <option value="768">
+                768 × 768
+              </option>
+
+              <option value="1024">
+                1024 × 1024
+              </option>
+            </select>
+          </div>
+
+          <div class="tool-control">
+            <label>
+              Error Correction
+            </label>
+
+            <select
+              class="tool-select qr-standard-level"
+            >
+              <option value="L">
+                Low
+              </option>
+
+              <option
+                value="M"
+                selected
+              >
+                Medium
+              </option>
+
+              <option value="Q">
+                Quartile
+              </option>
+
+              <option value="H">
+                High
+              </option>
+            </select>
+          </div>
+
+          <div class="tool-control">
+            <label>
+              Foreground
+            </label>
+
+            <input
+              class="tool-input qr-standard-dark"
+              type="color"
+              value="#111827"
+            >
+          </div>
+
+          <div class="tool-control">
+            <label>
+              Background
+            </label>
+
+            <input
+              class="tool-input qr-standard-light"
+              type="color"
+              value="#ffffff"
+            >
+          </div>
+
+        </div>
+
+        <div
+          class="tool-actions"
+          style="margin-top: 18px;"
+        >
+
+          <button
+            class="tool-button primary qr-standard-generate"
+            type="button"
+          >
+            <i class="fa-solid fa-qrcode"></i>
+            Generate QR
+          </button>
+
+          <button
+            class="tool-button qr-standard-clear"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+      </div>
+
+      <div
+        class="tool-panel qr-standard-result"
+        style="
+          margin-top: 18px;
+          display: none;
+        "
+      >
+
+        <div
+          style="
+            display: grid;
+            place-items: center;
+          "
+        >
+          <canvas
+            class="qr-standard-canvas"
+            style="
+              display: block;
+              width: min(100%, 420px);
+              height: auto;
+              border-radius: 14px;
+            "
+          ></canvas>
+        </div>
+
+        <div
+          class="tool-actions"
+          style="
+            margin-top: 18px;
+            justify-content: center;
+          "
+        >
+
+          <button
+            class="tool-button primary qr-standard-download"
+            type="button"
+          >
+            <i class="fa-solid fa-download"></i>
+            Download PNG
+          </button>
+
+          <button
+            class="tool-button qr-standard-copy"
+            type="button"
+          >
+            <i class="fa-regular fa-copy"></i>
+            Copy Content
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+
+  const input =
+    workspaceContent.querySelector(
+      ".qr-standard-input"
+    );
+
+  const sizeSelect =
+    workspaceContent.querySelector(
+      ".qr-standard-size"
+    );
+
+  const levelSelect =
+    workspaceContent.querySelector(
+      ".qr-standard-level"
+    );
+
+  const darkInput =
+    workspaceContent.querySelector(
+      ".qr-standard-dark"
+    );
+
+  const lightInput =
+    workspaceContent.querySelector(
+      ".qr-standard-light"
+    );
+
+  const generateButton =
+    workspaceContent.querySelector(
+      ".qr-standard-generate"
+    );
+
+  const clearButton =
+    workspaceContent.querySelector(
+      ".qr-standard-clear"
+    );
+
+  const result =
+    workspaceContent.querySelector(
+      ".qr-standard-result"
+    );
+
+  const canvas =
+    workspaceContent.querySelector(
+      ".qr-standard-canvas"
+    );
+
+  const downloadButton =
+    workspaceContent.querySelector(
+      ".qr-standard-download"
+    );
+
+  const copyButton =
+    workspaceContent.querySelector(
+      ".qr-standard-copy"
+    );
+
+  let currentContent =
+    "";
+
+
+  async function generate() {
+    const content =
+      input.value.trim();
+
+    if (!content) {
+      showToast(
+        "QR content required",
+        "Enter text or a URL first.",
+        "warning"
+      );
+
+      input.focus();
+
+      return;
+    }
+
+    const originalHTML =
+      generateButton.innerHTML;
+
+    generateButton.disabled =
+      true;
+
+    generateButton.innerHTML = `
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      Generating...
+    `;
+
+    try {
+      const qrcode =
+        await ensureQRCodeGenerator();
+
+      const level =
+        levelSelect.value;
+
+      const qr =
+        qrcode(
+          0,
+          level
+        );
+
+      qr.addData(
+        content
+      );
+
+      qr.make();
+
+      const size =
+        Math.max(
+          128,
+          Number(
+            sizeSelect.value
+          ) || 512
+        );
+
+      drawStandardsQRCode(
+        qr,
+        canvas,
+        {
+          size,
+          darkColor:
+            darkInput.value,
+
+          lightColor:
+            lightInput.value
+        }
+      );
+
+      currentContent =
+        content;
+
+      result.style.display =
+        "";
+
+      addHistory(
+        "qr-generator",
+        {
+          fileName:
+            "Generated QR"
+        }
+      );
+
+      showToast(
+        "QR generated",
+        "Your QR code is ready.",
+        "success"
+      );
+    } catch (error) {
+      console.error(
+        "[SENN TOOLS] QR:",
+        error
+      );
+
+      showToast(
+        "QR generation failed",
+        error.message ||
+          "Unable to generate this QR code.",
+        "error"
+      );
+    } finally {
+      generateButton.disabled =
+        false;
+
+      generateButton.innerHTML =
+        originalHTML;
+    }
+  }
+
+
+  generateButton.addEventListener(
+    "click",
+    generate
+  );
+
+
+  input.addEventListener(
+    "keydown",
+    (event) => {
+      if (
+        event.key ===
+          "Enter" &&
+        (
+          event.ctrlKey ||
+          event.metaKey
+        )
+      ) {
+        generate();
+      }
+    }
+  );
+
+
+  clearButton.addEventListener(
+    "click",
+    () => {
+      input.value =
+        "";
+
+      currentContent =
+        "";
+
+      result.style.display =
+        "none";
+
+      const context =
+        canvas.getContext(
+          "2d"
+        );
+
+      if (context) {
+        context.clearRect(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+      }
+
+      input.focus();
+    }
+  );
+
+
+  downloadButton.addEventListener(
+    "click",
+    async () => {
+      if (
+        !currentContent
+      ) {
+        return;
+      }
+
+      const blob =
+        await canvasToBlob(
+          canvas,
+          "image/png",
+          1
+        );
+
+      if (!blob) {
+        showToast(
+          "Download failed",
+          "QR image could not be created.",
+          "error"
+        );
+
+        return;
+      }
+
+      downloadBlob(
+        blob,
+        "senn-tools-qr.png"
+      );
+    }
+  );
+
+
+  copyButton.addEventListener(
+    "click",
+    async () => {
+      if (
+        !currentContent
+      ) {
+        return;
+      }
+
+      try {
+        await navigator.clipboard
+          .writeText(
+            currentContent
+          );
+
+        showToast(
+          "Copied",
+          "QR content copied.",
+          "success"
+        );
+      } catch {
+        showToast(
+          "Copy failed",
+          "Clipboard access was unavailable.",
+          "error"
+        );
+      }
+    }
+  );
+}
+
+
+/* =========================================================
+   141. DRAW STANDARDS QR
+========================================================= */
+
+function drawStandardsQRCode(
+  qr,
+  canvas,
+  options = {}
+) {
+  const moduleCount =
+    qr.getModuleCount();
+
+  const requestedSize =
+    Math.max(
+      128,
+      Number(
+        options.size
+      ) || 512
+    );
+
+  const quietZoneModules =
+    4;
+
+  const totalModules =
+    moduleCount +
+    (
+      quietZoneModules *
+      2
+    );
+
+  const moduleSize =
+    Math.max(
+      1,
+      Math.floor(
+        requestedSize /
+        totalModules
+      )
+    );
+
+  const actualSize =
+    totalModules *
+    moduleSize;
+
+  canvas.width =
+    actualSize;
+
+  canvas.height =
+    actualSize;
+
+  const context =
+    canvas.getContext(
+      "2d",
+      {
+        alpha: false
+      }
+    );
+
+  if (!context) {
+    throw new Error(
+      "Canvas is not supported by this browser."
+    );
+  }
+
+  const darkColor =
+    options.darkColor ||
+    "#111827";
+
+  const lightColor =
+    options.lightColor ||
+    "#ffffff";
+
+  context.imageSmoothingEnabled =
+    false;
+
+  context.fillStyle =
+    lightColor;
+
+  context.fillRect(
+    0,
+    0,
+    actualSize,
+    actualSize
+  );
+
+  context.fillStyle =
+    darkColor;
+
+  for (
+    let row = 0;
+    row < moduleCount;
+    row += 1
+  ) {
+    for (
+      let column = 0;
+      column < moduleCount;
+      column += 1
+    ) {
+      if (
+        !qr.isDark(
+          row,
+          column
+        )
+      ) {
+        continue;
+      }
+
+      context.fillRect(
+        (
+          column +
+          quietZoneModules
+        ) *
+          moduleSize,
+
+        (
+          row +
+          quietZoneModules
+        ) *
+          moduleSize,
+
+        moduleSize,
+        moduleSize
+      );
+    }
+  }
+}
+
+
+/* =========================================================
+   142. PROCESSING OVERLAY REFERENCES
+========================================================= */
+
+function getProcessingElements() {
+  return {
+    overlay:
+      document.getElementById(
+        "processingOverlay"
+      ),
+
+    title:
+      document.getElementById(
+        "processingTitle"
+      ),
+
+    message:
+      document.getElementById(
+        "processingMessage"
+      ),
+
+    progress:
+      document.getElementById(
+        "processingProgress"
+      ),
+
+    percentage:
+      document.getElementById(
+        "processingPercentage"
+      ),
+
+    cancel:
+      document.getElementById(
+        "cancelProcessing"
+      )
+  };
+}
+
+
+/* =========================================================
+   143. SHOW PROCESSING OVERLAY
+========================================================= */
+
+function showProcessingOverlay(
+  options = {}
+) {
+  const elements =
+    getProcessingElements();
+
+  state.processingCancelled =
+    false;
+
+  if (
+    !elements.overlay
+  ) {
+    return;
+  }
+
+  const title =
+    options.title ||
+    "Processing";
+
+  const message =
+    options.message ||
+    "Working on your file...";
+
+  const percentage =
+    Math.min(
+      Math.max(
+        Number(
+          options.percentage
+        ) || 0,
+        0
+      ),
+      100
+    );
+
+  if (
+    elements.title
+  ) {
+    elements.title.textContent =
+      title;
+  }
+
+  if (
+    elements.message
+  ) {
+    elements.message.textContent =
+      message;
+  }
+
+  if (
+    elements.progress
+  ) {
+    elements.progress.style.width =
+      `${percentage}%`;
+  }
+
+  if (
+    elements.percentage
+  ) {
+    elements.percentage.textContent =
+      `${percentage}%`;
+  }
+
+  elements.overlay.classList.add(
+    "active"
+  );
+
+  elements.overlay.hidden =
+    false;
+
+  document.body.classList.add(
+    "processing-active"
+  );
+}
+
+
+/* =========================================================
+   144. UPDATE PROCESSING OVERLAY
+========================================================= */
+
+function updateProcessingOverlay(
+  percentage,
+  message = ""
+) {
+  const elements =
+    getProcessingElements();
+
+  const safePercentage =
+    Math.min(
+      Math.max(
+        Number(
+          percentage
+        ) || 0,
+        0
+      ),
+      100
+    );
+
+  if (
+    elements.progress
+  ) {
+    elements.progress.style.width =
+      `${safePercentage}%`;
+  }
+
+  if (
+    elements.percentage
+  ) {
+    elements.percentage.textContent =
+      `${safePercentage}%`;
+  }
+
+  if (
+    elements.message &&
+    message
+  ) {
+    elements.message.textContent =
+      message;
+  }
+}
+
+
+/* =========================================================
+   145. HIDE PROCESSING OVERLAY
+========================================================= */
+
+function hideProcessingOverlay() {
+  const elements =
+    getProcessingElements();
+
+  if (
+    elements.overlay
+  ) {
+    elements.overlay.classList.remove(
+      "active"
+    );
+
+    elements.overlay.hidden =
+      true;
+  }
+
+  document.body.classList.remove(
+    "processing-active"
+  );
+}
+
+
+/* =========================================================
+   146. PROCESS CANCELLATION
+========================================================= */
+
+function cancelCurrentProcessing() {
+  state.processingCancelled =
+    true;
+
+  hideProcessingOverlay();
+
+  showToast(
+    "Processing cancelled",
+    "The current operation was cancelled.",
+    "warning"
+  );
+}
+
+
+function throwIfProcessingCancelled() {
+  if (
+    state.processingCancelled
+  ) {
+    const error =
+      new Error(
+        "Processing cancelled."
+      );
+
+    error.name =
+      "SennProcessingCancelled";
+
+    throw error;
+  }
+}
+
+
+/* =========================================================
+   147. PROCESSING CANCEL BUTTON
+========================================================= */
+
+(function bindProcessingCancelButton() {
+  const {
+    cancel
+  } =
+    getProcessingElements();
+
+  if (!cancel) {
+    return;
+  }
+
+  if (
+    cancel.dataset
+      .sennBound ===
+    "true"
+  ) {
+    return;
+  }
+
+  cancel.dataset.sennBound =
+    "true";
+
+  cancel.addEventListener(
+    "click",
+    () => {
+      cancelCurrentProcessing();
+    }
+  );
+})();
+
+
+/* =========================================================
+   148. FRIENDLY ERROR MESSAGE
+========================================================= */
+
+function getFriendlyToolError(
+  error,
+  fallback =
+    "Something went wrong while processing the file."
+) {
+  if (!error) {
+    return fallback;
+  }
+
+  if (
+    error.name ===
+    "SennProcessingCancelled"
+  ) {
+    return "Processing cancelled.";
+  }
+
+  const message =
+    String(
+      error.message ||
+      ""
+    ).trim();
+
+  if (!message) {
+    return fallback;
+  }
+
+  const lower =
+    message.toLowerCase();
+
+  if (
+    lower.includes(
+      "password"
+    ) ||
+    lower.includes(
+      "encrypted"
+    )
+  ) {
+    return (
+      "This file appears to be password-protected or encrypted."
+    );
+  }
+
+  if (
+    lower.includes(
+      "invalid pdf"
+    ) ||
+    lower.includes(
+      "failed to parse"
+    )
+  ) {
+    return (
+      "This PDF appears to be damaged or unsupported."
+    );
+  }
+
+  if (
+    lower.includes(
+      "network"
+    ) ||
+    lower.includes(
+      "failed to fetch"
+    )
+  ) {
+    return (
+      "A required processing library could not be loaded."
+    );
+  }
+
+  if (
+    lower.includes(
+      "memory"
+    ) ||
+    lower.includes(
+      "allocation"
+    )
+  ) {
+    return (
+      "This file is too large for the browser to process safely."
+    );
+  }
+
+  return message;
+}
+
+
+/* =========================================================
+   149. SAFE TOOL TASK WRAPPER
+========================================================= */
+
+async function runToolTask(
+  task,
+  options = {}
+) {
+  if (
+    typeof task !==
+    "function"
+  ) {
+    throw new TypeError(
+      "Tool task must be a function."
+    );
+  }
+
+  const title =
+    options.title ||
+    "Processing";
+
+  const message =
+    options.message ||
+    "Working on your file...";
+
+  showProcessingOverlay({
+    title,
+    message,
+    percentage: 0
+  });
+
+  try {
+    throwIfProcessingCancelled();
+
+    const result =
+      await task({
+        update(
+          percentage,
+          status
+        ) {
+          throwIfProcessingCancelled();
+
+          updateProcessingOverlay(
+            percentage,
+            status
+          );
+        },
+
+        isCancelled() {
+          return (
+            state.processingCancelled
+          );
+        },
+
+        throwIfCancelled:
+          throwIfProcessingCancelled
+      });
+
+    throwIfProcessingCancelled();
+
+    updateProcessingOverlay(
+      100,
+      options.completeMessage ||
+        "Complete"
+    );
+
+    return result;
+  } catch (error) {
+    if (
+      error?.name !==
+      "SennProcessingCancelled"
+    ) {
+      console.error(
+        "[SENN TOOLS] Processing:",
+        error
+      );
+    }
+
+    throw error;
+  } finally {
+    window.setTimeout(
+      () => {
+        hideProcessingOverlay();
+      },
+      180
+    );
+  }
+}
+
+
+/* =========================================================
+   150. SMART DROP → WORKSPACE SYNC
+========================================================= */
+
+function syncSmartDropFileToWorkspace() {
+  const file =
+    getCurrentSelectedFile();
+
+  if (
+    !file ||
+    !state.currentTool
+  ) {
+    return false;
+  }
+
+  const workspaceInput =
+    workspaceContent
+      ?.querySelector(
+        'input[type="file"]'
+      );
+
+  if (
+    !workspaceInput
+  ) {
+    return false;
+  }
+
+  const accepts =
+    String(
+      workspaceInput.accept ||
+      ""
+    )
+      .split(",")
+      .map(
+        (value) =>
+          value
+            .trim()
+            .toLowerCase()
+      )
+      .filter(Boolean);
+
+  if (
+    accepts.length > 0 &&
+    !doesFileMatchAccept(
+      file,
+      accepts
+    )
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+
+/* =========================================================
+   151. FILE ACCEPT MATCHER
+========================================================= */
+
+function doesFileMatchAccept(
+  file,
+  acceptList
+) {
+  if (
+    !file ||
+    !Array.isArray(
+      acceptList
+    )
+  ) {
+    return false;
+  }
+
+  if (
+    acceptList.length === 0
+  ) {
+    return true;
+  }
+
+  const fileType =
+    String(
+      file.type ||
+      ""
+    ).toLowerCase();
+
+  const extension =
+    `.${getFileExtension(
+      file.name
+    ).toLowerCase()}`;
+
+  return acceptList.some(
+    (accept) => {
+      if (
+        accept.startsWith(
+          "."
+        )
+      ) {
+        return (
+          extension ===
+          accept
+        );
+      }
+
+      if (
+        accept.endsWith(
+          "/*"
+        )
+      ) {
+        const prefix =
+          accept.slice(
+            0,
+            -1
+          );
+
+        return fileType
+          .startsWith(
+            prefix
+          );
+      }
+
+      return (
+        fileType ===
+        accept
+      );
+    }
+  );
+}
+
+
+/* =========================================================
+   152. BACKEND TOOL STATE
+========================================================= */
+
+function renderBackendRequiredTool(
+  toolId
+) {
+  const tool =
+    tools[toolId];
+
+  if (!tool) {
+    renderUnavailableTool(
+      toolId
+    );
+
+    return;
+  }
+
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-panel">
+
+        <div
+          class="workspace-placeholder-icon"
+        >
+          <i class="${escapeHTML(
+            tool.icon
+          )}"></i>
+        </div>
+
+        <h2>
+          ${escapeHTML(
+            tool.name
+          )}
+        </h2>
+
+        <p>
+          This tool requires the
+          SENN processing backend.
+        </p>
+
+        <div
+          class="tool-notice"
+          style="margin-top: 18px;"
+        >
+
+          <i class="fa-solid fa-server"></i>
+
+          <span>
+            The interface is ready,
+            but real processing is
+            intentionally disabled
+            until the backend engine
+            is connected.
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   153. BACKEND ROUTER
+========================================================= */
+
+function shouldUseBackendPlaceholder(
+  toolId
+) {
+  const tool =
+    tools[toolId];
+
+  return Boolean(
+    tool &&
+    tool.backendRequired
+  );
+}
+
+
+/* =========================================================
+   154. PART 4B-3 RENDERERS
+========================================================= */
+
+const part4B3Renderers = {
+  "qr-generator":
+    renderStandardsQRGenerator
+};
+
+
+/* =========================================================
+   155. FINAL PART 4 ROUTER
+========================================================= */
+
+const previousPart4B2RenderToolWorkspace =
+  renderToolWorkspace;
+
+renderToolWorkspace =
+  function (
+    toolId
+  ) {
+    const renderer =
+      part4B3Renderers[
+        toolId
+      ];
+
+    if (renderer) {
+      renderer();
+
+      return;
+    }
+
+    if (
+      shouldUseBackendPlaceholder(
+        toolId
+      )
+    ) {
+      renderBackendRequiredTool(
+        toolId
+      );
+
+      return;
+    }
+
+    previousPart4B2RenderToolWorkspace(
+      toolId
+    );
+
+    window.requestAnimationFrame(
+      () => {
+        syncSmartDropFileToWorkspace();
+      }
+    );
+  };
+
+
+/* =========================================================
+   156. PROCESSING STATE RESET
+========================================================= */
+
+function resetProcessingState() {
+  state.processingCancelled =
+    false;
+
+  hideProcessingOverlay();
+}
+
+
+window.addEventListener(
+  "pageshow",
+  () => {
+    resetProcessingState();
+  }
+);
+
+
+/* =========================================================
+   157. PART 4 FINAL CHECK
+========================================================= */
+
+function getPart4Status() {
+  return {
+    qr:
+      typeof renderStandardsQRGenerator ===
+      "function",
+
+    imageToPDF:
+      typeof renderImageToPDF ===
+      "function",
+
+    mergePDF:
+      typeof renderMergePDF ===
+      "function",
+
+    splitPDF:
+      typeof renderSplitPDF ===
+      "function",
+
+    pdfToImage:
+      typeof renderPDFToImage ===
+      "function",
+
+    compressPDF:
+      typeof renderPDFCompressor ===
+      "function",
+
+    jsonCSV:
+      typeof renderJSONCSV ===
+      "function",
+
+    processing:
+      typeof runToolTask ===
+      "function"
+  };
+}
+
+
+/* =========================================================
+   158. PART 4B-3 READY
+========================================================= */
+
+console.log(
+  "[SENN TOOLS] Part 4B-3 ready.",
+  getPart4Status()
+);
+
+
+/* =========================================================
+   PART 4B-3 END
+
+   ADDED:
+   ✓ Standards-compliant QR engine
+   ✓ QR PNG export
+   ✓ QR colors
+   ✓ QR error correction levels
+   ✓ QR quiet zone
+   ✓ Processing overlay controller
+   ✓ Processing progress API
+   ✓ Processing cancellation state
+   ✓ Friendly processing errors
+   ✓ Reusable async task wrapper
+   ✓ Smart Drop compatibility matcher
+   ✓ Backend-required tool state
+   ✓ Final Part 4 router
+   ✓ Processing state cleanup
+
+   PART 4 STATUS:
+   4A   ✓
+   4B-1 ✓
+   4B-2 ✓
+   4B-3 ✓
+
+   PART 4 COMPLETE
+
+   NEXT:
+   PART 5
+   - Video Compressor
+   - Video Trimmer
+   - Video → Audio
+   - Video Upscaler handling
+   - Media Converter
+   - Audio Converter
+   - Remaining media tools
+========================================================= */
