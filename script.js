@@ -13152,3 +13152,1933 @@ console.log(
    - PDF Compressor honest handling
    - QR standards fix
 ========================================================= */
+
+/* =========================================================
+   SENN TOOLS V1
+   PART 4B-2
+   PDF → IMAGE ENGINE
+========================================================= */
+
+
+/* =========================================================
+   127. PDF.JS MODULE LOADER
+========================================================= */
+
+let sennPDFJSModule =
+  null;
+
+let sennPDFJSLoadingPromise =
+  null;
+
+
+async function ensurePDFJS() {
+  if (sennPDFJSModule) {
+    return sennPDFJSModule;
+  }
+
+  if (sennPDFJSLoadingPromise) {
+    return sennPDFJSLoadingPromise;
+  }
+
+  sennPDFJSLoadingPromise =
+    (async () => {
+      try {
+        const pdfjsLib =
+          await import(
+            "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.296/build/pdf.min.mjs"
+          );
+
+        pdfjsLib
+          .GlobalWorkerOptions
+          .workerSrc =
+          "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.296/build/pdf.worker.min.mjs";
+
+        sennPDFJSModule =
+          pdfjsLib;
+
+        return pdfjsLib;
+      } catch (error) {
+        sennPDFJSLoadingPromise =
+          null;
+
+        throw new Error(
+          "PDF rendering engine could not be loaded."
+        );
+      }
+    })();
+
+  return sennPDFJSLoadingPromise;
+}
+
+
+/* =========================================================
+   128. LOAD PDF.JS DOCUMENT
+========================================================= */
+
+async function loadPDFJSFile(
+  file
+) {
+  if (
+    !isPDFFile(file)
+  ) {
+    throw new Error(
+      "The selected file is not a PDF."
+    );
+  }
+
+  const pdfjsLib =
+    await ensurePDFJS();
+
+  const bytes =
+    new Uint8Array(
+      await file.arrayBuffer()
+    );
+
+  const loadingTask =
+    pdfjsLib.getDocument({
+      data: bytes
+    });
+
+  return loadingTask.promise;
+}
+
+
+/* =========================================================
+   129. PDF → IMAGE UI
+========================================================= */
+
+function renderPDFToImage() {
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-upload-panel">
+
+        <div
+          class="workspace-placeholder-icon"
+        >
+          <i class="fa-solid fa-file-image"></i>
+        </div>
+
+        <h2>
+          PDF to Image
+        </h2>
+
+        <p>
+          Render PDF pages into
+          high-quality PNG or JPEG images.
+        </p>
+
+        <input
+          class="pdf-image-input"
+          type="file"
+          accept="application/pdf,.pdf"
+          hidden
+        >
+
+        <button
+          class="tool-button primary pdf-image-select"
+          type="button"
+        >
+          <i class="fa-solid fa-file-arrow-up"></i>
+          Choose PDF
+        </button>
+
+      </div>
+
+      <div
+        class="tool-panel pdf-image-panel"
+        hidden
+      >
+
+        <div
+          class="pdf-image-file-info"
+        ></div>
+
+        <div
+          class="tool-controls"
+        >
+
+          <div
+            class="tool-control"
+          >
+
+            <label>
+              Output Format
+            </label>
+
+            <select
+              class="tool-select pdf-image-format"
+            >
+              <option
+                value="png"
+                selected
+              >
+                PNG
+              </option>
+
+              <option value="jpeg">
+                JPEG
+              </option>
+            </select>
+
+          </div>
+
+          <div
+            class="tool-control"
+          >
+
+            <label>
+              Resolution
+            </label>
+
+            <select
+              class="tool-select pdf-image-scale"
+            >
+              <option value="1">
+                Standard
+              </option>
+
+              <option
+                value="1.5"
+                selected
+              >
+                High
+              </option>
+
+              <option value="2">
+                Very High
+              </option>
+
+              <option value="3">
+                Ultra
+              </option>
+            </select>
+
+          </div>
+
+          <div
+            class="tool-control"
+          >
+
+            <label>
+              Pages
+            </label>
+
+            <select
+              class="tool-select pdf-image-page-mode"
+            >
+              <option
+                value="all"
+                selected
+              >
+                All Pages
+              </option>
+
+              <option value="custom">
+                Custom Pages
+              </option>
+            </select>
+
+          </div>
+
+          <div
+            class="tool-control pdf-image-custom-control"
+            hidden
+          >
+
+            <label>
+              Page Selection
+            </label>
+
+            <input
+              class="tool-input pdf-image-pages"
+              type="text"
+              placeholder="1-3, 5, 8"
+            >
+
+          </div>
+
+          <div
+            class="tool-control pdf-image-quality-control"
+            hidden
+          >
+
+            <label>
+              JPEG Quality
+            </label>
+
+            <select
+              class="tool-select pdf-image-quality"
+            >
+              <option value="0.7">
+                Smaller File
+              </option>
+
+              <option
+                value="0.85"
+                selected
+              >
+                Balanced
+              </option>
+
+              <option value="0.95">
+                High Quality
+              </option>
+            </select>
+
+          </div>
+
+        </div>
+
+        <div
+          class="tool-actions"
+        >
+
+          <button
+            class="tool-button primary pdf-image-convert"
+            type="button"
+          >
+            <i class="fa-solid fa-images"></i>
+            Convert Pages
+          </button>
+
+          <button
+            class="tool-button pdf-image-clear"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+      </div>
+
+      <div
+        class="pdf-image-progress"
+      ></div>
+
+      <div
+        class="pdf-image-results"
+      ></div>
+
+    </div>
+  `;
+
+  const input =
+    workspaceContent.querySelector(
+      ".pdf-image-input"
+    );
+
+  const selectButton =
+    workspaceContent.querySelector(
+      ".pdf-image-select"
+    );
+
+  const panel =
+    workspaceContent.querySelector(
+      ".pdf-image-panel"
+    );
+
+  const fileInfo =
+    workspaceContent.querySelector(
+      ".pdf-image-file-info"
+    );
+
+  const formatSelect =
+    workspaceContent.querySelector(
+      ".pdf-image-format"
+    );
+
+  const scaleSelect =
+    workspaceContent.querySelector(
+      ".pdf-image-scale"
+    );
+
+  const pageMode =
+    workspaceContent.querySelector(
+      ".pdf-image-page-mode"
+    );
+
+  const customControl =
+    workspaceContent.querySelector(
+      ".pdf-image-custom-control"
+    );
+
+  const pageInput =
+    workspaceContent.querySelector(
+      ".pdf-image-pages"
+    );
+
+  const qualityControl =
+    workspaceContent.querySelector(
+      ".pdf-image-quality-control"
+    );
+
+  const qualitySelect =
+    workspaceContent.querySelector(
+      ".pdf-image-quality"
+    );
+
+  const convertButton =
+    workspaceContent.querySelector(
+      ".pdf-image-convert"
+    );
+
+  const clearButton =
+    workspaceContent.querySelector(
+      ".pdf-image-clear"
+    );
+
+  const progress =
+    workspaceContent.querySelector(
+      ".pdf-image-progress"
+    );
+
+  const results =
+    workspaceContent.querySelector(
+      ".pdf-image-results"
+    );
+
+  let selectedPDF =
+    null;
+
+  let loadedDocument =
+    null;
+
+  let pageCount =
+    0;
+
+  let generatedImages =
+    [];
+
+
+  async function loadFile(
+    file
+  ) {
+    if (
+      !isPDFFile(file)
+    ) {
+      showToast(
+        "Invalid file",
+        "Choose a valid PDF file.",
+        "warning"
+      );
+
+      return;
+    }
+
+    selectedPDF =
+      file;
+
+    fileInfo.innerHTML = `
+      ${createPDFFileCardHTML(
+        file,
+        0,
+        {
+          removable: false
+        }
+      )}
+
+      <div class="tool-notice">
+
+        <i class="fa-solid fa-spinner fa-spin"></i>
+
+        <span>
+          Reading PDF...
+        </span>
+
+      </div>
+    `;
+
+    panel.hidden =
+      false;
+
+    convertButton.disabled =
+      true;
+
+    results.innerHTML =
+      "";
+
+    progress.innerHTML =
+      "";
+
+    try {
+      loadedDocument =
+        await loadPDFJSFile(
+          file
+        );
+
+      pageCount =
+        loadedDocument.numPages;
+
+      fileInfo.innerHTML = `
+        ${createPDFFileCardHTML(
+          file,
+          0,
+          {
+            removable: false
+          }
+        )}
+
+        <div class="tool-notice success">
+
+          <i class="fa-solid fa-circle-check"></i>
+
+          <span>
+            ${pageCount} page${
+              pageCount === 1
+                ? ""
+                : "s"
+            } ready to convert.
+          </span>
+
+        </div>
+      `;
+
+      pageInput.placeholder =
+        pageCount > 1
+          ? `1-${Math.min(
+              pageCount,
+              3
+            )}, ${pageCount}`
+          : "1";
+
+      convertButton.disabled =
+        false;
+
+      await renderPDFPagePreview(
+        loadedDocument,
+        results
+      );
+    } catch (error) {
+      console.error(
+        "[SENN TOOLS] PDF → Image:",
+        error
+      );
+
+      selectedPDF =
+        null;
+
+      loadedDocument =
+        null;
+
+      pageCount =
+        0;
+
+      panel.hidden =
+        true;
+
+      showToast(
+        "PDF could not be opened",
+        error.message ||
+          "This PDF could not be processed.",
+        "error"
+      );
+    }
+  }
+
+
+  selectButton.addEventListener(
+    "click",
+    () => {
+      input.click();
+    }
+  );
+
+
+  input.addEventListener(
+    "change",
+    async () => {
+      const file =
+        input.files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      await loadFile(
+        file
+      );
+    }
+  );
+
+
+  formatSelect.addEventListener(
+    "change",
+    () => {
+      qualityControl.hidden =
+        formatSelect.value !==
+        "jpeg";
+    }
+  );
+
+
+  pageMode.addEventListener(
+    "change",
+    () => {
+      customControl.hidden =
+        pageMode.value !==
+        "custom";
+    }
+  );
+
+
+  clearButton.addEventListener(
+    "click",
+    async () => {
+      if (
+        loadedDocument
+      ) {
+        try {
+          await loadedDocument
+            .destroy();
+        } catch {
+          // Ignore cleanup errors.
+        }
+      }
+
+      generatedImages.forEach(
+        (item) => {
+          if (
+            item.url
+          ) {
+            URL.revokeObjectURL(
+              item.url
+            );
+          }
+        }
+      );
+
+      generatedImages =
+        [];
+
+      selectedPDF =
+        null;
+
+      loadedDocument =
+        null;
+
+      pageCount =
+        0;
+
+      input.value =
+        "";
+
+      pageInput.value =
+        "";
+
+      panel.hidden =
+        true;
+
+      fileInfo.innerHTML =
+        "";
+
+      progress.innerHTML =
+        "";
+
+      results.innerHTML =
+        "";
+    }
+  );
+
+
+  convertButton.addEventListener(
+    "click",
+    async () => {
+      if (
+        !selectedPDF ||
+        !loadedDocument
+      ) {
+        return;
+      }
+
+      let pages = [];
+
+      try {
+        if (
+          pageMode.value ===
+          "all"
+        ) {
+          pages =
+            Array.from(
+              {
+                length:
+                  pageCount
+              },
+              (
+                _,
+                index
+              ) =>
+                index + 1
+            );
+        } else {
+          pages =
+            parsePDFPageSelection(
+              pageInput.value,
+              pageCount
+            );
+        }
+      } catch (error) {
+        showToast(
+          "Invalid pages",
+          error.message,
+          "warning"
+        );
+
+        return;
+      }
+
+      const format =
+        formatSelect.value;
+
+      const scale =
+        Number(
+          scaleSelect.value
+        ) || 1.5;
+
+      const quality =
+        Number(
+          qualitySelect.value
+        ) || 0.85;
+
+      convertButton.disabled =
+        true;
+
+      const originalHTML =
+        convertButton.innerHTML;
+
+      convertButton.innerHTML = `
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Converting...
+      `;
+
+      generatedImages.forEach(
+        (item) => {
+          if (
+            item.url
+          ) {
+            URL.revokeObjectURL(
+              item.url
+            );
+          }
+        }
+      );
+
+      generatedImages =
+        [];
+
+      results.innerHTML =
+        "";
+
+      try {
+        for (
+          let index = 0;
+          index < pages.length;
+          index += 1
+        ) {
+          const pageNumber =
+            pages[index];
+
+          const percentage =
+            Math.round(
+              (
+                index /
+                pages.length
+              ) *
+                100
+            );
+
+          renderPDFConversionProgress(
+            progress,
+            percentage,
+            `Rendering page ${pageNumber} of ${pageCount}`
+          );
+
+          const image =
+            await renderPDFPageToImage(
+              loadedDocument,
+              pageNumber,
+              {
+                scale,
+                format,
+                quality
+              }
+            );
+
+          generatedImages.push(
+            image
+          );
+
+          renderPDFImageResults(
+            generatedImages,
+            results
+          );
+        }
+
+        renderPDFConversionProgress(
+          progress,
+          100,
+          "Conversion complete"
+        );
+
+        addHistory(
+          "pdf-to-image",
+          {
+            fileName:
+              selectedPDF.name
+          }
+        );
+
+        showToast(
+          "Conversion complete",
+          `${generatedImages.length} page${
+            generatedImages.length === 1
+              ? ""
+              : "s"
+          } converted.`,
+          "success"
+        );
+      } catch (error) {
+        console.error(
+          "[SENN TOOLS] PDF rendering:",
+          error
+        );
+
+        showToast(
+          "Conversion failed",
+          error.message ||
+            "Unable to render this PDF.",
+          "error"
+        );
+      } finally {
+        convertButton.disabled =
+          false;
+
+        convertButton.innerHTML =
+          originalHTML;
+      }
+    }
+  );
+
+
+  results.addEventListener(
+    "click",
+    (event) => {
+      const button =
+        event.target.closest(
+          "[data-pdf-image-download]"
+        );
+
+      if (!button) {
+        return;
+      }
+
+      const index =
+        Number(
+          button.dataset
+            .pdfImageDownload
+        );
+
+      const item =
+        generatedImages[
+          index
+        ];
+
+      if (!item) {
+        return;
+      }
+
+      downloadBlob(
+        item.blob,
+        item.fileName
+      );
+    }
+  );
+
+
+  const smartFile =
+    getCurrentSelectedFile();
+
+  if (
+    smartFile &&
+    isPDFFile(
+      smartFile
+    )
+  ) {
+    loadFile(
+      smartFile
+    );
+  }
+}
+
+
+/* =========================================================
+   130. RENDER PDF PAGE → IMAGE
+========================================================= */
+
+async function renderPDFPageToImage(
+  pdfDocument,
+  pageNumber,
+  options = {}
+) {
+  const page =
+    await pdfDocument.getPage(
+      pageNumber
+    );
+
+  const scale =
+    Math.min(
+      Math.max(
+        Number(
+          options.scale
+        ) || 1.5,
+        0.5
+      ),
+      4
+    );
+
+  const viewport =
+    page.getViewport({
+      scale
+    });
+
+  const canvas =
+    document.createElement(
+      "canvas"
+    );
+
+  const context =
+    canvas.getContext(
+      "2d",
+      {
+        alpha: false
+      }
+    );
+
+  if (!context) {
+    throw new Error(
+      "Canvas is not supported by this browser."
+    );
+  }
+
+  canvas.width =
+    Math.max(
+      1,
+      Math.floor(
+        viewport.width
+      )
+    );
+
+  canvas.height =
+    Math.max(
+      1,
+      Math.floor(
+        viewport.height
+      )
+    );
+
+  context.fillStyle =
+    "#ffffff";
+
+  context.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  const renderTask =
+    page.render({
+      canvas,
+      canvasContext:
+        context,
+      viewport,
+      background:
+        "rgb(255,255,255)"
+    });
+
+  await renderTask.promise;
+
+  const format =
+    options.format ===
+    "jpeg"
+      ? "jpeg"
+      : "png";
+
+  const mimeType =
+    format === "jpeg"
+      ? "image/jpeg"
+      : "image/png";
+
+  const quality =
+    format === "jpeg"
+      ? (
+          Number(
+            options.quality
+          ) || 0.85
+        )
+      : 1;
+
+  const blob =
+    await canvasToBlob(
+      canvas,
+      mimeType,
+      quality
+    );
+
+  if (!blob) {
+    throw new Error(
+      `Page ${pageNumber} could not be converted.`
+    );
+  }
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+  if (
+    typeof page.cleanup ===
+    "function"
+  ) {
+    page.cleanup();
+  }
+
+  return {
+    pageNumber,
+    blob,
+    url,
+
+    width:
+      canvas.width,
+
+    height:
+      canvas.height,
+
+    format,
+
+    fileName:
+      `page-${String(
+        pageNumber
+      ).padStart(
+        3,
+        "0"
+      )}.${format === "jpeg"
+        ? "jpg"
+        : "png"
+      }`
+  };
+}
+
+
+/* =========================================================
+   131. PDF FIRST PAGE PREVIEW
+========================================================= */
+
+async function renderPDFPagePreview(
+  pdfDocument,
+  container
+) {
+  if (
+    !pdfDocument ||
+    pdfDocument.numPages <
+      1
+  ) {
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="tool-panel">
+
+      <h3>
+        PDF PREVIEW
+      </h3>
+
+      <div
+        class="pdf-preview-loading"
+        style="
+          display: grid;
+          place-items: center;
+          min-height: 180px;
+        "
+      >
+        <div>
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          Rendering first page...
+        </div>
+      </div>
+
+    </div>
+  `;
+
+  try {
+    const page =
+      await pdfDocument.getPage(
+        1
+      );
+
+    const baseViewport =
+      page.getViewport({
+        scale: 1
+      });
+
+    const maximumWidth =
+      700;
+
+    const scale =
+      Math.min(
+        1.2,
+        maximumWidth /
+          baseViewport.width
+      );
+
+    const viewport =
+      page.getViewport({
+        scale
+      });
+
+    const canvas =
+      document.createElement(
+        "canvas"
+      );
+
+    const context =
+      canvas.getContext(
+        "2d",
+        {
+          alpha: false
+        }
+      );
+
+    canvas.width =
+      Math.max(
+        1,
+        Math.floor(
+          viewport.width
+        )
+      );
+
+    canvas.height =
+      Math.max(
+        1,
+        Math.floor(
+          viewport.height
+        )
+      );
+
+    canvas.style.maxWidth =
+      "100%";
+
+    canvas.style.height =
+      "auto";
+
+    canvas.style.display =
+      "block";
+
+    canvas.style.margin =
+      "0 auto";
+
+    canvas.style.borderRadius =
+      "12px";
+
+    context.fillStyle =
+      "#ffffff";
+
+    context.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    const renderTask =
+      page.render({
+        canvas,
+        canvasContext:
+          context,
+        viewport,
+        background:
+          "rgb(255,255,255)"
+      });
+
+    await renderTask.promise;
+
+    const panel =
+      container.querySelector(
+        ".tool-panel"
+      );
+
+    if (!panel) {
+      return;
+    }
+
+    const loading =
+      panel.querySelector(
+        ".pdf-preview-loading"
+      );
+
+    if (loading) {
+      loading.remove();
+    }
+
+    const wrapper =
+      document.createElement(
+        "div"
+      );
+
+    wrapper.style.padding =
+      "18px";
+
+    wrapper.style.background =
+      "rgba(255,255,255,.03)";
+
+    wrapper.style.borderRadius =
+      "16px";
+
+    wrapper.appendChild(
+      canvas
+    );
+
+    panel.appendChild(
+      wrapper
+    );
+
+    if (
+      typeof page.cleanup ===
+      "function"
+    ) {
+      page.cleanup();
+    }
+  } catch (error) {
+    console.warn(
+      "[SENN TOOLS] Preview:",
+      error
+    );
+
+    container.innerHTML = `
+      <div class="tool-panel">
+
+        <div class="tool-notice">
+
+          <i class="fa-solid fa-triangle-exclamation"></i>
+
+          <span>
+            Preview unavailable.
+            Conversion may still work.
+          </span>
+
+        </div>
+
+      </div>
+    `;
+  }
+}
+
+
+/* =========================================================
+   132. PDF CONVERSION PROGRESS
+========================================================= */
+
+function renderPDFConversionProgress(
+  container,
+  percentage,
+  message
+) {
+  const safePercentage =
+    Math.min(
+      Math.max(
+        Number(
+          percentage
+        ) || 0,
+        0
+      ),
+      100
+    );
+
+  container.innerHTML = `
+    <div
+      class="tool-panel"
+      style="margin-top: 18px;"
+    >
+
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 12px;
+        "
+      >
+
+        <strong>
+          ${escapeHTML(
+            message
+          )}
+        </strong>
+
+        <span>
+          ${safePercentage}%
+        </span>
+
+      </div>
+
+      <div
+        style="
+          width: 100%;
+          height: 8px;
+          overflow: hidden;
+          border-radius: 999px;
+          background: rgba(255,255,255,.08);
+        "
+      >
+
+        <div
+          style="
+            width: ${safePercentage}%;
+            height: 100%;
+            border-radius: inherit;
+            background: currentColor;
+            transition: width .25s ease;
+          "
+        ></div>
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   133. PDF IMAGE RESULTS
+========================================================= */
+
+function renderPDFImageResults(
+  images,
+  container
+) {
+  if (
+    !images.length
+  ) {
+    container.innerHTML =
+      "";
+
+    return;
+  }
+
+  container.innerHTML = `
+    <div
+      class="tool-panel"
+      style="margin-top: 18px;"
+    >
+
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 14px;
+          margin-bottom: 18px;
+        "
+      >
+
+        <div>
+
+          <h3>
+            CONVERTED PAGES
+          </h3>
+
+          <p>
+            ${images.length}
+            image${
+              images.length === 1
+                ? ""
+                : "s"
+            } generated
+          </p>
+
+        </div>
+
+      </div>
+
+      <div
+        style="
+          display: grid;
+          grid-template-columns:
+            repeat(
+              auto-fit,
+              minmax(190px, 1fr)
+            );
+          gap: 14px;
+        "
+      >
+
+        ${images
+          .map(
+            (
+              item,
+              index
+            ) => `
+              <div
+                style="
+                  min-width: 0;
+                  padding: 12px;
+                  border: 1px solid rgba(255,255,255,.08);
+                  border-radius: 16px;
+                  background: rgba(255,255,255,.025);
+                "
+              >
+
+                <div
+                  style="
+                    overflow: hidden;
+                    border-radius: 12px;
+                    background: #ffffff;
+                    margin-bottom: 12px;
+                  "
+                >
+
+                  <img
+                    src="${item.url}"
+                    alt="PDF page ${item.pageNumber}"
+                    style="
+                      display: block;
+                      width: 100%;
+                      height: auto;
+                    "
+                  >
+
+                </div>
+
+                <strong>
+                  Page ${item.pageNumber}
+                </strong>
+
+                <small
+                  style="
+                    display: block;
+                    margin-top: 4px;
+                    margin-bottom: 10px;
+                  "
+                >
+                  ${item.width}
+                  ×
+                  ${item.height}
+                  •
+                  ${item.format.toUpperCase()}
+                </small>
+
+                <button
+                  class="tool-button"
+                  type="button"
+                  data-pdf-image-download="${index}"
+                  style="width: 100%;"
+                >
+                  <i class="fa-solid fa-download"></i>
+                  Download
+                </button>
+
+              </div>
+            `
+          )
+          .join("")}
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   134. PDF COMPRESSOR
+========================================================= */
+
+function renderPDFCompressor() {
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-upload-panel">
+
+        <div
+          class="workspace-placeholder-icon"
+        >
+          <i class="fa-solid fa-compress"></i>
+        </div>
+
+        <h2>
+          PDF Compressor
+        </h2>
+
+        <p>
+          Optimize compatible PDF files
+          directly in your browser.
+        </p>
+
+        <input
+          class="pdf-compress-input"
+          type="file"
+          accept="application/pdf,.pdf"
+          hidden
+        >
+
+        <button
+          class="tool-button primary pdf-compress-select"
+          type="button"
+        >
+          <i class="fa-solid fa-file-arrow-up"></i>
+          Choose PDF
+        </button>
+
+      </div>
+
+      <div
+        class="tool-panel pdf-compress-panel"
+        hidden
+      >
+
+        <div
+          class="pdf-compress-file"
+        ></div>
+
+        <div class="tool-notice">
+
+          <i class="fa-solid fa-circle-info"></i>
+
+          <span>
+            Browser-only PDF compression
+            has limited results.
+            SENN Tools will optimize the
+            document structure without
+            pretending it can magically
+            shrink every PDF.
+          </span>
+
+        </div>
+
+        <div
+          class="tool-actions"
+          style="margin-top: 18px;"
+        >
+
+          <button
+            class="tool-button primary pdf-compress-run"
+            type="button"
+          >
+            <i class="fa-solid fa-compress"></i>
+            Optimize PDF
+          </button>
+
+          <button
+            class="tool-button pdf-compress-clear"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+        <div
+          class="pdf-compress-result"
+        ></div>
+
+      </div>
+
+    </div>
+  `;
+
+  const input =
+    workspaceContent.querySelector(
+      ".pdf-compress-input"
+    );
+
+  const selectButton =
+    workspaceContent.querySelector(
+      ".pdf-compress-select"
+    );
+
+  const panel =
+    workspaceContent.querySelector(
+      ".pdf-compress-panel"
+    );
+
+  const fileContainer =
+    workspaceContent.querySelector(
+      ".pdf-compress-file"
+    );
+
+  const runButton =
+    workspaceContent.querySelector(
+      ".pdf-compress-run"
+    );
+
+  const clearButton =
+    workspaceContent.querySelector(
+      ".pdf-compress-clear"
+    );
+
+  const result =
+    workspaceContent.querySelector(
+      ".pdf-compress-result"
+    );
+
+  let selectedPDF =
+    null;
+
+
+  function loadFile(
+    file
+  ) {
+    if (
+      !isPDFFile(file)
+    ) {
+      showToast(
+        "Invalid file",
+        "Choose a PDF file.",
+        "warning"
+      );
+
+      return;
+    }
+
+    selectedPDF =
+      file;
+
+    panel.hidden =
+      false;
+
+    result.innerHTML =
+      "";
+
+    fileContainer.innerHTML =
+      createPDFFileCardHTML(
+        file,
+        0,
+        {
+          removable: false
+        }
+      );
+  }
+
+
+  selectButton.addEventListener(
+    "click",
+    () => {
+      input.click();
+    }
+  );
+
+
+  input.addEventListener(
+    "change",
+    () => {
+      const file =
+        input.files?.[0];
+
+      if (file) {
+        loadFile(
+          file
+        );
+      }
+    }
+  );
+
+
+  clearButton.addEventListener(
+    "click",
+    () => {
+      selectedPDF =
+        null;
+
+      input.value =
+        "";
+
+      panel.hidden =
+        true;
+
+      result.innerHTML =
+        "";
+
+      fileContainer.innerHTML =
+        "";
+    }
+  );
+
+
+  runButton.addEventListener(
+    "click",
+    async () => {
+      if (!selectedPDF) {
+        return;
+      }
+
+      const originalHTML =
+        runButton.innerHTML;
+
+      runButton.disabled =
+        true;
+
+      runButton.innerHTML = `
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Optimizing...
+      `;
+
+      try {
+        const optimized =
+          await optimizePDFFile(
+            selectedPDF
+          );
+
+        const difference =
+          selectedPDF.size -
+          optimized.size;
+
+        const percentage =
+          selectedPDF.size > 0
+            ? (
+                difference /
+                selectedPDF.size
+              ) * 100
+            : 0;
+
+        const baseName =
+          getBaseFileName(
+            selectedPDF.name
+          );
+
+        result.innerHTML = `
+          <div
+            class="tool-notice ${
+              difference > 0
+                ? "success"
+                : ""
+            }"
+            style="margin-top: 18px;"
+          >
+
+            <i class="fa-solid fa-chart-simple"></i>
+
+            <span>
+              Original:
+              ${escapeHTML(
+                formatBytes(
+                  selectedPDF.size
+                )
+              )}
+              •
+              Output:
+              ${escapeHTML(
+                formatBytes(
+                  optimized.size
+                )
+              )}
+              ${
+                difference > 0
+                  ? `• ${percentage.toFixed(
+                      1
+                    )}% smaller`
+                  : "• No meaningful size reduction"
+              }
+            </span>
+
+          </div>
+        `;
+
+        downloadBlob(
+          optimized,
+          `${baseName}-optimized.pdf`
+        );
+
+        addHistory(
+          "compress-pdf",
+          {
+            fileName:
+              selectedPDF.name
+          }
+        );
+
+        showToast(
+          "PDF processed",
+          difference > 0
+            ? `${percentage.toFixed(
+                1
+              )}% smaller.`
+            : "Document optimized, but file size did not decrease significantly.",
+          difference > 0
+            ? "success"
+            : "info"
+        );
+      } catch (error) {
+        console.error(
+          "[SENN TOOLS] PDF Compressor:",
+          error
+        );
+
+        showToast(
+          "Optimization failed",
+          error.message ||
+            "Unable to optimize this PDF.",
+          "error"
+        );
+      } finally {
+        runButton.disabled =
+          false;
+
+        runButton.innerHTML =
+          originalHTML;
+      }
+    }
+  );
+
+
+  const smartFile =
+    getCurrentSelectedFile();
+
+  if (
+    smartFile &&
+    isPDFFile(
+      smartFile
+    )
+  ) {
+    loadFile(
+      smartFile
+    );
+  }
+}
+
+
+/* =========================================================
+   135. PDF OPTIMIZATION ENGINE
+========================================================= */
+
+async function optimizePDFFile(
+  file
+) {
+  const PDFLib =
+    await ensurePDFLib();
+
+  const {
+    PDFDocument
+  } = PDFLib;
+
+  const bytes =
+    await file.arrayBuffer();
+
+  const document =
+    await PDFDocument.load(
+      bytes,
+      {
+        ignoreEncryption:
+          false,
+
+        updateMetadata:
+          false
+      }
+    );
+
+  const output =
+    await document.save({
+      useObjectStreams:
+        true,
+
+      addDefaultPage:
+        false,
+
+      objectsPerTick:
+        50
+    });
+
+  return new Blob(
+    [
+      output
+    ],
+    {
+      type:
+        "application/pdf"
+    }
+  );
+}
+
+
+/* =========================================================
+   136. PART 4B-2 ROUTERS
+========================================================= */
+
+const part4B2Renderers = {
+  "pdf-to-image":
+    renderPDFToImage,
+
+  "compress-pdf":
+    renderPDFCompressor
+};
+
+
+/* =========================================================
+   137. EXTEND PART 4B ROUTER
+========================================================= */
+
+const previousPart4BRenderToolWorkspace =
+  renderToolWorkspace;
+
+renderToolWorkspace =
+  function (
+    toolId
+  ) {
+    const renderer =
+      part4B2Renderers[
+        toolId
+      ];
+
+    if (renderer) {
+      renderer();
+
+      return;
+    }
+
+    previousPart4BRenderToolWorkspace(
+      toolId
+    );
+  };
+
+
+/* =========================================================
+   138. PART 4B-2 READY
+========================================================= */
+
+console.log(
+  "[SENN TOOLS] Part 4B-2 PDF → Image engine ready."
+);
+
+
+/* =========================================================
+   PART 4B-2 END
+
+   ADDED:
+   ✓ PDF.js engine
+   ✓ PDF first-page preview
+   ✓ PDF → PNG
+   ✓ PDF → JPEG
+   ✓ Standard / High / Very High / Ultra resolution
+   ✓ All-page conversion
+   ✓ Custom page selection
+   ✓ Individual page download
+   ✓ Conversion progress
+   ✓ Smart Drop → PDF to Image
+   ✓ PDF structural optimizer
+   ✓ Honest PDF compression result
+   ✓ Smart Drop → PDF Compressor
+
+   PART 4 STATUS:
+   4A   ✓
+   4B-1 ✓
+   4B-2 ✓
+
+   NEXT PART 4B-3:
+   - Standards-compliant QR Generator
+   - Global Processing Overlay
+   - Cancel processing
+   - Better error handling
+   - Smart Drop → workspace sync polish
+   - Final Part 4 integration
+========================================================= */
