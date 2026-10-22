@@ -1939,3 +1939,1872 @@ initializeApp();
    - Recommended Tools
    - Real Tool Workspaces
 ========================================================= */
+
+/* =========================================================
+   25. GLOBAL SEARCH
+========================================================= */
+
+const searchModal =
+  document.getElementById("searchModal");
+
+const searchModalBackdrop =
+  document.querySelector(
+    ".search-modal-backdrop"
+  );
+
+const globalSearchInput =
+  document.getElementById(
+    "globalSearchInput"
+  );
+
+const globalSearchResults =
+  document.getElementById(
+    "globalSearchResults"
+  );
+
+const globalSearchButton =
+  document.querySelector(
+    "#globalSearchButton, [data-global-search]"
+  );
+
+const searchClose =
+  document.querySelector(
+    ".search-close"
+  );
+
+
+function openGlobalSearch() {
+  if (!searchModal) {
+    return;
+  }
+
+  searchModal.classList.add("active");
+
+  document.body.style.overflow =
+    "hidden";
+
+  window.setTimeout(() => {
+    globalSearchInput?.focus();
+  }, 50);
+
+  renderGlobalSearchResults("");
+}
+
+
+function closeGlobalSearch() {
+  if (!searchModal) {
+    return;
+  }
+
+  searchModal.classList.remove("active");
+
+  document.body.style.overflow = "";
+
+  if (globalSearchInput) {
+    globalSearchInput.value = "";
+  }
+}
+
+
+function searchTools(query) {
+  const normalized =
+    query
+      .trim()
+      .toLowerCase();
+
+  if (!normalized) {
+    return Object.values(tools);
+  }
+
+  return Object.values(tools)
+    .filter((tool) => {
+      const searchText = [
+        tool.name,
+        tool.category,
+        tool.description,
+        ...tool.keywords
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchText.includes(
+        normalized
+      );
+    });
+}
+
+
+function renderGlobalSearchResults(
+  query = ""
+) {
+  if (!globalSearchResults) {
+    return;
+  }
+
+  const results =
+    searchTools(query);
+
+  if (!query.trim()) {
+    const popularIds = [
+      "photo-enhancer",
+      "image-upscaler",
+      "image-compressor",
+      "video-upscaler",
+      "json-formatter",
+      "qr-generator"
+    ];
+
+    const popularTools =
+      popularIds
+        .map((id) => tools[id])
+        .filter(Boolean);
+
+    globalSearchResults.innerHTML = `
+      <div class="search-result-label">
+        Popular tools
+      </div>
+
+      ${popularTools
+        .map(createSearchResultHTML)
+        .join("")}
+    `;
+
+    return;
+  }
+
+  if (results.length === 0) {
+    globalSearchResults.innerHTML = `
+      <div class="search-hint">
+        <i
+          class="fa-solid fa-magnifying-glass"
+        ></i>
+
+        <span>
+          No tools found for
+          "${escapeHTML(query)}"
+        </span>
+      </div>
+    `;
+
+    return;
+  }
+
+  globalSearchResults.innerHTML = `
+    <div class="search-result-label">
+      ${results.length}
+      ${
+        results.length === 1
+          ? "result"
+          : "results"
+      }
+    </div>
+
+    ${results
+      .map(createSearchResultHTML)
+      .join("")}
+  `;
+}
+
+
+function createSearchResultHTML(tool) {
+  return `
+    <button
+      class="search-result-item"
+      type="button"
+      data-search-tool="${escapeHTML(
+        tool.id
+      )}"
+    >
+
+      <div
+        class="mini-tool-icon ${escapeHTML(
+          tool.category
+        )}-tool"
+      >
+        <i class="${escapeHTML(
+          tool.icon
+        )}"></i>
+      </div>
+
+      <div class="search-result-content">
+
+        <strong>
+          ${escapeHTML(tool.name)}
+        </strong>
+
+        <span>
+          ${escapeHTML(
+            tool.description
+          )}
+        </span>
+
+      </div>
+
+      <small>
+        ${escapeHTML(
+          capitalize(
+            tool.category
+          )
+        )}
+      </small>
+
+      <i
+        class="fa-solid fa-arrow-right"
+      ></i>
+
+    </button>
+  `;
+}
+
+
+if (globalSearchButton) {
+  globalSearchButton.addEventListener(
+    "click",
+    openGlobalSearch
+  );
+}
+
+
+if (searchClose) {
+  searchClose.addEventListener(
+    "click",
+    closeGlobalSearch
+  );
+}
+
+
+if (searchModalBackdrop) {
+  searchModalBackdrop.addEventListener(
+    "click",
+    closeGlobalSearch
+  );
+}
+
+
+if (globalSearchInput) {
+  globalSearchInput.addEventListener(
+    "input",
+    () => {
+      renderGlobalSearchResults(
+        globalSearchInput.value
+      );
+    }
+  );
+}
+
+
+document.addEventListener(
+  "click",
+  (event) => {
+    const result =
+      event.target.closest(
+        "[data-search-tool]"
+      );
+
+    if (!result) {
+      return;
+    }
+
+    const toolId =
+      result.dataset.searchTool;
+
+    closeGlobalSearch();
+
+    openTool(toolId);
+  }
+);
+
+
+/* =========================================================
+   26. GLOBAL KEYBOARD SHORTCUTS
+========================================================= */
+
+document.addEventListener(
+  "keydown",
+  (event) => {
+    const target =
+      event.target;
+
+    const typing =
+      target instanceof
+        HTMLInputElement ||
+      target instanceof
+        HTMLTextAreaElement ||
+      target?.isContentEditable;
+
+    if (
+      event.key === "/" &&
+      !typing
+    ) {
+      event.preventDefault();
+
+      openGlobalSearch();
+
+      return;
+    }
+
+    if (event.key === "Escape") {
+      if (
+        searchModal?.classList.contains(
+          "active"
+        )
+      ) {
+        closeGlobalSearch();
+
+        return;
+      }
+
+      closeSidebar();
+    }
+  }
+);
+
+
+/* =========================================================
+   27. SMART DROP REFERENCES
+========================================================= */
+
+const smartDrop =
+  document.querySelector(
+    ".smart-drop"
+  );
+
+const globalFileInput =
+  document.getElementById(
+    "globalFileInput"
+  );
+
+const browseButton =
+  document.getElementById(
+    "browseButton"
+  );
+
+const fileDetection =
+  document.getElementById(
+    "fileDetection"
+  );
+
+const filePreview =
+  document.getElementById(
+    "filePreview"
+  );
+
+const detectedFileType =
+  document.getElementById(
+    "detectedFileType"
+  );
+
+const detectedFileName =
+  document.getElementById(
+    "detectedFileName"
+  );
+
+const detectedFileSize =
+  document.getElementById(
+    "detectedFileSize"
+  );
+
+const detectedFileFormat =
+  document.getElementById(
+    "detectedFileFormat"
+  );
+
+const detectedFileDimensions =
+  document.getElementById(
+    "detectedFileDimensions"
+  );
+
+const changeFileButton =
+  document.getElementById(
+    "changeFileButton"
+  );
+
+const removeFileButton =
+  document.getElementById(
+    "removeFileButton"
+  );
+
+const recommendedGrid =
+  document.getElementById(
+    "recommendedGrid"
+  );
+
+
+/* =========================================================
+   28. FILE TYPE DETECTION
+========================================================= */
+
+function getFileExtension(fileName) {
+  if (!fileName) {
+    return "";
+  }
+
+  const parts =
+    fileName
+      .toLowerCase()
+      .split(".");
+
+  if (parts.length < 2) {
+    return "";
+  }
+
+  return parts.pop();
+}
+
+
+function detectFileType(file) {
+  if (!file) {
+    return {
+      type: "unknown",
+      label: "Unknown File",
+      extension: ""
+    };
+  }
+
+  const mime =
+    (
+      file.type ||
+      ""
+    ).toLowerCase();
+
+  const extension =
+    getFileExtension(
+      file.name
+    );
+
+  if (
+    mime.startsWith("image/")
+  ) {
+    return {
+      type: "image",
+      label: "Image detected",
+      extension
+    };
+  }
+
+  if (
+    mime.startsWith("video/")
+  ) {
+    return {
+      type: "video",
+      label: "Video detected",
+      extension
+    };
+  }
+
+  if (
+    mime.startsWith("audio/")
+  ) {
+    return {
+      type: "audio",
+      label: "Audio detected",
+      extension
+    };
+  }
+
+  if (
+    mime === "application/pdf" ||
+    extension === "pdf"
+  ) {
+    return {
+      type: "pdf",
+      label: "PDF detected",
+      extension: "pdf"
+    };
+  }
+
+  const documentExtensions = [
+    "doc",
+    "docx",
+    "odt",
+    "rtf"
+  ];
+
+  if (
+    documentExtensions.includes(
+      extension
+    )
+  ) {
+    return {
+      type: "document",
+      label: "Document detected",
+      extension
+    };
+  }
+
+  const spreadsheetExtensions = [
+    "csv",
+    "xls",
+    "xlsx",
+    "ods"
+  ];
+
+  if (
+    spreadsheetExtensions.includes(
+      extension
+    )
+  ) {
+    return {
+      type: "spreadsheet",
+      label: "Spreadsheet detected",
+      extension
+    };
+  }
+
+  const textExtensions = [
+    "txt",
+    "md",
+    "json",
+    "xml",
+    "html",
+    "css",
+    "js"
+  ];
+
+  if (
+    mime.startsWith("text/") ||
+    textExtensions.includes(
+      extension
+    )
+  ) {
+    return {
+      type: "text",
+      label: "Text file detected",
+      extension
+    };
+  }
+
+  return {
+    type: "unknown",
+    label: "File detected",
+    extension
+  };
+}
+
+
+/* =========================================================
+   29. FILE ICONS
+========================================================= */
+
+function getFileIcon(type) {
+  const icons = {
+    image:
+      "fa-regular fa-image",
+
+    video:
+      "fa-solid fa-film",
+
+    audio:
+      "fa-solid fa-music",
+
+    pdf:
+      "fa-solid fa-file-pdf",
+
+    document:
+      "fa-solid fa-file-word",
+
+    spreadsheet:
+      "fa-solid fa-table",
+
+    text:
+      "fa-solid fa-file-lines",
+
+    unknown:
+      "fa-solid fa-file"
+  };
+
+  return (
+    icons[type] ||
+    icons.unknown
+  );
+}
+
+
+/* =========================================================
+   30. SMART DROP FILE SELECTION
+========================================================= */
+
+if (browseButton) {
+  browseButton.addEventListener(
+    "click",
+    (event) => {
+      event.stopPropagation();
+
+      globalFileInput?.click();
+    }
+  );
+}
+
+
+if (changeFileButton) {
+  changeFileButton.addEventListener(
+    "click",
+    () => {
+      globalFileInput?.click();
+    }
+  );
+}
+
+
+if (globalFileInput) {
+  globalFileInput.addEventListener(
+    "change",
+    () => {
+      const file =
+        globalFileInput.files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      handleSelectedFile(file);
+    }
+  );
+}
+
+
+/* =========================================================
+   31. DRAG AND DROP
+========================================================= */
+
+if (smartDrop) {
+  [
+    "dragenter",
+    "dragover"
+  ].forEach((eventName) => {
+    smartDrop.addEventListener(
+      eventName,
+      (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        smartDrop.classList.add(
+          "drag-active"
+        );
+      }
+    );
+  });
+
+  [
+    "dragleave",
+    "drop"
+  ].forEach((eventName) => {
+    smartDrop.addEventListener(
+      eventName,
+      (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        smartDrop.classList.remove(
+          "drag-active"
+        );
+      }
+    );
+  });
+
+  smartDrop.addEventListener(
+    "drop",
+    (event) => {
+      const files =
+        event.dataTransfer?.files;
+
+      if (
+        !files ||
+        files.length === 0
+      ) {
+        return;
+      }
+
+      handleSelectedFile(
+        files[0]
+      );
+    }
+  );
+}
+
+
+/* =========================================================
+   32. SELECTED FILE
+========================================================= */
+
+async function handleSelectedFile(
+  file
+) {
+  if (!file) {
+    return;
+  }
+
+  clearSelectedFileURL();
+
+  state.selectedFile =
+    file;
+
+  const detection =
+    detectFileType(file);
+
+  if (fileDetection) {
+    fileDetection.classList.remove(
+      "hidden"
+    );
+  }
+
+  updateBasicFileInformation(
+    file,
+    detection
+  );
+
+  renderRecommendedTools(
+    detection.type
+  );
+
+  try {
+    if (
+      detection.type === "image"
+    ) {
+      await loadImageMetadata(file);
+    } else if (
+      detection.type === "video"
+    ) {
+      await loadVideoMetadata(file);
+    } else if (
+      detection.type === "audio"
+    ) {
+      await loadAudioMetadata(file);
+    } else {
+      renderGenericFilePreview(
+        detection.type
+      );
+    }
+  } catch (error) {
+    console.error(
+      "[SENN TOOLS] Metadata error:",
+      error
+    );
+
+    renderGenericFilePreview(
+      detection.type
+    );
+  }
+
+  showToast(
+    "File detected",
+    `${file.name} is ready.`,
+    "success"
+  );
+}
+
+
+/* =========================================================
+   33. BASIC FILE INFORMATION
+========================================================= */
+
+function updateBasicFileInformation(
+  file,
+  detection
+) {
+  if (detectedFileType) {
+    detectedFileType.textContent =
+      detection.label;
+  }
+
+  if (detectedFileName) {
+    detectedFileName.textContent =
+      file.name;
+  }
+
+  if (detectedFileSize) {
+    detectedFileSize.textContent =
+      formatBytes(file.size);
+  }
+
+  if (detectedFileFormat) {
+    detectedFileFormat.textContent =
+      (
+        detection.extension ||
+        file.type ||
+        "Unknown"
+      ).toUpperCase();
+  }
+
+  if (detectedFileDimensions) {
+    detectedFileDimensions.textContent =
+      "Reading metadata...";
+  }
+}
+
+
+/* =========================================================
+   34. OBJECT URL MANAGEMENT
+========================================================= */
+
+function createSelectedFileURL(file) {
+  clearSelectedFileURL();
+
+  const url =
+    URL.createObjectURL(file);
+
+  state.selectedFileURL =
+    url;
+
+  return url;
+}
+
+
+function clearSelectedFileURL() {
+  if (!state.selectedFileURL) {
+    return;
+  }
+
+  URL.revokeObjectURL(
+    state.selectedFileURL
+  );
+
+  state.selectedFileURL =
+    null;
+}
+
+
+/* =========================================================
+   35. IMAGE METADATA
+========================================================= */
+
+function loadImageMetadata(file) {
+  return new Promise(
+    (resolve, reject) => {
+      const image =
+        new Image();
+
+      const url =
+        createSelectedFileURL(
+          file
+        );
+
+      image.onload = () => {
+        if (
+          detectedFileDimensions
+        ) {
+          detectedFileDimensions
+            .textContent =
+            `${image.naturalWidth} × ${image.naturalHeight}`;
+        }
+
+        if (filePreview) {
+          filePreview.innerHTML = `
+            <img
+              src="${url}"
+              alt="Selected image preview"
+            >
+          `;
+        }
+
+        resolve({
+          width:
+            image.naturalWidth,
+
+          height:
+            image.naturalHeight
+        });
+      };
+
+      image.onerror = () => {
+        reject(
+          new Error(
+            "Unable to read image."
+          )
+        );
+      };
+
+      image.src = url;
+    }
+  );
+}
+
+
+/* =========================================================
+   36. VIDEO METADATA
+========================================================= */
+
+function loadVideoMetadata(file) {
+  return new Promise(
+    (resolve, reject) => {
+      const video =
+        document.createElement(
+          "video"
+        );
+
+      const url =
+        createSelectedFileURL(
+          file
+        );
+
+      video.preload = "metadata";
+      video.muted = true;
+
+      video.onloadedmetadata = () => {
+        const width =
+          video.videoWidth;
+
+        const height =
+          video.videoHeight;
+
+        const duration =
+          Number.isFinite(
+            video.duration
+          )
+            ? video.duration
+            : 0;
+
+        if (
+          detectedFileDimensions
+        ) {
+          detectedFileDimensions
+            .textContent =
+            `${width} × ${height} • ${formatDuration(
+              duration
+            )}`;
+        }
+
+        renderVideoPreview(
+          url
+        );
+
+        resolve({
+          width,
+          height,
+          duration
+        });
+      };
+
+      video.onerror = () => {
+        reject(
+          new Error(
+            "Unable to read video."
+          )
+        );
+      };
+
+      video.src = url;
+    }
+  );
+}
+
+
+/* =========================================================
+   37. AUDIO METADATA
+========================================================= */
+
+function loadAudioMetadata(file) {
+  return new Promise(
+    (resolve, reject) => {
+      const audio =
+        document.createElement(
+          "audio"
+        );
+
+      const url =
+        createSelectedFileURL(
+          file
+        );
+
+      audio.preload = "metadata";
+
+      audio.onloadedmetadata = () => {
+        const duration =
+          Number.isFinite(
+            audio.duration
+          )
+            ? audio.duration
+            : 0;
+
+        if (
+          detectedFileDimensions
+        ) {
+          detectedFileDimensions
+            .textContent =
+            `Audio • ${formatDuration(
+              duration
+            )}`;
+        }
+
+        renderGenericFilePreview(
+          "audio"
+        );
+
+        resolve({
+          duration
+        });
+      };
+
+      audio.onerror = () => {
+        reject(
+          new Error(
+            "Unable to read audio."
+          )
+        );
+      };
+
+      audio.src = url;
+    }
+  );
+}
+
+
+/* =========================================================
+   38. DURATION FORMATTER
+========================================================= */
+
+function formatDuration(seconds) {
+  if (
+    !Number.isFinite(seconds) ||
+    seconds < 0
+  ) {
+    return "00:00";
+  }
+
+  const total =
+    Math.floor(seconds);
+
+  const hours =
+    Math.floor(
+      total / 3600
+    );
+
+  const minutes =
+    Math.floor(
+      (total % 3600) / 60
+    );
+
+  const remainingSeconds =
+    total % 60;
+
+  if (hours > 0) {
+    return [
+      hours,
+      String(minutes)
+        .padStart(2, "0"),
+      String(remainingSeconds)
+        .padStart(2, "0")
+    ].join(":");
+  }
+
+  return [
+    String(minutes)
+      .padStart(2, "0"),
+
+    String(remainingSeconds)
+      .padStart(2, "0")
+  ].join(":");
+}
+
+
+/* =========================================================
+   39. VIDEO PREVIEW
+========================================================= */
+
+function renderVideoPreview(url) {
+  if (!filePreview) {
+    return;
+  }
+
+  filePreview.innerHTML = `
+    <video
+      src="${url}"
+      muted
+      playsinline
+      preload="metadata"
+    ></video>
+
+    <div class="file-preview-overlay">
+      <i
+        class="fa-solid fa-play"
+      ></i>
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   40. GENERIC FILE PREVIEW
+========================================================= */
+
+function renderGenericFilePreview(
+  type
+) {
+  if (!filePreview) {
+    return;
+  }
+
+  filePreview.innerHTML = `
+    <i
+      class="${getFileIcon(
+        type
+      )}"
+    ></i>
+  `;
+
+  if (
+    detectedFileDimensions &&
+    detectedFileDimensions.textContent ===
+      "Reading metadata..."
+  ) {
+    detectedFileDimensions.textContent =
+      capitalize(type);
+  }
+}
+
+
+/* =========================================================
+   41. RECOMMENDED TOOLS
+========================================================= */
+
+function getRecommendedToolIds(
+  fileType
+) {
+  const recommendations = {
+    image: [
+      "photo-enhancer",
+      "image-upscaler",
+      "image-compressor",
+      "image-resizer",
+      "image-converter",
+      "background-remover",
+      "metadata-viewer"
+    ],
+
+    video: [
+      "video-upscaler",
+      "video-compressor",
+      "video-trimmer",
+      "video-to-audio",
+      "video-thumbnail",
+      "metadata-viewer"
+    ],
+
+    audio: [
+      "audio-converter",
+      "metadata-viewer"
+    ],
+
+    pdf: [
+      "merge-pdf",
+      "split-pdf",
+      "compress-pdf",
+      "pdf-to-image",
+      "metadata-viewer"
+    ],
+
+    document: [
+      "metadata-viewer"
+    ],
+
+    spreadsheet: [
+      "json-csv",
+      "metadata-viewer"
+    ],
+
+    text: [
+      "word-counter",
+      "base64",
+      "json-formatter",
+      "hash-generator",
+      "metadata-viewer"
+    ],
+
+    unknown: [
+      "metadata-viewer",
+      "hash-generator"
+    ]
+  };
+
+  return (
+    recommendations[fileType] ||
+    recommendations.unknown
+  );
+}
+
+
+function renderRecommendedTools(
+  fileType
+) {
+  if (!recommendedGrid) {
+    return;
+  }
+
+  const ids =
+    getRecommendedToolIds(
+      fileType
+    );
+
+  recommendedGrid.innerHTML =
+    ids
+      .map((id) => tools[id])
+      .filter(Boolean)
+      .map((tool) => {
+        return `
+          <button
+            class="recommended-tool"
+            type="button"
+                        data-recommended-tool="${escapeHTML(
+              tool.id
+            )}"
+          >
+
+            <div
+              class="mini-tool-icon ${escapeHTML(
+                tool.category
+              )}-tool"
+            >
+              <i
+                class="${escapeHTML(
+                  tool.icon
+                )}"
+              ></i>
+            </div>
+
+            <div>
+              <strong>
+                ${escapeHTML(
+                  tool.name
+                )}
+              </strong>
+
+              <span>
+                Open tool
+              </span>
+            </div>
+
+            <i
+              class="fa-solid fa-arrow-right"
+            ></i>
+
+          </button>
+        `;
+      })
+      .join("");
+}
+
+
+/* =========================================================
+   42. OPEN RECOMMENDED TOOL
+========================================================= */
+
+document.addEventListener(
+  "click",
+  (event) => {
+    const button =
+      event.target.closest(
+        "[data-recommended-tool]"
+      );
+
+    if (!button) {
+      return;
+    }
+
+    const toolId =
+      button.dataset
+        .recommendedTool;
+
+    if (!toolId) {
+      return;
+    }
+
+    openTool(toolId);
+  }
+);
+
+
+/* =========================================================
+   43. REMOVE SELECTED FILE
+========================================================= */
+
+function removeSelectedFile() {
+  clearSelectedFileURL();
+
+  state.selectedFile =
+    null;
+
+  if (globalFileInput) {
+    globalFileInput.value = "";
+  }
+
+  if (fileDetection) {
+    fileDetection.classList.add(
+      "hidden"
+    );
+  }
+
+  if (filePreview) {
+    filePreview.innerHTML = `
+      <i
+        class="fa-solid fa-file"
+      ></i>
+    `;
+  }
+
+  if (detectedFileType) {
+    detectedFileType.textContent =
+      "File detected";
+  }
+
+  if (detectedFileName) {
+    detectedFileName.textContent =
+      "No file selected";
+  }
+
+  if (detectedFileSize) {
+    detectedFileSize.textContent =
+      "—";
+  }
+
+  if (detectedFileFormat) {
+    detectedFileFormat.textContent =
+      "—";
+  }
+
+  if (detectedFileDimensions) {
+    detectedFileDimensions.textContent =
+      "—";
+  }
+
+  if (recommendedGrid) {
+    recommendedGrid.innerHTML = "";
+  }
+
+  showToast(
+    "File removed",
+    "Smart Drop has been reset."
+  );
+}
+
+
+if (removeFileButton) {
+  removeFileButton.addEventListener(
+    "click",
+    removeSelectedFile
+  );
+}
+
+
+/* =========================================================
+   44. HOME SEARCH → GLOBAL SEARCH
+========================================================= */
+
+if (toolSearch) {
+  toolSearch.addEventListener(
+    "focus",
+    () => {
+      /*
+        Keep the homepage input usable
+        normally. Global search is opened
+        only through the top search button
+        or "/" shortcut.
+      */
+    }
+  );
+}
+
+
+/* =========================================================
+   45. SMART DROP CLICK
+========================================================= */
+
+if (smartDrop) {
+  smartDrop.addEventListener(
+    "click",
+    (event) => {
+      if (
+        event.target.closest(
+          "button"
+        )
+      ) {
+        return;
+      }
+
+      if (
+        event.target.closest(
+          "#fileDetection"
+        )
+      ) {
+        return;
+      }
+
+      globalFileInput?.click();
+    }
+  );
+}
+
+
+/* =========================================================
+   46. SMART DROP ACCESSIBILITY
+========================================================= */
+
+if (smartDrop) {
+  smartDrop.setAttribute(
+    "tabindex",
+    "0"
+  );
+
+  smartDrop.setAttribute(
+    "role",
+    "button"
+  );
+
+  smartDrop.setAttribute(
+    "aria-label",
+    "Choose or drop a file"
+  );
+
+  smartDrop.addEventListener(
+    "keydown",
+    (event) => {
+      if (
+        event.key !== "Enter" &&
+        event.key !== " "
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+
+      globalFileInput?.click();
+    }
+  );
+}
+
+
+/* =========================================================
+   47. SELECTED FILE HELPER
+========================================================= */
+
+function requireSelectedFile(
+  acceptedTypes = []
+) {
+  const file =
+    state.selectedFile;
+
+  if (!file) {
+    showToast(
+      "No file selected",
+      "Choose a file first.",
+      "warning"
+    );
+
+    return null;
+  }
+
+  if (
+    acceptedTypes.length === 0
+  ) {
+    return file;
+  }
+
+  const detected =
+    detectFileType(file);
+
+  if (
+    !acceptedTypes.includes(
+      detected.type
+    )
+  ) {
+    showToast(
+      "Unsupported file",
+      `This tool requires: ${acceptedTypes.join(
+        ", "
+      )}.`,
+      "warning"
+    );
+
+    return null;
+  }
+
+  return file;
+}
+
+
+/* =========================================================
+   48. DOWNLOAD HELPER
+========================================================= */
+
+function downloadBlob(
+  blob,
+  fileName
+) {
+  if (!(blob instanceof Blob)) {
+    showToast(
+      "Download failed",
+      "No valid output was created.",
+      "error"
+    );
+
+    return;
+  }
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const anchor =
+    document.createElement("a");
+
+  anchor.href = url;
+
+  anchor.download =
+    fileName ||
+    "senn-tools-output";
+
+  document.body.appendChild(
+    anchor
+  );
+
+  anchor.click();
+
+  anchor.remove();
+
+  window.setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 1000);
+}
+
+
+/* =========================================================
+   49. FILE NAME HELPER
+========================================================= */
+
+function getBaseFileName(
+  fileName
+) {
+  if (!fileName) {
+    return "senn-tools";
+  }
+
+  const lastDot =
+    fileName.lastIndexOf(".");
+
+  if (lastDot <= 0) {
+    return fileName;
+  }
+
+  return fileName.slice(
+    0,
+    lastDot
+  );
+}
+
+
+/* =========================================================
+   50. READ FILE AS DATA URL
+========================================================= */
+
+function readFileAsDataURL(file) {
+  return new Promise(
+    (resolve, reject) => {
+      const reader =
+        new FileReader();
+
+      reader.onload = () => {
+        resolve(reader.result);
+      };
+
+      reader.onerror = () => {
+        reject(
+          new Error(
+            "Failed to read file."
+          )
+        );
+      };
+
+      reader.readAsDataURL(file);
+    }
+  );
+}
+
+
+/* =========================================================
+   51. READ FILE AS TEXT
+========================================================= */
+
+function readFileAsText(file) {
+  return new Promise(
+    (resolve, reject) => {
+      const reader =
+        new FileReader();
+
+      reader.onload = () => {
+        resolve(
+          String(
+            reader.result || ""
+          )
+        );
+      };
+
+      reader.onerror = () => {
+        reject(
+          new Error(
+            "Failed to read text file."
+          )
+        );
+      };
+
+      reader.readAsText(file);
+    }
+  );
+}
+
+
+/* =========================================================
+   52. LOAD IMAGE FOR PROCESSING
+========================================================= */
+
+function loadImageFromFile(file) {
+  return new Promise(
+    (resolve, reject) => {
+      const image =
+        new Image();
+
+      const url =
+        URL.createObjectURL(file);
+
+      image.onload = () => {
+        URL.revokeObjectURL(url);
+
+        resolve(image);
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+
+        reject(
+          new Error(
+            "Unable to load image."
+          )
+        );
+      };
+
+      image.src = url;
+    }
+  );
+}
+
+
+/* =========================================================
+   53. CANVAS → BLOB
+========================================================= */
+
+function canvasToBlob(
+  canvas,
+  type = "image/png",
+  quality = 0.92
+) {
+  return new Promise(
+    (resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(
+              new Error(
+                "Unable to create output."
+              )
+            );
+
+            return;
+          }
+
+          resolve(blob);
+        },
+        type,
+        quality
+      );
+    }
+  );
+}
+
+
+/* =========================================================
+   54. WORKSPACE SHARED UI
+========================================================= */
+
+function createWorkspaceUploadHTML(
+  title = "Choose a file",
+  description =
+    "Select a local file to start processing.",
+  accept = ""
+) {
+  return `
+    <div class="tool-interface">
+
+      <div class="tool-upload-panel">
+
+        <div
+          class="workspace-placeholder-icon"
+        >
+          <i
+            class="fa-solid fa-cloud-arrow-up"
+          ></i>
+        </div>
+
+        <h2>
+          ${escapeHTML(title)}
+        </h2>
+
+        <p>
+          ${escapeHTML(
+            description
+          )}
+        </p>
+
+        <input
+          class="workspace-file-input"
+          type="file"
+          ${
+            accept
+              ? `accept="${escapeHTML(
+                  accept
+                )}"`
+              : ""
+          }
+          hidden
+        >
+
+        <button
+          class="primary-button workspace-file-button"
+          type="button"
+        >
+          <i
+            class="fa-solid fa-folder-open"
+          ></i>
+
+          Choose File
+        </button>
+
+        ${
+          state.selectedFile
+            ? `
+              <div class="workspace-current-file">
+
+                <i
+                  class="${getFileIcon(
+                    detectFileType(
+                      state.selectedFile
+                    ).type
+                  )}"
+                ></i>
+
+                <div>
+                  <strong>
+                    ${escapeHTML(
+                      state.selectedFile
+                        .name
+                    )}
+                  </strong>
+
+                  <span>
+                    ${escapeHTML(
+                      formatBytes(
+                        state.selectedFile
+                          .size
+                      )
+                    )}
+                  </span>
+                </div>
+
+              </div>
+            `
+            : ""
+        }
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   55. WORKSPACE FILE PICKER
+========================================================= */
+
+function bindWorkspaceFilePicker(
+  onFileSelected
+) {
+  const input =
+    workspaceContent?.querySelector(
+      ".workspace-file-input"
+    );
+
+  const button =
+    workspaceContent?.querySelector(
+      ".workspace-file-button"
+    );
+
+  if (!input || !button) {
+    return;
+  }
+
+  button.addEventListener(
+    "click",
+    () => {
+      input.click();
+    }
+  );
+
+  input.addEventListener(
+    "change",
+    async () => {
+      const file =
+        input.files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      state.selectedFile =
+        file;
+
+      if (
+        typeof onFileSelected ===
+        "function"
+      ) {
+        await onFileSelected(file);
+      }
+    }
+  );
+}
+
+
+/* =========================================================
+   56. SMART DROP → WORKSPACE FILE SYNC
+========================================================= */
+
+function getCurrentSelectedFile() {
+  return state.selectedFile || null;
+}
+
+
+/* =========================================================
+   57. PART 2 READY
+========================================================= */
+
+console.log(
+  "[SENN TOOLS] Global Search and Smart Drop ready."
+);
+
+
+/* =========================================================
+   PART 2 END
+
+   NEXT:
+   - Image Resizer
+   - Image Compressor
+   - Image Converter
+   - Image Upscaler
+   - Photo Enhancer
+   - Video Thumbnail
+   - JSON Formatter
+   - Base64
+   - Word Counter
+   - Password Generator
+   - UUID Generator
+   - Hash Generator
+   - URL Parser
+   - Timestamp Converter
+   - Color Converter
+========================================================= */
