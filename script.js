@@ -11699,3 +11699,1456 @@ console.log(
    - Processing Overlay
    - Backend-required tool states
 ========================================================= */
+
+/* =========================================================
+   SENN TOOLS V1
+   PART 4B
+   PDF ENGINE
+========================================================= */
+
+
+/* =========================================================
+   113. EXTERNAL LIBRARY LOADER
+========================================================= */
+
+const sennLibraryCache =
+  new Map();
+
+
+function loadExternalScript(
+  source,
+  globalCheck
+) {
+  if (
+    typeof globalCheck === "function" &&
+    globalCheck()
+  ) {
+    return Promise.resolve();
+  }
+
+  if (
+    sennLibraryCache.has(
+      source
+    )
+  ) {
+    return sennLibraryCache.get(
+      source
+    );
+  }
+
+  const promise =
+    new Promise(
+      (
+        resolve,
+        reject
+      ) => {
+        const existing =
+          document.querySelector(
+            `script[src="${source}"]`
+          );
+
+        if (existing) {
+          existing.addEventListener(
+            "load",
+            () => {
+              resolve();
+            },
+            {
+              once: true
+            }
+          );
+
+          existing.addEventListener(
+            "error",
+            () => {
+              reject(
+                new Error(
+                  "External library failed to load."
+                )
+              );
+            },
+            {
+              once: true
+            }
+          );
+
+          return;
+        }
+
+        const script =
+          document.createElement(
+            "script"
+          );
+
+        script.src =
+          source;
+
+        script.async =
+          true;
+
+        script.crossOrigin =
+          "anonymous";
+
+        script.addEventListener(
+          "load",
+          () => {
+            resolve();
+          },
+          {
+            once: true
+          }
+        );
+
+        script.addEventListener(
+          "error",
+          () => {
+            sennLibraryCache.delete(
+              source
+            );
+
+            reject(
+              new Error(
+                "External library failed to load."
+              )
+            );
+          },
+          {
+            once: true
+          }
+        );
+
+        document.head.appendChild(
+          script
+        );
+      }
+    );
+
+  sennLibraryCache.set(
+    source,
+    promise
+  );
+
+  return promise;
+}
+
+
+/* =========================================================
+   114. PDF-LIB LOADER
+========================================================= */
+
+async function ensurePDFLib() {
+  if (
+    window.PDFLib
+  ) {
+    return window.PDFLib;
+  }
+
+  await loadExternalScript(
+    "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js",
+    () =>
+      Boolean(
+        window.PDFLib
+      )
+  );
+
+  if (
+    !window.PDFLib
+  ) {
+    throw new Error(
+      "PDF engine could not be initialized."
+    );
+  }
+
+  return window.PDFLib;
+}
+
+
+/* =========================================================
+   115. PDF FILE VALIDATION
+========================================================= */
+
+function isPDFFile(
+  file
+) {
+  if (!file) {
+    return false;
+  }
+
+  if (
+    file.type ===
+    "application/pdf"
+  ) {
+    return true;
+  }
+
+  return (
+    getFileExtension(
+      file.name
+    ) === "pdf"
+  );
+}
+
+
+function filterPDFFiles(
+  files
+) {
+  return Array.from(
+    files || []
+  ).filter(
+    isPDFFile
+  );
+}
+
+
+/* =========================================================
+   116. PDF FILE CARD
+========================================================= */
+
+function createPDFFileCardHTML(
+  file,
+  index,
+  options = {}
+) {
+  const removable =
+    options.removable !==
+    false;
+
+  return `
+    <div
+      class="pdf-file-card"
+      data-pdf-index="${index}"
+      style="
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px;
+        border: 1px solid var(--border-color, rgba(255,255,255,.08));
+        border-radius: 16px;
+        margin-bottom: 10px;
+      "
+    >
+
+      <div
+        style="
+          width: 42px;
+          height: 42px;
+          display: grid;
+          place-items: center;
+          border-radius: 12px;
+          background: rgba(255,255,255,.05);
+          flex: 0 0 auto;
+        "
+      >
+        <i class="fa-solid fa-file-pdf"></i>
+      </div>
+
+      <div
+        style="
+          min-width: 0;
+          flex: 1;
+        "
+      >
+
+        <strong
+          style="
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          "
+        >
+          ${escapeHTML(
+            file.name
+          )}
+        </strong>
+
+        <small>
+          ${escapeHTML(
+            formatBytes(
+              file.size
+            )
+          )}
+        </small>
+
+      </div>
+
+      ${
+        removable
+          ? `
+            <button
+              class="tool-button pdf-remove-file"
+              type="button"
+              data-index="${index}"
+              aria-label="Remove file"
+            >
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          `
+          : ""
+      }
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   117. MERGE PDF
+========================================================= */
+
+function renderMergePDF() {
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-upload-panel">
+
+        <div
+          class="workspace-placeholder-icon"
+        >
+          <i class="fa-solid fa-object-group"></i>
+        </div>
+
+        <h2>
+          Merge PDF
+        </h2>
+
+        <p>
+          Combine multiple PDF files
+          into one document.
+        </p>
+
+        <input
+          class="merge-pdf-input"
+          type="file"
+          accept="application/pdf,.pdf"
+          multiple
+          hidden
+        >
+
+        <button
+          class="tool-button primary merge-pdf-select"
+          type="button"
+        >
+          <i class="fa-solid fa-plus"></i>
+          Choose PDF Files
+        </button>
+
+      </div>
+
+      <div
+        class="tool-panel merge-pdf-panel"
+        hidden
+      >
+
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+          "
+        >
+
+          <div>
+            <h3>
+              PDF FILES
+            </h3>
+
+            <p
+              class="merge-pdf-count"
+            >
+              0 files selected
+            </p>
+          </div>
+
+          <button
+            class="tool-button merge-pdf-add"
+            type="button"
+          >
+            <i class="fa-solid fa-plus"></i>
+            Add PDF
+          </button>
+
+        </div>
+
+        <div
+          class="merge-pdf-list"
+        ></div>
+
+        <div
+          class="tool-actions"
+        >
+
+          <button
+            class="tool-button primary merge-pdf-run"
+            type="button"
+          >
+            <i class="fa-solid fa-object-group"></i>
+            Merge PDFs
+          </button>
+
+          <button
+            class="tool-button merge-pdf-clear"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+
+  const input =
+    workspaceContent.querySelector(
+      ".merge-pdf-input"
+    );
+
+  const selectButton =
+    workspaceContent.querySelector(
+      ".merge-pdf-select"
+    );
+
+  const addButton =
+    workspaceContent.querySelector(
+      ".merge-pdf-add"
+    );
+
+  const panel =
+    workspaceContent.querySelector(
+      ".merge-pdf-panel"
+    );
+
+  const list =
+    workspaceContent.querySelector(
+      ".merge-pdf-list"
+    );
+
+  const count =
+    workspaceContent.querySelector(
+      ".merge-pdf-count"
+    );
+
+  const mergeButton =
+    workspaceContent.querySelector(
+      ".merge-pdf-run"
+    );
+
+  const clearButton =
+    workspaceContent.querySelector(
+      ".merge-pdf-clear"
+    );
+
+  let files = [];
+
+
+  function refresh() {
+    panel.hidden =
+      files.length === 0;
+
+    count.textContent =
+      `${files.length} PDF file${
+        files.length === 1
+          ? ""
+          : "s"
+      } selected`;
+
+    list.innerHTML =
+      files
+        .map(
+          (
+            file,
+            index
+          ) =>
+            createPDFFileCardHTML(
+              file,
+              index
+            )
+        )
+        .join("");
+
+    mergeButton.disabled =
+      files.length < 2;
+  }
+
+
+  function addFiles(
+    incomingFiles
+  ) {
+    const pdfFiles =
+      filterPDFFiles(
+        incomingFiles
+      );
+
+    if (
+      pdfFiles.length === 0
+    ) {
+      showToast(
+        "No PDF found",
+        "Choose valid PDF files.",
+        "warning"
+      );
+
+      return;
+    }
+
+    files.push(
+      ...pdfFiles
+    );
+
+    refresh();
+  }
+
+
+  selectButton.addEventListener(
+    "click",
+    () => {
+      input.click();
+    }
+  );
+
+
+  addButton.addEventListener(
+    "click",
+    () => {
+      input.click();
+    }
+  );
+
+
+  input.addEventListener(
+    "change",
+    () => {
+      addFiles(
+        input.files
+      );
+
+      input.value = "";
+    }
+  );
+
+
+  list.addEventListener(
+    "click",
+    (event) => {
+      const button =
+        event.target.closest(
+          ".pdf-remove-file"
+        );
+
+      if (!button) {
+        return;
+      }
+
+      const index =
+        Number(
+          button.dataset.index
+        );
+
+      if (
+        !Number.isInteger(
+          index
+        )
+      ) {
+        return;
+      }
+
+      files.splice(
+        index,
+        1
+      );
+
+      refresh();
+    }
+  );
+
+
+  clearButton.addEventListener(
+    "click",
+    () => {
+      files = [];
+
+      input.value = "";
+
+      refresh();
+    }
+  );
+
+
+  mergeButton.addEventListener(
+    "click",
+    async () => {
+      if (
+        files.length < 2
+      ) {
+        showToast(
+          "Need more PDFs",
+          "Select at least two PDF files.",
+          "warning"
+        );
+
+        return;
+      }
+
+      const originalHTML =
+        mergeButton.innerHTML;
+
+      mergeButton.disabled =
+        true;
+
+      mergeButton.innerHTML = `
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Merging...
+      `;
+
+      try {
+        const blob =
+          await mergePDFFiles(
+            files
+          );
+
+        downloadBlob(
+          blob,
+          "senn-tools-merged.pdf"
+        );
+
+        addHistory(
+          "merge-pdf",
+          {
+            fileName:
+              `${files.length} PDFs`
+          }
+        );
+
+        showToast(
+          "PDFs merged",
+          `${files.length} files combined successfully.`,
+          "success"
+        );
+      } catch (error) {
+        console.error(
+          "[SENN TOOLS] Merge PDF:",
+          error
+        );
+
+        showToast(
+          "Merge failed",
+          error.message ||
+          "Unable to merge these PDFs.",
+          "error"
+        );
+      } finally {
+        mergeButton.disabled =
+          files.length < 2;
+
+        mergeButton.innerHTML =
+          originalHTML;
+      }
+    }
+  );
+
+
+  const smartFile =
+    getCurrentSelectedFile();
+
+  if (
+    smartFile &&
+    isPDFFile(
+      smartFile
+    )
+  ) {
+    addFiles([
+      smartFile
+    ]);
+  }
+}
+
+
+/* =========================================================
+   118. MERGE PDF ENGINE
+========================================================= */
+
+async function mergePDFFiles(
+  files
+) {
+  const PDFLib =
+    await ensurePDFLib();
+
+  const {
+    PDFDocument
+  } = PDFLib;
+
+  const outputDocument =
+    await PDFDocument.create();
+
+  for (
+    const file of files
+  ) {
+    const bytes =
+      await file.arrayBuffer();
+
+    const sourceDocument =
+      await PDFDocument.load(
+        bytes,
+        {
+          ignoreEncryption:
+            false
+        }
+      );
+
+    const pageIndices =
+      sourceDocument
+        .getPageIndices();
+
+    const copiedPages =
+      await outputDocument
+        .copyPages(
+          sourceDocument,
+          pageIndices
+        );
+
+    copiedPages.forEach(
+      (page) => {
+        outputDocument.addPage(
+          page
+        );
+      }
+    );
+  }
+
+  const result =
+    await outputDocument.save();
+
+  return new Blob(
+    [
+      result
+    ],
+    {
+      type:
+        "application/pdf"
+    }
+  );
+}
+
+
+/* =========================================================
+   119. SPLIT PDF
+========================================================= */
+
+function renderSplitPDF() {
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-upload-panel">
+
+        <div
+          class="workspace-placeholder-icon"
+        >
+          <i class="fa-solid fa-scissors"></i>
+        </div>
+
+        <h2>
+          Split PDF
+        </h2>
+
+        <p>
+          Extract specific pages
+          from a PDF into a new file.
+        </p>
+
+        <input
+          class="split-pdf-input"
+          type="file"
+          accept="application/pdf,.pdf"
+          hidden
+        >
+
+        <button
+          class="tool-button primary split-pdf-select"
+          type="button"
+        >
+          <i class="fa-solid fa-file-arrow-up"></i>
+          Choose PDF
+        </button>
+
+      </div>
+
+      <div
+        class="tool-panel split-pdf-panel"
+        hidden
+      >
+
+        <div
+          class="split-pdf-file"
+        ></div>
+
+        <div
+          class="tool-controls"
+        >
+
+          <div
+            class="tool-control full"
+          >
+
+            <label>
+              Pages
+            </label>
+
+            <input
+              class="tool-input split-pdf-pages"
+              type="text"
+              placeholder="Example: 1-3, 5, 8-10"
+            >
+
+            <small>
+              Enter page numbers or ranges.
+            </small>
+
+          </div>
+
+        </div>
+
+        <div
+          class="tool-actions"
+        >
+
+          <button
+            class="tool-button primary split-pdf-run"
+            type="button"
+          >
+            <i class="fa-solid fa-scissors"></i>
+            Extract Pages
+          </button>
+
+          <button
+            class="tool-button split-pdf-clear"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+
+  const input =
+    workspaceContent.querySelector(
+      ".split-pdf-input"
+    );
+
+  const selectButton =
+    workspaceContent.querySelector(
+      ".split-pdf-select"
+    );
+
+  const panel =
+    workspaceContent.querySelector(
+      ".split-pdf-panel"
+    );
+
+  const fileContainer =
+    workspaceContent.querySelector(
+      ".split-pdf-file"
+    );
+
+  const pageInput =
+    workspaceContent.querySelector(
+      ".split-pdf-pages"
+    );
+
+  const splitButton =
+    workspaceContent.querySelector(
+      ".split-pdf-run"
+    );
+
+  const clearButton =
+    workspaceContent.querySelector(
+      ".split-pdf-clear"
+    );
+
+  let selectedPDF =
+    null;
+
+  let pageCount =
+    0;
+
+
+  async function loadSelectedPDF(
+    file
+  ) {
+    if (
+      !isPDFFile(file)
+    ) {
+      showToast(
+        "Invalid file",
+        "Choose a PDF file.",
+        "warning"
+      );
+
+      return;
+    }
+
+    selectedPDF =
+      file;
+
+    try {
+      pageCount =
+        await getPDFPageCount(
+          file
+        );
+
+      panel.hidden =
+        false;
+
+      fileContainer.innerHTML = `
+        ${createPDFFileCardHTML(
+          file,
+          0,
+          {
+            removable:
+              false
+          }
+        )}
+
+        <div
+          class="tool-notice"
+          style="margin-bottom: 18px;"
+        >
+          <i class="fa-solid fa-file-lines"></i>
+
+          <span>
+            ${pageCount} page${
+              pageCount === 1
+                ? ""
+                : "s"
+            } detected.
+          </span>
+        </div>
+      `;
+
+      pageInput.placeholder =
+        pageCount > 1
+          ? `Example: 1-${Math.min(
+              3,
+              pageCount
+            )}, ${pageCount}`
+          : "1";
+    } catch (error) {
+      selectedPDF =
+        null;
+
+      pageCount =
+        0;
+
+      panel.hidden =
+        true;
+
+      console.error(
+        "[SENN TOOLS] PDF load:",
+        error
+      );
+
+      showToast(
+        "PDF could not be opened",
+        error.message ||
+        "The PDF may be damaged or protected.",
+        "error"
+      );
+    }
+  }
+
+
+  selectButton.addEventListener(
+    "click",
+    () => {
+      input.click();
+    }
+  );
+
+
+  input.addEventListener(
+    "change",
+    async () => {
+      const file =
+        input.files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      await loadSelectedPDF(
+        file
+      );
+    }
+  );
+
+
+  clearButton.addEventListener(
+    "click",
+    () => {
+      selectedPDF =
+        null;
+
+      pageCount =
+        0;
+
+      input.value = "";
+
+      pageInput.value = "";
+
+      fileContainer.innerHTML =
+        "";
+
+      panel.hidden =
+        true;
+    }
+  );
+
+
+  splitButton.addEventListener(
+    "click",
+    async () => {
+      if (
+        !selectedPDF
+      ) {
+        return;
+      }
+
+      let pages;
+
+      try {
+        pages =
+          parsePDFPageSelection(
+            pageInput.value,
+            pageCount
+          );
+      } catch (error) {
+        showToast(
+          "Invalid page selection",
+          error.message,
+          "warning"
+        );
+
+        return;
+      }
+
+      const originalHTML =
+        splitButton.innerHTML;
+
+      splitButton.disabled =
+        true;
+
+      splitButton.innerHTML = `
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Extracting...
+      `;
+
+      try {
+        const blob =
+          await extractPDFPages(
+            selectedPDF,
+            pages
+          );
+
+        const baseName =
+          getBaseFileName(
+            selectedPDF.name
+          );
+
+        downloadBlob(
+          blob,
+          `${baseName}-pages.pdf`
+        );
+
+        addHistory(
+          "split-pdf",
+          {
+            fileName:
+              selectedPDF.name
+          }
+        );
+
+        showToast(
+          "Pages extracted",
+          `${pages.length} page${
+            pages.length === 1
+              ? ""
+              : "s"
+          } saved.`,
+          "success"
+        );
+      } catch (error) {
+        console.error(
+          "[SENN TOOLS] Split PDF:",
+          error
+        );
+
+        showToast(
+          "Extraction failed",
+          error.message ||
+          "Unable to extract these pages.",
+          "error"
+        );
+      } finally {
+        splitButton.disabled =
+          false;
+
+        splitButton.innerHTML =
+          originalHTML;
+      }
+    }
+  );
+
+
+  const smartFile =
+    getCurrentSelectedFile();
+
+  if (
+    smartFile &&
+    isPDFFile(
+      smartFile
+    )
+  ) {
+    loadSelectedPDF(
+      smartFile
+    );
+  }
+}
+
+
+/* =========================================================
+   120. GET PDF PAGE COUNT
+========================================================= */
+
+async function getPDFPageCount(
+  file
+) {
+  const PDFLib =
+    await ensurePDFLib();
+
+  const {
+    PDFDocument
+  } = PDFLib;
+
+  const bytes =
+    await file.arrayBuffer();
+
+  const document =
+    await PDFDocument.load(
+      bytes,
+      {
+        ignoreEncryption:
+          false
+      }
+    );
+
+  return document.getPageCount();
+}
+
+
+/* =========================================================
+   121. PARSE PAGE SELECTION
+========================================================= */
+
+function parsePDFPageSelection(
+  value,
+  totalPages
+) {
+  const input =
+    String(value)
+      .trim();
+
+  if (!input) {
+    throw new Error(
+      "Enter the pages you want to extract."
+    );
+  }
+
+  const result =
+    new Set();
+
+  const parts =
+    input
+      .split(",")
+      .map(
+        (part) =>
+          part.trim()
+      )
+      .filter(Boolean);
+
+  if (
+    parts.length === 0
+  ) {
+    throw new Error(
+      "No pages were selected."
+    );
+  }
+
+  for (
+    const part of parts
+  ) {
+    if (
+      /^\d+$/.test(
+        part
+      )
+    ) {
+      const page =
+        Number(part);
+
+      validatePDFPageNumber(
+        page,
+        totalPages
+      );
+
+      result.add(
+        page
+      );
+
+      continue;
+    }
+
+    const rangeMatch =
+      part.match(
+        /^(\d+)\s*-\s*(\d+)$/
+      );
+
+    if (
+      !rangeMatch
+    ) {
+      throw new Error(
+        `"${part}" is not a valid page or range.`
+      );
+    }
+
+    const start =
+      Number(
+        rangeMatch[1]
+      );
+
+    const end =
+      Number(
+        rangeMatch[2]
+      );
+
+    validatePDFPageNumber(
+      start,
+      totalPages
+    );
+
+    validatePDFPageNumber(
+      end,
+      totalPages
+    );
+
+    if (
+      start > end
+    ) {
+      throw new Error(
+        `Range ${start}-${end} is reversed.`
+      );
+    }
+
+    for (
+      let page = start;
+      page <= end;
+      page += 1
+    ) {
+      result.add(
+        page
+      );
+    }
+  }
+
+  const pages =
+    Array.from(result);
+
+  if (
+    pages.length === 0
+  ) {
+    throw new Error(
+      "No valid pages were selected."
+    );
+  }
+
+  return pages;
+}
+
+
+/* =========================================================
+   122. VALIDATE PDF PAGE NUMBER
+========================================================= */
+
+function validatePDFPageNumber(
+  page,
+  totalPages
+) {
+  if (
+    !Number.isInteger(
+      page
+    ) ||
+    page < 1
+  ) {
+    throw new Error(
+      `"${page}" is not a valid page number.`
+    );
+  }
+
+  if (
+    page > totalPages
+  ) {
+    throw new Error(
+      `Page ${page} does not exist. This PDF has ${totalPages} pages.`
+    );
+  }
+}
+
+
+/* =========================================================
+   123. EXTRACT PDF PAGES
+========================================================= */
+
+async function extractPDFPages(
+  file,
+  pages
+) {
+  const PDFLib =
+    await ensurePDFLib();
+
+  const {
+    PDFDocument
+  } = PDFLib;
+
+  const sourceBytes =
+    await file.arrayBuffer();
+
+  const sourceDocument =
+    await PDFDocument.load(
+      sourceBytes,
+      {
+        ignoreEncryption:
+          false
+      }
+    );
+
+  const outputDocument =
+    await PDFDocument.create();
+
+  const zeroBasedIndices =
+    pages.map(
+      (page) =>
+        page - 1
+    );
+
+  const copiedPages =
+    await outputDocument
+      .copyPages(
+        sourceDocument,
+        zeroBasedIndices
+      );
+
+  copiedPages.forEach(
+    (page) => {
+      outputDocument.addPage(
+        page
+      );
+    }
+  );
+
+  const result =
+    await outputDocument.save();
+
+  return new Blob(
+    [
+      result
+    ],
+    {
+      type:
+        "application/pdf"
+    }
+  );
+}
+
+
+/* =========================================================
+   124. PART 4B PDF ROUTERS
+========================================================= */
+
+const part4BRenderers = {
+  "merge-pdf":
+    renderMergePDF,
+
+  "split-pdf":
+    renderSplitPDF
+};
+
+
+/* =========================================================
+   125. EXTEND PART 4A ROUTER
+========================================================= */
+
+const previousPart4RenderToolWorkspace =
+  renderToolWorkspace;
+
+renderToolWorkspace =
+  function (
+    toolId
+  ) {
+    const renderer =
+      part4BRenderers[
+        toolId
+      ];
+
+    if (renderer) {
+      renderer();
+
+      return;
+    }
+
+    previousPart4RenderToolWorkspace(
+      toolId
+    );
+  };
+
+
+/* =========================================================
+   126. PART 4B-1 READY
+========================================================= */
+
+console.log(
+  "[SENN TOOLS] Part 4B-1 PDF engine ready."
+);
+
+
+/* =========================================================
+   PART 4B-1 END
+
+   ADDED:
+   ✓ PDF engine loader
+   ✓ PDF validation
+   ✓ Merge PDF UI
+   ✓ Merge multiple PDFs
+   ✓ Remove PDF before merge
+   ✓ Smart Drop → Merge PDF
+   ✓ Split PDF UI
+   ✓ PDF page counter
+   ✓ Page selection parser
+   ✓ Single page extraction
+   ✓ Page range extraction
+   ✓ Multiple range extraction
+   ✓ Smart Drop → Split PDF
+
+   NEXT PART 4B-2:
+   - PDF → Image
+   - PDF page previews
+   - PNG / JPEG output
+   - ZIP multi-page export
+   - Processing Overlay
+   - PDF Compressor honest handling
+   - QR standards fix
+========================================================= */
