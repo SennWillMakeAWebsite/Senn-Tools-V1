@@ -18897,3 +18897,2632 @@ console.log(
    - Audio Converter
    - Media Converter
 ========================================================= */
+/* =========================================================
+   177. AUDIO FILE VALIDATION
+========================================================= */
+
+function isAudioFile(file) {
+  if (!file) {
+    return false;
+  }
+
+  const type =
+    String(file.type || "")
+      .toLowerCase();
+
+  if (type.startsWith("video/")) {
+    return false;
+  }
+
+  if (type.startsWith("audio/")) {
+    return true;
+  }
+
+  const extension =
+    getMediaExtension(
+      file,
+      ""
+    );
+
+  return [
+    "mp3",
+    "wav",
+    "m4a",
+    "aac",
+    "ogg",
+    "oga",
+    "flac",
+    "opus"
+  ].includes(extension);
+}
+
+
+/* =========================================================
+   178. AUDIO METADATA
+========================================================= */
+
+function readAudioMetadata(file) {
+  return new Promise(
+    (resolve, reject) => {
+      if (!isAudioFile(file)) {
+        reject(
+          new Error(
+            "Invalid audio file."
+          )
+        );
+
+        return;
+      }
+
+      const audio =
+        document.createElement(
+          "audio"
+        );
+
+      const objectURL =
+        URL.createObjectURL(
+          file
+        );
+
+      audio.preload =
+        "metadata";
+
+      audio.onloadedmetadata =
+        () => {
+          const metadata = {
+            name:
+              file.name,
+
+            type:
+              file.type ||
+              "audio",
+
+            size:
+              file.size,
+
+            duration:
+              Number.isFinite(
+                audio.duration
+              )
+                ? audio.duration
+                : 0
+          };
+
+          URL.revokeObjectURL(
+            objectURL
+          );
+
+          resolve(metadata);
+        };
+
+      audio.onerror =
+        () => {
+          URL.revokeObjectURL(
+            objectURL
+          );
+
+          reject(
+            new Error(
+              "Unable to read audio metadata."
+            )
+          );
+        };
+
+      audio.src =
+        objectURL;
+    }
+  );
+}
+
+
+/* =========================================================
+   179. AUDIO FILE CARD
+========================================================= */
+
+function createAudioFileCardHTML(
+  file,
+  metadata = null
+) {
+  const duration =
+    metadata
+      ? formatMediaTime(
+          metadata.duration
+        )
+      : "Reading...";
+
+  return `
+    <div class="tool-file-card">
+
+      <div class="tool-file-icon">
+        <i class="fa-solid fa-wave-square"></i>
+      </div>
+
+      <div class="tool-file-info">
+
+        <strong>
+          ${escapeHTML(
+            file.name
+          )}
+        </strong>
+
+        <span>
+          ${escapeHTML(
+            formatBytes(
+              file.size
+            )
+          )}
+          •
+          ${escapeHTML(
+            duration
+          )}
+        </span>
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   180. AUDIO PREVIEW
+========================================================= */
+
+function createAudioPreview(
+  file,
+  container
+) {
+  if (
+    !file ||
+    !container
+  ) {
+    return null;
+  }
+
+  const oldURL =
+    container.dataset
+      .audioObjectUrl;
+
+  if (oldURL) {
+    URL.revokeObjectURL(
+      oldURL
+    );
+  }
+
+  const objectURL =
+    URL.createObjectURL(
+      file
+    );
+
+  container.dataset
+    .audioObjectUrl =
+      objectURL;
+
+  container.innerHTML = `
+    <audio
+      controls
+      preload="metadata"
+      style="
+        display: block;
+        width: 100%;
+      "
+    >
+      <source
+        src="${objectURL}"
+        type="${escapeHTML(
+          file.type ||
+          "audio/mpeg"
+        )}"
+      >
+    </audio>
+  `;
+
+  return container.querySelector(
+    "audio"
+  );
+}
+
+
+/* =========================================================
+   181. MEDIA OUTPUT FORMATS
+========================================================= */
+
+const mediaOutputFormats = {
+  mp3: {
+    extension:
+      "mp3",
+
+    mimeType:
+      "audio/mpeg",
+
+    args: [
+      "-vn",
+      "-c:a",
+      "libmp3lame",
+      "-b:a",
+      "192k"
+    ]
+  },
+
+  wav: {
+    extension:
+      "wav",
+
+    mimeType:
+      "audio/wav",
+
+    args: [
+      "-vn",
+      "-c:a",
+      "pcm_s16le"
+    ]
+  },
+
+  m4a: {
+    extension:
+      "m4a",
+
+    mimeType:
+      "audio/mp4",
+
+    args: [
+      "-vn",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "192k"
+    ]
+  },
+
+  webm: {
+    extension:
+      "webm",
+
+    mimeType:
+      "video/webm",
+
+    args: [
+      "-c:v",
+      "libvpx-vp9",
+      "-crf",
+      "32",
+      "-b:v",
+      "0",
+      "-c:a",
+      "libopus",
+      "-b:a",
+      "128k"
+    ]
+  },
+
+  mp4: {
+    extension:
+      "mp4",
+
+    mimeType:
+      "video/mp4",
+
+    args: [
+      "-c:v",
+      "libx264",
+      "-preset",
+      "veryfast",
+      "-crf",
+      "23",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
+      "-pix_fmt",
+      "yuv420p",
+      "-movflags",
+      "+faststart"
+    ]
+  }
+};
+
+
+/* =========================================================
+   182. MEDIA OUTPUT CONFIG
+========================================================= */
+
+function getMediaOutputConfig(
+  format
+) {
+  const normalized =
+    String(format || "")
+      .trim()
+      .toLowerCase();
+
+  const config =
+    mediaOutputFormats[
+      normalized
+    ];
+
+  if (!config) {
+    throw new Error(
+      `Unsupported output format: ${normalized}`
+    );
+  }
+
+  return config;
+}
+
+
+/* =========================================================
+   183. VIDEO → AUDIO UI
+========================================================= */
+
+function renderVideoToAudio() {
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-upload-panel">
+
+        <div class="workspace-placeholder-icon">
+          <i class="fa-solid fa-file-audio"></i>
+        </div>
+
+        <h2>
+          Video → Audio
+        </h2>
+
+        <p>
+          Extract audio from a video
+          directly in your browser.
+        </p>
+
+        <input
+          class="video-audio-input"
+          type="file"
+          accept="video/*,.mp4,.webm,.mov,.m4v"
+          hidden
+        >
+
+        <button
+          class="tool-button primary video-audio-select"
+          type="button"
+        >
+          <i class="fa-solid fa-file-arrow-up"></i>
+          Choose Video
+        </button>
+
+      </div>
+
+      <div
+        class="tool-panel video-audio-panel"
+        hidden
+      >
+
+        <div class="video-audio-file"></div>
+
+        <div
+          class="video-audio-preview"
+          style="margin-top: 18px;"
+        ></div>
+
+        <div
+          class="tool-controls"
+          style="margin-top: 18px;"
+        >
+
+          <div class="tool-control">
+
+            <label>
+              Audio Format
+            </label>
+
+            <select
+              class="tool-select video-audio-format"
+            >
+              <option value="mp3">
+                MP3
+              </option>
+
+              <option value="wav">
+                WAV
+              </option>
+
+              <option value="m4a">
+                M4A
+              </option>
+            </select>
+
+          </div>
+
+        </div>
+
+        <div
+          class="tool-notice"
+          style="margin-top: 18px;"
+        >
+          <i class="fa-solid fa-microchip"></i>
+
+          <span>
+            Audio extraction runs locally
+            using the browser media engine.
+          </span>
+        </div>
+
+        <div
+          class="tool-actions"
+          style="margin-top: 18px;"
+        >
+
+          <button
+            class="tool-button primary video-audio-run"
+            type="button"
+          >
+            <i class="fa-solid fa-music"></i>
+            Extract Audio
+          </button>
+
+          <button
+            class="tool-button video-audio-clear"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+        <div class="video-audio-result"></div>
+
+      </div>
+
+    </div>
+  `;
+
+  const input =
+    workspaceContent.querySelector(
+      ".video-audio-input"
+    );
+
+  const selectButton =
+    workspaceContent.querySelector(
+      ".video-audio-select"
+    );
+
+  const panel =
+    workspaceContent.querySelector(
+      ".video-audio-panel"
+    );
+
+  const fileContainer =
+    workspaceContent.querySelector(
+      ".video-audio-file"
+    );
+
+  const previewContainer =
+    workspaceContent.querySelector(
+      ".video-audio-preview"
+    );
+
+  const formatSelect =
+    workspaceContent.querySelector(
+      ".video-audio-format"
+    );
+
+  const runButton =
+    workspaceContent.querySelector(
+      ".video-audio-run"
+    );
+
+  const clearButton =
+    workspaceContent.querySelector(
+      ".video-audio-clear"
+    );
+
+  const result =
+    workspaceContent.querySelector(
+      ".video-audio-result"
+    );
+
+  let selectedVideo =
+    null;
+
+  let metadata =
+    null;
+
+
+  async function loadVideo(
+    file
+  ) {
+    if (!isVideoFile(file)) {
+      showToast(
+        "Invalid video",
+        "Choose a supported video file.",
+        "warning"
+      );
+
+      return;
+    }
+
+    selectedVideo =
+      file;
+
+    metadata =
+      null;
+
+    panel.hidden =
+      false;
+
+    result.innerHTML =
+      "";
+
+    fileContainer.innerHTML =
+      createVideoFileCardHTML(
+        file
+      );
+
+    createVideoPreview(
+      file,
+      previewContainer
+    );
+
+    try {
+      metadata =
+        await readVideoMetadata(
+          file
+        );
+
+      if (
+        selectedVideo !==
+        file
+      ) {
+        return;
+      }
+
+      fileContainer.innerHTML =
+        createVideoFileCardHTML(
+          file,
+          metadata
+        );
+    } catch (error) {
+      console.warn(
+        "[SENN TOOLS] Video metadata:",
+        error
+      );
+    }
+  }
+
+
+  selectButton.addEventListener(
+    "click",
+    () => input.click()
+  );
+
+
+  input.addEventListener(
+    "change",
+    () => {
+      const file =
+        input.files?.[0];
+
+      if (file) {
+        loadVideo(file);
+      }
+    }
+  );
+
+
+  clearButton.addEventListener(
+    "click",
+    () => {
+      selectedVideo =
+        null;
+
+      metadata =
+        null;
+
+      input.value =
+        "";
+
+      panel.hidden =
+        true;
+
+      result.innerHTML =
+        "";
+
+      fileContainer.innerHTML =
+        "";
+
+      const oldURL =
+        previewContainer.dataset
+          .videoObjectUrl;
+
+      if (oldURL) {
+        URL.revokeObjectURL(
+          oldURL
+        );
+
+        delete previewContainer
+          .dataset
+          .videoObjectUrl;
+      }
+
+      previewContainer.innerHTML =
+        "";
+    }
+  );
+
+
+  runButton.addEventListener(
+    "click",
+    async () => {
+      if (!selectedVideo) {
+        return;
+      }
+
+      const format =
+        formatSelect.value;
+
+      const originalHTML =
+        runButton.innerHTML;
+
+      runButton.disabled =
+        true;
+
+      runButton.innerHTML = `
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Extracting...
+      `;
+
+      try {
+        const output =
+          await extractAudioFromVideo(
+            selectedVideo,
+            format
+          );
+
+        const config =
+          getMediaOutputConfig(
+            format
+          );
+
+        const baseName =
+          getBaseFileName(
+            selectedVideo.name
+          );
+
+        downloadBlob(
+          output,
+          `${baseName}.${config.extension}`
+        );
+
+        result.innerHTML = `
+          <div
+            class="tool-notice success"
+            style="margin-top: 18px;"
+          >
+            <i class="fa-solid fa-circle-check"></i>
+
+            <span>
+              ${escapeHTML(
+                config.extension
+                  .toUpperCase()
+              )}
+              audio ready
+              •
+              ${escapeHTML(
+                formatBytes(
+                  output.size
+                )
+              )}
+            </span>
+          </div>
+        `;
+
+        addHistory(
+          "video-to-audio",
+          {
+            fileName:
+              selectedVideo.name
+          }
+        );
+
+        showToast(
+          "Audio extracted",
+          `${config.extension.toUpperCase()} file ready.`,
+          "success"
+        );
+      } catch (error) {
+        if (
+          error?.name ===
+          "SennProcessingCancelled"
+        ) {
+          return;
+        }
+
+        console.error(
+          "[SENN TOOLS] Video → Audio:",
+          error
+        );
+
+        showToast(
+          "Extraction failed",
+          getFriendlyToolError(
+            error,
+            "Unable to extract audio from this video."
+          ),
+          "error"
+        );
+      } finally {
+        runButton.disabled =
+          false;
+
+        runButton.innerHTML =
+          originalHTML;
+      }
+    }
+  );
+
+
+  const smartFile =
+    getCurrentSelectedFile();
+
+  if (
+    smartFile &&
+    isVideoFile(smartFile)
+  ) {
+    loadVideo(smartFile);
+  }
+}
+
+
+/* =========================================================
+   184. VIDEO → AUDIO ENGINE
+========================================================= */
+
+async function extractAudioFromVideo(
+  file,
+  format = "mp3"
+) {
+  const config =
+    getMediaOutputConfig(
+      format
+    );
+
+  if (
+    ![
+      "mp3",
+      "wav",
+      "m4a"
+    ].includes(
+      config.extension
+    )
+  ) {
+    throw new Error(
+      "Invalid audio output format."
+    );
+  }
+
+  return runMediaTask(
+    async (
+      ffmpeg,
+      {
+        update,
+        throwIfCancelled
+      }
+    ) => {
+      const inputExtension =
+        getMediaExtension(
+          file,
+          "mp4"
+        );
+
+      const inputName =
+        createMediaTempName(
+          "audio-source",
+          inputExtension
+        );
+
+      const outputName =
+        createMediaTempName(
+          "audio-output",
+          config.extension
+        );
+
+      try {
+        update(
+          7,
+          "Loading video..."
+        );
+
+        await ffmpeg.writeFile(
+          inputName,
+          await mediaFileToUint8Array(
+            file
+          )
+        );
+
+        throwIfCancelled();
+
+        update(
+          10,
+          "Extracting audio..."
+        );
+
+        await ffmpeg.exec([
+          "-i",
+          inputName,
+          ...config.args,
+          outputName
+        ]);
+
+        throwIfCancelled();
+
+        update(
+          96,
+          "Preparing audio..."
+        );
+
+        const data =
+          await ffmpeg.readFile(
+            outputName
+          );
+
+        return new Blob(
+          [data],
+          {
+            type:
+              config.mimeType
+          }
+        );
+      } finally {
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          inputName
+        );
+
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          outputName
+        );
+      }
+    },
+    {
+      title:
+        "Extracting Audio",
+
+      message:
+        "Preparing video...",
+
+      progressMessage:
+        "Extracting audio...",
+
+      completeMessage:
+        "Audio extraction complete"
+    }
+  );
+}
+
+
+/* =========================================================
+   185. AUDIO CONVERTER UI
+========================================================= */
+
+function renderAudioConverter() {
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-upload-panel">
+
+        <div class="workspace-placeholder-icon">
+          <i class="fa-solid fa-headphones"></i>
+        </div>
+
+        <h2>
+          Audio Converter
+        </h2>
+
+        <p>
+          Convert audio between
+          MP3, WAV, and M4A.
+        </p>
+
+        <input
+          class="audio-converter-input"
+          type="file"
+          accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus"
+          hidden
+        >
+
+        <button
+          class="tool-button primary audio-converter-select"
+          type="button"
+        >
+          <i class="fa-solid fa-file-arrow-up"></i>
+          Choose Audio
+        </button>
+
+      </div>
+
+      <div
+        class="tool-panel audio-converter-panel"
+        hidden
+      >
+
+        <div class="audio-converter-file"></div>
+
+        <div
+          class="audio-converter-preview"
+          style="margin-top: 18px;"
+        ></div>
+
+        <div
+          class="tool-controls"
+          style="margin-top: 18px;"
+        >
+
+          <div class="tool-control">
+
+            <label>
+              Convert To
+            </label>
+
+            <select
+              class="tool-select audio-converter-format"
+            >
+              <option value="mp3">
+                MP3
+              </option>
+
+              <option value="wav">
+                WAV
+              </option>
+
+              <option value="m4a">
+                M4A
+              </option>
+            </select>
+
+          </div>
+
+        </div>
+
+        <div
+          class="tool-actions"
+          style="margin-top: 18px;"
+        >
+
+          <button
+            class="tool-button primary audio-converter-run"
+            type="button"
+          >
+            <i class="fa-solid fa-repeat"></i>
+            Convert Audio
+          </button>
+
+          <button
+            class="tool-button audio-converter-clear"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+        <div class="audio-converter-result"></div>
+
+      </div>
+
+    </div>
+  `;
+
+  const input =
+    workspaceContent.querySelector(
+      ".audio-converter-input"
+    );
+
+  const selectButton =
+    workspaceContent.querySelector(
+      ".audio-converter-select"
+    );
+
+  const panel =
+    workspaceContent.querySelector(
+      ".audio-converter-panel"
+    );
+
+  const fileContainer =
+    workspaceContent.querySelector(
+      ".audio-converter-file"
+    );
+
+  const previewContainer =
+    workspaceContent.querySelector(
+      ".audio-converter-preview"
+    );
+
+  const formatSelect =
+    workspaceContent.querySelector(
+      ".audio-converter-format"
+    );
+
+  const runButton =
+    workspaceContent.querySelector(
+      ".audio-converter-run"
+    );
+
+  const clearButton =
+    workspaceContent.querySelector(
+      ".audio-converter-clear"
+    );
+
+  const result =
+    workspaceContent.querySelector(
+      ".audio-converter-result"
+    );
+
+  let selectedAudio =
+    null;
+
+  let metadata =
+    null;
+
+
+  async function loadAudio(
+    file
+  ) {
+    if (!isAudioFile(file)) {
+      showToast(
+        "Invalid audio",
+        "Choose a supported audio file.",
+        "warning"
+      );
+
+      return;
+    }
+
+    selectedAudio =
+      file;
+
+    metadata =
+      null;
+
+    panel.hidden =
+      false;
+
+    result.innerHTML =
+      "";
+
+    fileContainer.innerHTML =
+      createAudioFileCardHTML(
+        file
+      );
+
+    createAudioPreview(
+      file,
+      previewContainer
+    );
+
+    try {
+      metadata =
+        await readAudioMetadata(
+          file
+        );
+
+      if (
+        selectedAudio !==
+        file
+      ) {
+        return;
+      }
+
+      fileContainer.innerHTML =
+        createAudioFileCardHTML(
+          file,
+          metadata
+        );
+    } catch (error) {
+      console.warn(
+        "[SENN TOOLS] Audio metadata:",
+        error
+      );
+    }
+  }
+
+
+  selectButton.addEventListener(
+    "click",
+    () => input.click()
+  );
+
+
+  input.addEventListener(
+    "change",
+    () => {
+      const file =
+        input.files?.[0];
+
+      if (file) {
+        loadAudio(file);
+      }
+    }
+  );
+
+
+  clearButton.addEventListener(
+    "click",
+    () => {
+      selectedAudio =
+        null;
+
+      metadata =
+        null;
+
+      input.value =
+        "";
+
+      panel.hidden =
+        true;
+
+      result.innerHTML =
+        "";
+
+      fileContainer.innerHTML =
+        "";
+
+      const oldURL =
+        previewContainer.dataset
+          .audioObjectUrl;
+
+      if (oldURL) {
+        URL.revokeObjectURL(
+          oldURL
+        );
+
+        delete previewContainer
+          .dataset
+          .audioObjectUrl;
+      }
+
+      previewContainer.innerHTML =
+        "";
+    }
+  );
+
+
+  runButton.addEventListener(
+    "click",
+    async () => {
+      if (!selectedAudio) {
+        return;
+      }
+
+      const format =        formatSelect.value;
+
+      const originalHTML =
+        runButton.innerHTML;
+
+      runButton.disabled =
+        true;
+
+      runButton.innerHTML = `
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Extracting...
+      `;
+
+      try {
+        const output =
+          await extractAudioFromVideo(
+            selectedVideo,
+            format
+          );
+
+        const config =
+          getMediaOutputConfig(
+            format
+          );
+
+        const baseName =
+          getBaseFileName(
+            selectedVideo.name
+          );
+
+        downloadBlob(
+          output,
+          `${baseName}.${config.extension}`
+        );
+
+        result.innerHTML = `
+          <div
+            class="tool-notice success"
+            style="margin-top: 18px;"
+          >
+            <i class="fa-solid fa-circle-check"></i>
+
+            <span>
+              ${escapeHTML(
+                config.extension
+                  .toUpperCase()
+              )}
+              audio ready
+              •
+              ${escapeHTML(
+                formatBytes(
+                  output.size
+                )
+              )}
+            </span>
+          </div>
+        `;
+
+        addHistory(
+          "video-to-audio",
+          {
+            fileName:
+              selectedVideo.name
+          }
+        );
+
+        showToast(
+          "Audio extracted",
+          `${config.extension.toUpperCase()} file ready.`,
+          "success"
+        );
+      } catch (error) {
+        if (
+          error?.name ===
+          "SennProcessingCancelled"
+        ) {
+          return;
+        }
+
+        console.error(
+          "[SENN TOOLS] Video → Audio:",
+          error
+        );
+
+        showToast(
+          "Extraction failed",
+          getFriendlyToolError(
+            error,
+            "Unable to extract audio from this video."
+          ),
+          "error"
+        );
+      } finally {
+        runButton.disabled =
+          false;
+
+        runButton.innerHTML =
+          originalHTML;
+      }
+    }
+  );
+
+
+  const smartFile =
+    getCurrentSelectedFile();
+
+  if (
+    smartFile &&
+    isVideoFile(smartFile)
+  ) {
+    loadVideo(smartFile);
+  }
+}
+
+
+/* =========================================================
+   184. VIDEO → AUDIO ENGINE
+========================================================= */
+
+async function extractAudioFromVideo(
+  file,
+  format = "mp3"
+) {
+  const config =
+    getMediaOutputConfig(
+      format
+    );
+
+  if (
+    ![
+      "mp3",
+      "wav",
+      "m4a"
+    ].includes(
+      config.extension
+    )
+  ) {
+    throw new Error(
+      "Invalid audio output format."
+    );
+  }
+
+  return runMediaTask(
+    async (
+      ffmpeg,
+      {
+        update,
+        throwIfCancelled
+      }
+    ) => {
+      const inputExtension =
+        getMediaExtension(
+          file,
+          "mp4"
+        );
+
+      const inputName =
+        createMediaTempName(
+          "audio-source",
+          inputExtension
+        );
+
+      const outputName =
+        createMediaTempName(
+          "audio-output",
+          config.extension
+        );
+
+      try {
+        update(
+          7,
+          "Loading video..."
+        );
+
+        await ffmpeg.writeFile(
+          inputName,
+          await mediaFileToUint8Array(
+            file
+          )
+        );
+
+        throwIfCancelled();
+
+        update(
+          10,
+          "Extracting audio..."
+        );
+
+        await ffmpeg.exec([
+          "-i",
+          inputName,
+          ...config.args,
+          outputName
+        ]);
+
+        throwIfCancelled();
+
+        update(
+          96,
+          "Preparing audio..."
+        );
+
+        const data =
+          await ffmpeg.readFile(
+            outputName
+          );
+
+        return new Blob(
+          [data],
+          {
+            type:
+              config.mimeType
+          }
+        );
+      } finally {
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          inputName
+        );
+
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          outputName
+        );
+      }
+    },
+    {
+      title:
+        "Extracting Audio",
+
+      message:
+        "Preparing video...",
+
+      progressMessage:
+        "Extracting audio...",
+
+      completeMessage:
+        "Audio extraction complete"
+    }
+  );
+}
+
+
+/* =========================================================
+   185. AUDIO CONVERTER UI
+========================================================= */
+
+function renderAudioConverter() {
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-upload-panel">
+
+        <div class="workspace-placeholder-icon">
+          <i class="fa-solid fa-headphones"></i>
+        </div>
+
+        <h2>
+          Audio Converter
+        </h2>
+
+        <p>
+          Convert audio between
+          MP3, WAV, and M4A.
+        </p>
+
+        <input
+          class="audio-converter-input"
+          type="file"
+          accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus"
+          hidden
+        >
+
+        <button
+          class="tool-button primary audio-converter-select"
+          type="button"
+        >
+          <i class="fa-solid fa-file-arrow-up"></i>
+          Choose Audio
+        </button>
+
+      </div>
+
+      <div
+        class="tool-panel audio-converter-panel"
+        hidden
+      >
+
+        <div class="audio-converter-file"></div>
+
+        <div
+          class="audio-converter-preview"
+          style="margin-top: 18px;"
+        ></div>
+
+        <div
+          class="tool-controls"
+          style="margin-top: 18px;"
+        >
+
+          <div class="tool-control">
+            <label>
+              Convert To
+            </label>
+
+            <select
+              class="tool-select audio-converter-format"
+            >
+              <option value="mp3">
+                MP3
+              </option>
+
+              <option value="wav">
+                WAV
+              </option>
+
+              <option value="m4a">
+                M4A
+              </option>
+            </select>
+          </div>
+
+        </div>
+
+        <div
+          class="tool-actions"
+          style="margin-top: 18px;"
+        >
+
+          <button
+            class="tool-button primary audio-converter-run"
+            type="button"
+          >
+            <i class="fa-solid fa-repeat"></i>
+            Convert Audio
+          </button>
+
+          <button
+            class="tool-button audio-converter-clear"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+        <div class="audio-converter-result"></div>
+
+      </div>
+
+    </div>
+  `;
+
+  const input =
+    workspaceContent.querySelector(
+      ".audio-converter-input"
+    );
+
+  const selectButton =
+    workspaceContent.querySelector(
+      ".audio-converter-select"
+    );
+
+  const panel =
+    workspaceContent.querySelector(
+      ".audio-converter-panel"
+    );
+
+  const fileContainer =
+    workspaceContent.querySelector(
+      ".audio-converter-file"
+    );
+
+  const previewContainer =
+    workspaceContent.querySelector(
+      ".audio-converter-preview"
+    );
+
+  const formatSelect =
+    workspaceContent.querySelector(
+      ".audio-converter-format"
+    );
+
+  const runButton =
+    workspaceContent.querySelector(
+      ".audio-converter-run"
+    );
+
+  const clearButton =
+    workspaceContent.querySelector(
+      ".audio-converter-clear"
+    );
+
+  const result =
+    workspaceContent.querySelector(
+      ".audio-converter-result"
+    );
+
+  let selectedAudio =
+    null;
+
+  let metadata =
+    null;
+
+
+  async function loadAudio(
+    file
+  ) {
+    if (!isAudioFile(file)) {
+      showToast(
+        "Invalid audio",
+        "Choose a supported audio file.",
+        "warning"
+      );
+
+      return;
+    }
+
+    selectedAudio =
+      file;
+
+    metadata =
+      null;
+
+    panel.hidden =
+      false;
+
+    result.innerHTML =
+      "";
+
+    fileContainer.innerHTML =
+      createAudioFileCardHTML(
+        file
+      );
+
+    createAudioPreview(
+      file,
+      previewContainer
+    );
+
+    try {
+      metadata =
+        await readAudioMetadata(
+          file
+        );
+
+      if (
+        selectedAudio !==
+        file
+      ) {
+        return;
+      }
+
+      fileContainer.innerHTML =
+        createAudioFileCardHTML(
+          file,
+          metadata
+        );
+    } catch (error) {
+      console.warn(
+        "[SENN TOOLS] Audio metadata:",
+        error
+      );
+    }
+  }
+
+
+  selectButton.addEventListener(
+    "click",
+    () => input.click()
+  );
+
+
+  input.addEventListener(
+    "change",
+    () => {
+      const file =
+        input.files?.[0];
+
+      if (file) {
+        loadAudio(file);
+      }
+    }
+  );
+
+
+  clearButton.addEventListener(
+    "click",
+    () => {
+      selectedAudio =
+        null;
+
+      metadata =
+        null;
+
+      input.value =
+        "";
+
+      panel.hidden =
+        true;
+
+      result.innerHTML =
+        "";
+
+      fileContainer.innerHTML =
+        "";
+
+      const oldURL =
+        previewContainer.dataset
+          .audioObjectUrl;
+
+      if (oldURL) {
+        URL.revokeObjectURL(
+          oldURL
+        );
+
+        delete previewContainer
+          .dataset
+          .audioObjectUrl;
+      }
+
+      previewContainer.innerHTML =
+        "";
+    }
+  );
+
+
+  runButton.addEventListener(
+    "click",
+    async () => {
+      if (!selectedAudio) {
+        return;
+      }
+
+      const format =
+        formatSelect.value;
+
+      const originalHTML =
+        runButton.innerHTML;
+
+      runButton.disabled =
+        true;
+
+      runButton.innerHTML = `
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Converting...
+      `;
+
+      try {
+        const output =
+          await convertAudioFile(
+            selectedAudio,
+            format
+          );
+
+        const config =
+          getMediaOutputConfig(
+            format
+          );
+
+        const baseName =
+          getBaseFileName(
+            selectedAudio.name
+          );
+
+        downloadBlob(
+          output,
+          `${baseName}.${config.extension}`
+        );
+
+        result.innerHTML = `
+          <div
+            class="tool-notice success"
+            style="margin-top: 18px;"
+          >
+            <i class="fa-solid fa-circle-check"></i>
+
+            <span>
+              ${escapeHTML(
+                config.extension
+                  .toUpperCase()
+              )}
+              ready
+              •
+              ${escapeHTML(
+                formatBytes(
+                  output.size
+                )
+              )}
+            </span>
+          </div>
+        `;
+
+        addHistory(
+          "audio-converter",
+          {
+            fileName:
+              selectedAudio.name
+          }
+        );
+
+        showToast(
+          "Audio converted",
+          `${config.extension.toUpperCase()} file ready.`,
+          "success"
+        );
+      } catch (error) {
+        if (
+          error?.name ===
+          "SennProcessingCancelled"
+        ) {
+          return;
+        }
+
+        console.error(
+          "[SENN TOOLS] Audio Converter:",
+          error
+        );
+
+        showToast(
+          "Conversion failed",
+          getFriendlyToolError(
+            error,
+            "Unable to convert this audio file."
+          ),
+          "error"
+        );
+      } finally {
+        runButton.disabled =
+          false;
+
+        runButton.innerHTML =
+          originalHTML;
+      }
+    }
+  );
+
+
+  const smartFile =
+    getCurrentSelectedFile();
+
+  if (
+    smartFile &&
+    isAudioFile(smartFile)
+  ) {
+    loadAudio(smartFile);
+  }
+}
+
+
+/* =========================================================
+   186. AUDIO CONVERSION ENGINE
+========================================================= */
+
+async function convertAudioFile(
+  file,
+  format
+) {
+  const config =
+    getMediaOutputConfig(
+      format
+    );
+
+  if (
+    ![
+      "mp3",
+      "wav",
+      "m4a"
+    ].includes(
+      config.extension
+    )
+  ) {
+    throw new Error(
+      "Invalid audio output format."
+    );
+  }
+
+  return runMediaTask(
+    async (
+      ffmpeg,
+      {
+        update,
+        throwIfCancelled
+      }
+    ) => {
+      const inputExtension =
+        getMediaExtension(
+          file,
+          "mp3"
+        );
+
+      const inputName =
+        createMediaTempName(
+          "audio-input",
+          inputExtension
+        );
+
+      const outputName =
+        createMediaTempName(
+          "audio-converted",
+          config.extension
+        );
+
+      try {
+        update(
+          7,
+          "Loading audio..."
+        );
+
+        await ffmpeg.writeFile(
+          inputName,
+          await mediaFileToUint8Array(
+            file
+          )
+        );
+
+        throwIfCancelled();
+
+        update(
+          10,
+          "Converting audio..."
+        );
+
+        await ffmpeg.exec([
+          "-i",
+          inputName,
+          ...config.args,
+          outputName
+        ]);
+
+        throwIfCancelled();
+
+        update(
+          96,
+          "Preparing converted audio..."
+        );
+
+        const data =
+          await ffmpeg.readFile(
+            outputName
+          );
+
+        return new Blob(
+          [data],
+          {
+            type:
+              config.mimeType
+          }
+        );
+      } finally {
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          inputName
+        );
+
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          outputName
+        );
+      }
+    },
+    {
+      title:
+        "Converting Audio",
+
+      message:
+        "Preparing audio...",
+
+      progressMessage:
+        "Converting audio...",
+
+      completeMessage:
+        "Audio conversion complete"
+    }
+  );
+}
+
+
+/* =========================================================
+   187. MEDIA CONVERTER UI
+========================================================= */
+
+function renderMediaConverter() {
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-upload-panel">
+
+        <div class="workspace-placeholder-icon">
+          <i class="fa-solid fa-film"></i>
+        </div>
+
+        <h2>
+          Media Converter
+        </h2>
+
+        <p>
+          Convert videos between
+          MP4 and WebM.
+        </p>
+
+        <input
+          class="media-converter-input"
+          type="file"
+          accept="video/*,.mp4,.webm,.mov,.m4v"
+          hidden
+        >
+
+        <button
+          class="tool-button primary media-converter-select"
+          type="button"
+        >
+          <i class="fa-solid fa-file-arrow-up"></i>
+          Choose Video
+        </button>
+
+      </div>
+
+      <div
+        class="tool-panel media-converter-panel"
+        hidden
+      >
+
+        <div class="media-converter-file"></div>
+
+        <div
+          class="media-converter-preview"
+          style="margin-top: 18px;"
+        ></div>
+
+        <div
+          class="tool-controls"
+          style="margin-top: 18px;"
+        >
+
+          <div class="tool-control">
+
+            <label>
+              Convert To
+            </label>
+
+            <select
+              class="tool-select media-converter-format"
+            >
+              <option value="mp4">
+                MP4
+              </option>
+
+              <option value="webm">
+                WebM
+              </option>
+            </select>
+
+          </div>
+
+        </div>
+
+        <div
+          class="tool-notice"
+          style="margin-top: 18px;"
+        >
+          <i class="fa-solid fa-circle-info"></i>
+
+          <span>
+            Video conversion re-encodes
+            the file. Processing time
+            depends on video length,
+            resolution, and device speed.
+          </span>
+        </div>
+
+        <div
+          class="tool-actions"
+          style="margin-top: 18px;"
+        >
+
+          <button
+            class="tool-button primary media-converter-run"
+            type="button"
+          >
+            <i class="fa-solid fa-repeat"></i>
+            Convert Video
+          </button>
+
+          <button
+            class="tool-button media-converter-clear"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+        <div class="media-converter-result"></div>
+
+      </div>
+
+    </div>
+  `;
+
+  const input =
+    workspaceContent.querySelector(
+      ".media-converter-input"
+    );
+
+  const selectButton =
+    workspaceContent.querySelector(
+      ".media-converter-select"
+    );
+
+  const panel =
+    workspaceContent.querySelector(
+      ".media-converter-panel"
+    );
+
+  const fileContainer =
+    workspaceContent.querySelector(
+      ".media-converter-file"
+    );
+
+  const previewContainer =
+    workspaceContent.querySelector(
+      ".media-converter-preview"
+    );
+
+  const formatSelect =
+    workspaceContent.querySelector(
+      ".media-converter-format"
+    );
+
+  const runButton =
+    workspaceContent.querySelector(
+      ".media-converter-run"
+    );
+
+  const clearButton =
+    workspaceContent.querySelector(
+      ".media-converter-clear"
+    );
+
+  const result =
+    workspaceContent.querySelector(
+      ".media-converter-result"
+    );
+
+  let selectedVideo =
+    null;
+
+  let metadata =
+    null;
+
+
+  async function loadVideo(
+    file
+  ) {
+    if (!isVideoFile(file)) {
+      showToast(
+        "Invalid video",
+        "Choose a supported video file.",
+        "warning"
+      );
+
+      return;
+    }
+
+    selectedVideo =
+      file;
+
+    metadata =
+      null;
+
+    panel.hidden =
+      false;
+
+    result.innerHTML =
+      "";
+
+    fileContainer.innerHTML =
+      createVideoFileCardHTML(
+        file
+      );
+
+    createVideoPreview(
+      file,
+      previewContainer
+    );
+
+    try {
+      metadata =
+        await readVideoMetadata(
+          file
+        );
+
+      if (
+        selectedVideo !==
+        file
+      ) {
+        return;
+      }
+
+      fileContainer.innerHTML =
+        createVideoFileCardHTML(
+          file,
+          metadata
+        );
+    } catch (error) {
+      console.warn(
+        "[SENN TOOLS] Video metadata:",
+        error
+      );
+    }
+  }
+
+
+  selectButton.addEventListener(
+    "click",
+    () => input.click()
+  );
+
+
+  input.addEventListener(
+    "change",
+    () => {
+      const file =
+        input.files?.[0];
+
+      if (file) {
+        loadVideo(file);
+      }
+    }
+  );
+
+
+  clearButton.addEventListener(
+    "click",
+    () => {
+      selectedVideo =
+        null;
+
+      metadata =
+        null;
+
+      input.value =
+        "";
+
+      panel.hidden =
+        true;
+
+      result.innerHTML =
+        "";
+
+      fileContainer.innerHTML =
+        "";
+
+      const oldURL =
+        previewContainer.dataset
+          .videoObjectUrl;
+
+      if (oldURL) {
+        URL.revokeObjectURL(
+          oldURL
+        );
+
+        delete previewContainer
+          .dataset
+          .videoObjectUrl;
+      }
+
+      previewContainer.innerHTML =
+        "";
+    }
+  );
+
+
+  runButton.addEventListener(
+    "click",
+    async () => {
+      if (!selectedVideo) {
+        return;
+      }
+
+      const format =
+        formatSelect.value;
+
+      const originalHTML =
+        runButton.innerHTML;
+
+      runButton.disabled =
+        true;
+
+      runButton.innerHTML = `
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Converting...
+      `;
+
+      try {
+        const output =
+          await convertVideoFile(
+            selectedVideo,
+            format
+          );
+
+        const config =
+          getMediaOutputConfig(
+            format
+          );
+
+        const baseName =
+          getBaseFileName(
+            selectedVideo.name
+          );
+
+        downloadBlob(
+          output,
+          `${baseName}-converted.${config.extension}`
+        );
+
+        result.innerHTML = `
+          <div
+            class="tool-notice success"
+            style="margin-top: 18px;"
+          >
+            <i class="fa-solid fa-circle-check"></i>
+
+            <span>
+              ${escapeHTML(
+                config.extension
+                  .toUpperCase()
+              )}
+              video ready
+              •
+              ${escapeHTML(                formatBytes(
+                  output.size
+                )
+              )}
+            </span>
+          </div>
+        `;
+
+        addHistory(
+          "media-converter",
+          {
+            fileName:
+              selectedVideo.name
+          }
+        );
+
+        showToast(
+          "Video converted",
+          `${config.extension.toUpperCase()} file ready.`,
+          "success"
+        );
+      } catch (error) {
+        if (
+          error?.name ===
+          "SennProcessingCancelled"
+        ) {
+          return;
+        }
+
+        console.error(
+          "[SENN TOOLS] Media Converter:",
+          error
+        );
+
+        showToast(
+          "Conversion failed",
+          getFriendlyToolError(
+            error,
+            "Unable to convert this video."
+          ),
+          "error"
+        );
+      } finally {
+        runButton.disabled =
+          false;
+
+        runButton.innerHTML =
+          originalHTML;
+      }
+    }
+  );
+
+
+  const smartFile =
+    getCurrentSelectedFile();
+
+  if (
+    smartFile &&
+    isVideoFile(smartFile)
+  ) {
+    loadVideo(smartFile);
+  }
+}
+
+
+/* =========================================================
+   188. VIDEO CONVERSION ENGINE
+========================================================= */
+
+async function convertVideoFile(
+  file,
+  format
+) {
+  const config =
+    getMediaOutputConfig(
+      format
+    );
+
+  if (
+    ![
+      "mp4",
+      "webm"
+    ].includes(
+      config.extension
+    )
+  ) {
+    throw new Error(
+      "Invalid video output format."
+    );
+  }
+
+  return runMediaTask(
+    async (
+      ffmpeg,
+      {
+        update,
+        throwIfCancelled
+      }
+    ) => {
+      const inputExtension =
+        getMediaExtension(
+          file,
+          "mp4"
+        );
+
+      const inputName =
+        createMediaTempName(
+          "video-input",
+          inputExtension
+        );
+
+      const outputName =
+        createMediaTempName(
+          "video-output",
+          config.extension
+        );
+
+      try {
+        update(
+          7,
+          "Loading video..."
+        );
+
+        await ffmpeg.writeFile(
+          inputName,
+          await mediaFileToUint8Array(
+            file
+          )
+        );
+
+        throwIfCancelled();
+
+        update(
+          10,
+          "Converting video..."
+        );
+
+        await ffmpeg.exec([
+          "-i",
+          inputName,
+          ...config.args,
+          outputName
+        ]);
+
+        throwIfCancelled();
+
+        update(
+          96,
+          "Preparing converted video..."
+        );
+
+        const data =
+          await ffmpeg.readFile(
+            outputName
+          );
+
+        return new Blob(
+          [data],
+          {
+            type:
+              config.mimeType
+          }
+        );
+      } finally {
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          inputName
+        );
+
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          outputName
+        );
+      }
+    },
+    {
+      title:
+        "Converting Video",
+
+      message:
+        "Preparing video...",
+
+      progressMessage:
+        "Converting video...",
+
+      completeMessage:
+        "Video conversion complete"
+    }
+  );
+}
+
+
+/* =========================================================
+   189. PART 5B RENDERERS
+========================================================= */
+
+const part5BRenderers = {
+  "video-to-audio":
+    renderVideoToAudio,
+
+  "audio-converter":
+    renderAudioConverter,
+
+  "media-converter":
+    renderMediaConverter
+};
+
+
+/* =========================================================
+   190. PART 5B ROUTER
+========================================================= */
+
+const previousPart5ARenderToolWorkspace =
+  renderToolWorkspace;
+
+renderToolWorkspace =
+  function (toolId) {
+    const renderer =
+      part5BRenderers[
+        toolId
+      ];
+
+    if (renderer) {
+      renderer();
+      return;
+    }
+
+    previousPart5ARenderToolWorkspace(
+      toolId
+    );
+  };
+
+
+/* =========================================================
+   191. PART 5B STATUS
+========================================================= */
+
+function getPart5BStatus() {
+  return {
+    audioValidation:
+      typeof isAudioFile ===
+      "function",
+
+    audioMetadata:
+      typeof readAudioMetadata ===
+      "function",
+
+    videoToAudio:
+      typeof renderVideoToAudio ===
+      "function",
+
+    audioConverter:
+      typeof renderAudioConverter ===
+      "function",
+
+    mediaConverter:
+      typeof renderMediaConverter ===
+      "function"
+  };
+}
+
+
+/* =========================================================
+   192. PART 5B READY
+========================================================= */
+
+console.log(
+  "[SENN TOOLS] Part 5B ready.",
+  getPart5BStatus()
+);
+
+
+/* =========================================================
+   PART 5B END
+
+   ADDED:
+   ✓ Audio validation
+   ✓ Audio metadata reader
+   ✓ Audio preview
+   ✓ Shared media output configuration
+   ✓ Video → MP3
+   ✓ Video → WAV
+   ✓ Video → M4A
+   ✓ MP3 / WAV / M4A audio conversion
+   ✓ MP4 → WebM
+   ✓ WebM / MOV → MP4
+   ✓ Smart Drop audio support
+   ✓ Smart Drop video support
+   ✓ Part 5B router override
+
+   PART 5 STATUS:
+   5A ✓
+   5B ✓
+
+   NEXT PART 5C:
+   - Video Upscaler
+   - Real processing cancellation
+   - FFmpeg engine recovery
+   - Media memory protection
+   - Smart Drop media polish
+   - Final Part 5 integration
+========================================================= */
+            
+       
