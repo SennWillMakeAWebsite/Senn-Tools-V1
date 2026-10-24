@@ -5892,3 +5892,142 @@ body.light-theme
    SECTION 234
    AI TOOLS BETA ENGINE
 ========================================================= */
+/* =========================================================
+   40. LIGHT THEME REPAIR
+========================================================= */
+
+html[data-theme="light"],
+body[data-theme="light"] {
+  color-scheme: light;
+
+  --background: #f4f7fb;
+  --background-secondary: #ffffff;
+
+  --text-primary: #121722;
+  --text-secondary: #5d6675;
+  --text-muted: #8b94a3;
+
+  --border-color: rgba(20, 30, 45, 0.11);
+}
+
+
+html[data-theme="light"] body,
+body[data-theme="light"] {
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(66, 232, 255, 0.08),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(155, 108, 255, 0.07),
+      transparent 28%
+    ),
+    #f4f7fb;
+
+  color: #121722;
+}
+
+
+html[data-theme="light"] .sidebar,
+html[data-theme="light"] .topbar,
+html[data-theme="light"] .footer,
+html[data-theme="light"] .smart-drop,
+html[data-theme="light"] .smart-drop-zone,
+html[data-theme="light"] .category-card,
+html[data-theme="light"] .tool-card,
+html[data-theme="light"] .mini-tool-card,
+html[data-theme="light"] .workspace-header,
+html[data-theme="light"] .workspace-content,
+html[data-theme="light"] .search-panel,
+html[data-theme="light"] .processing-card,
+html[data-theme="light"] .confirmation-card {
+  background-color:
+    rgba(255, 255, 255, 0.82);
+
+  border-color:
+    rgba(20, 30, 45, 0.1);
+}
+
+
+html[data-theme="light"] .nav-item,
+html[data-theme="light"] .filter-button,
+html[data-theme="light"] .secondary-button,
+html[data-theme="light"] .icon-button {
+  color: #525d6d;
+}
+
+
+html[data-theme="light"] .nav-item:hover,
+html[data-theme="light"] .nav-item.active,
+html[data-theme="light"] .filter-button:hover,
+html[data-theme="light"] .filter-button.active {
+  color: #111722;
+
+  background:
+    rgba(41, 177, 205, 0.08);
+}
+
+
+html[data-theme="light"] h1,
+html[data-theme="light"] h2,
+html[data-theme="light"] h3,
+html[data-theme="light"] strong {
+  color: #121722;
+}
+
+
+html[data-theme="light"] p {
+  color: #606b7b;
+}
+
+
+html[data-theme="light"] input,
+html[data-theme="light"] textarea,
+html[data-theme="light"] select {
+  color: #121722;
+
+  background:
+    rgba(255, 255, 255, 0.88);
+
+  border-color:
+    rgba(20, 30, 45, 0.12);
+}
+
+
+html[data-theme="light"] .background-grid {
+  opacity: 0.3;
+}
+
+
+/* AI LIGHT MODE */
+
+html[data-theme="light"] .ai-tool-card,
+html[data-theme="light"] .ai-category-card,
+html[data-theme="light"] .ai-settings-panel,
+html[data-theme="light"] .ai-preview-card,
+html[data-theme="light"] .ai-engine-status {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(66, 232, 255, 0.05),
+      rgba(155, 108, 255, 0.035)
+    ),
+    rgba(255, 255, 255, 0.86);
+
+  border-color:
+    rgba(74, 121, 170, 0.15);
+}
+
+
+/* DROP ZONE ACTIVE */
+
+.smart-drop-zone.dragging,
+.upload-zone.dragging {
+  border-color:
+    rgba(66, 232, 255, 0.55) !important;
+
+  background:
+    rgba(66, 232, 255, 0.055) !important;
+}
