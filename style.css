@@ -4460,3 +4460,1435 @@ body.light-theme
    ✓ Mobile layout
    ✓ Small mobile layout
 ========================================================= */
+/* =========================================================
+   39. AI TOOLS BETA
+========================================================= */
+
+:root {
+  --ai-cyan: #42e8ff;
+  --ai-blue: #6488ff;
+  --ai-purple: #9b6cff;
+
+  --ai-soft-cyan: rgba(66, 232, 255, 0.12);
+  --ai-soft-blue: rgba(100, 136, 255, 0.12);
+  --ai-soft-purple: rgba(155, 108, 255, 0.12);
+
+  --ai-border: rgba(120, 145, 255, 0.22);
+  --ai-border-hover: rgba(105, 220, 255, 0.42);
+
+  --ai-background:
+    linear-gradient(
+      145deg,
+      rgba(66, 232, 255, 0.055),
+      rgba(100, 136, 255, 0.035) 45%,
+      rgba(155, 108, 255, 0.055)
+    );
+}
+
+
+/* =========================================================
+   39.1 AI SIDEBAR
+========================================================= */
+
+.ai-nav-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-nav-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(66, 232, 255, 0.07),
+      rgba(155, 108, 255, 0.05)
+    );
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition:
+    opacity 0.2s ease;
+}
+
+.ai-nav-item:hover::before,
+.ai-nav-item.active::before {
+  opacity: 1;
+}
+
+.ai-nav-item > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ai-nav-item > i {
+  color: var(--ai-cyan);
+}
+
+.nav-beta-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-left: auto;
+
+  min-width: 36px;
+  height: 18px;
+
+  padding: 0 6px;
+
+  border: 1px solid rgba(66, 232, 255, 0.24);
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(66, 232, 255, 0.1),
+      rgba(155, 108, 255, 0.1)
+    );
+
+  color: #a8f5ff;
+
+  font-family: "JetBrains Mono", monospace;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.08em;
+
+  box-shadow:
+    inset 0 0 12px rgba(66, 232, 255, 0.025);
+}
+
+
+/* =========================================================
+   39.2 AI CATEGORY CARD
+========================================================= */
+
+.ai-category-card {
+  position: relative;
+  overflow: hidden;
+
+  border-color: var(--ai-border);
+
+  background:
+    var(--ai-background),
+    rgba(13, 15, 22, 0.72);
+}
+
+.ai-category-card::before {
+  content: "";
+  position: absolute;
+
+  width: 170px;
+  height: 170px;
+
+  top: -90px;
+  right: -70px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(66, 232, 255, 0.15),
+      rgba(100, 136, 255, 0.06) 45%,
+      transparent 72%
+    );
+
+  pointer-events: none;
+}
+
+.ai-category-card::after {
+  content: "";
+  position: absolute;
+
+  width: 150px;
+  height: 150px;
+
+  left: -75px;
+  bottom: -95px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(155, 108, 255, 0.13),
+      transparent 70%
+    );
+
+  pointer-events: none;
+}
+
+.ai-category-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ai-category-card:hover {
+  border-color: var(--ai-border-hover);
+
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.22),
+    0 0 28px rgba(66, 232, 255, 0.035);
+}
+
+.category-icon.ai-tool,
+.mini-tool-icon.ai-tool,
+.tool-icon.ai-tool {
+  color: var(--ai-cyan);
+
+  border-color: rgba(66, 232, 255, 0.16);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(66, 232, 255, 0.12),
+      rgba(100, 136, 255, 0.08) 50%,
+      rgba(155, 108, 255, 0.11)
+    );
+
+  box-shadow:
+    inset 0 0 20px rgba(66, 232, 255, 0.025);
+}
+
+.ai-category-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 8px;
+}
+
+.ai-category-title h3 {
+  margin: 0;
+}
+
+.ai-beta-badge,
+.tool-beta-badge,
+.filter-beta-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: fit-content;
+
+  border: 1px solid rgba(66, 232, 255, 0.24);
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(66, 232, 255, 0.1),
+      rgba(155, 108, 255, 0.1)
+    );
+
+  color: #a8f5ff;
+
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.08em;
+}
+
+.ai-beta-badge {
+  min-height: 20px;
+
+  padding: 5px 7px;
+
+  font-size: 8px;
+}
+
+
+/* =========================================================
+   39.3 AI FILTER
+========================================================= */
+
+.ai-filter-button {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+}
+
+.ai-filter-button > i {
+  color: var(--ai-cyan);
+}
+
+.filter-beta-badge {
+  padding: 4px 6px;
+
+  font-size: 7px;
+}
+
+.ai-filter-button.active {
+  border-color: rgba(66, 232, 255, 0.34);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(66, 232, 255, 0.12),
+      rgba(155, 108, 255, 0.08)
+    );
+}
+
+
+/* =========================================================
+   39.4 AI TOOL CARDS
+========================================================= */
+
+.ai-tool-card {
+  position: relative;
+  isolation: isolate;
+
+  overflow: hidden;
+
+  border-color: var(--ai-border);
+
+  background:
+    var(--ai-background),
+    rgba(13, 15, 22, 0.74);
+}
+
+.ai-tool-card::before {
+  content: "";
+  position: absolute;
+
+  z-index: -1;
+
+  width: 140px;
+  height: 140px;
+
+  top: -85px;
+  right: -65px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(66, 232, 255, 0.15),
+      rgba(100, 136, 255, 0.055) 45%,
+      transparent 72%
+    );
+
+  opacity: 0.8;
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.ai-tool-card::after {
+  content: "";
+  position: absolute;
+
+  z-index: -1;
+
+  left: 20px;
+  right: 20px;
+  bottom: -1px;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(66, 232, 255, 0.35),
+      rgba(155, 108, 255, 0.24),
+      transparent
+    );
+
+  opacity: 0.45;
+
+  transition:
+    opacity 0.25s ease;
+}
+
+.ai-tool-card:hover {
+  border-color: var(--ai-border-hover);
+
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.22),
+    0 0 30px rgba(66, 232, 255, 0.035);
+}
+
+.ai-tool-card:hover::before {
+  opacity: 1;
+
+  transform: scale(1.12);
+}
+
+.ai-tool-card:hover::after {
+  opacity: 1;
+}
+
+.ai-tool-card .mini-tool-icon {
+  flex-shrink: 0;
+}
+
+.ai-tool-card .tool-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  margin-bottom: 4px;
+}
+
+.ai-tool-card .tool-title-row h3 {
+  margin: 0;
+}
+
+.tool-beta-badge {
+  padding: 4px 6px;
+
+  font-size: 7px;
+}
+
+
+/* =========================================================
+   39.5 AI FAVORITE BUTTON
+========================================================= */
+
+.ai-tool-card .favorite-button:hover {
+  border-color: rgba(66, 232, 255, 0.28);
+
+  color: var(--ai-cyan);
+
+  background:
+    rgba(66, 232, 255, 0.07);
+}
+
+.ai-tool-card .favorite-button.active,
+.ai-tool-card .favorite-button.is-active {
+  color: var(--ai-cyan);
+
+  border-color: rgba(66, 232, 255, 0.3);
+
+  background:
+    rgba(66, 232, 255, 0.08);
+}
+
+
+/* =========================================================
+   39.6 AI WORKSPACE HEADER
+========================================================= */
+
+#toolWorkspace[data-ai-workspace="true"] .workspace-header {
+  position: relative;
+
+  overflow: hidden;
+
+  border-color: var(--ai-border);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(66, 232, 255, 0.04),
+      rgba(100, 136, 255, 0.025) 50%,
+      rgba(155, 108, 255, 0.045)
+    );
+}
+
+#toolWorkspace[data-ai-workspace="true"] .workspace-header::after {
+  content: "";
+
+  position: absolute;
+
+  width: 220px;
+  height: 220px;
+
+  top: -150px;
+  right: -80px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(66, 232, 255, 0.12),
+      transparent 68%
+    );
+
+  pointer-events: none;
+}
+
+#toolWorkspace[data-ai-workspace="true"] .workspace-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+#toolWorkspace[data-ai-workspace="true"] .workspace-icon {
+  color: var(--ai-cyan);
+
+  border-color: rgba(66, 232, 255, 0.2);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(66, 232, 255, 0.12),
+      rgba(155, 108, 255, 0.1)
+    );
+}
+
+#toolWorkspace[data-ai-workspace="true"] #workspaceCategory {
+  color: #8eefff;
+}
+
+
+/* =========================================================
+   39.7 AI WORKSPACE COMMON UI
+========================================================= */
+
+.ai-workspace {
+  display: grid;
+
+  gap: 18px;
+
+  width: 100%;
+}
+
+.ai-beta-notice {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 12px;
+
+  padding: 14px 16px;
+
+  border: 1px solid rgba(66, 232, 255, 0.16);
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(66, 232, 255, 0.055),
+      rgba(155, 108, 255, 0.035)
+    );
+}
+
+.ai-beta-notice > i {
+  flex-shrink: 0;
+
+  margin-top: 2px;
+
+  color: var(--ai-cyan);
+}
+
+.ai-beta-notice-content {
+  min-width: 0;
+}
+
+.ai-beta-notice-content strong {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: var(--text-primary);
+}
+
+.ai-beta-notice-content p {
+  margin: 0;
+
+  color: var(--text-secondary);
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   39.8 AI ENGINE STATUS
+========================================================= */
+
+.ai-engine-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  padding: 14px 16px;
+
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+
+  background:
+    rgba(255, 255, 255, 0.018);
+}
+
+.ai-engine-information {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  min-width: 0;
+}
+
+.ai-engine-dot {
+  width: 9px;
+  height: 9px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #707684;
+
+  box-shadow:
+    0 0 0 4px rgba(112, 118, 132, 0.08);
+}
+
+.ai-engine-status[data-status="ready"] .ai-engine-dot {
+  background: #63f5bb;
+
+  box-shadow:
+    0 0 0 4px rgba(99, 245, 187, 0.08),
+    0 0 14px rgba(99, 245, 187, 0.2);
+}
+
+.ai-engine-status[data-status="loading"] .ai-engine-dot {
+  background: var(--ai-cyan);
+
+  box-shadow:
+    0 0 0 4px rgba(66, 232, 255, 0.08),
+    0 0 14px rgba(66, 232, 255, 0.2);
+
+  animation:
+    aiEnginePulse 1.2s ease-in-out infinite;
+}
+
+.ai-engine-status[data-status="error"] .ai-engine-dot {
+  background: #ff6f7f;
+
+  box-shadow:
+    0 0 0 4px rgba(255, 111, 127, 0.08);
+}
+
+.ai-engine-copy {
+  min-width: 0;
+}
+
+.ai-engine-copy strong {
+  display: block;
+
+  margin-bottom: 2px;
+
+  color: var(--text-primary);
+
+  font-size: 13px;
+}
+
+.ai-engine-copy span {
+  display: block;
+
+  overflow: hidden;
+
+  color: var(--text-secondary);
+
+  font-size: 11px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-engine-badge {
+  flex-shrink: 0;
+
+  padding: 6px 8px;
+
+  border: 1px solid rgba(66, 232, 255, 0.17);
+  border-radius: 999px;
+
+  color: #a8f5ff;
+
+  background:
+    rgba(66, 232, 255, 0.055);
+
+  font-family: "JetBrains Mono", monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+}
+
+
+/* =========================================================
+   39.9 AI MODEL LOADING
+========================================================= */
+
+.ai-model-progress {
+  display: grid;
+
+  gap: 8px;
+}
+
+.ai-model-progress-information {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  color: var(--text-secondary);
+
+  font-size: 11px;
+}
+
+.ai-model-progress-information strong {
+  color: var(--text-primary);
+
+  font-weight: 600;
+}
+
+.ai-model-progress-track {
+  position: relative;
+
+  overflow: hidden;
+
+  width: 100%;
+  height: 7px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(255, 255, 255, 0.055);
+}
+
+.ai-model-progress-bar {
+  width: 0%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--ai-cyan),
+      var(--ai-blue),
+      var(--ai-purple)
+    );
+
+  box-shadow:
+    0 0 16px rgba(66, 232, 255, 0.16);
+
+  transition:
+    width 0.25s ease;
+}
+
+
+/* =========================================================
+   39.10 AI UPLOAD AREA
+========================================================= */
+
+.ai-upload-zone {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 210px;
+
+  padding: 26px;
+
+  overflow: hidden;
+
+  cursor: pointer;
+
+  text-align: center;
+
+  border: 1px dashed rgba(66, 232, 255, 0.24);
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(66, 232, 255, 0.025),
+      rgba(155, 108, 255, 0.018)
+    );
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.ai-upload-zone:hover,
+.ai-upload-zone.dragging {
+  border-color: rgba(66, 232, 255, 0.5);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(66, 232, 255, 0.055),
+      rgba(155, 108, 255, 0.035)
+    );
+}
+
+.ai-upload-zone.dragging {
+  transform: scale(0.995);
+}
+
+.ai-upload-content {
+  position: relative;
+  z-index: 1;
+
+  display: grid;
+  justify-items: center;
+
+  gap: 10px;
+
+  max-width: 430px;
+}
+
+.ai-upload-icon {
+  display: grid;
+  place-items: center;
+
+  width: 54px;
+  height: 54px;
+
+  margin-bottom: 4px;
+
+  border: 1px solid rgba(66, 232, 255, 0.18);
+  border-radius: 16px;
+
+  color: var(--ai-cyan);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(66, 232, 255, 0.1),
+      rgba(155, 108, 255, 0.07)
+    );
+
+  font-size: 19px;
+}
+
+.ai-upload-content h3 {
+  margin: 0;
+
+  color: var(--text-primary);
+
+  font-size: 16px;
+}
+
+.ai-upload-content p {
+  margin: 0;
+
+  color: var(--text-secondary);
+
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.ai-upload-support {
+  color: var(--text-muted);
+
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+
+/* =========================================================
+   39.11 AI SETTINGS
+========================================================= */
+
+.ai-settings-panel {
+  display: grid;
+
+  gap: 16px;
+
+  padding: 18px;
+
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+
+  background:
+    rgba(255, 255, 255, 0.018);
+}
+
+.ai-settings-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.ai-settings-heading h3 {
+  margin: 0;
+
+  color: var(--text-primary);
+
+  font-size: 14px;
+}
+
+.ai-settings-heading span {
+  color: var(--text-muted);
+
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+}
+
+.ai-option-group {
+  display: grid;
+
+  gap: 9px;
+}
+
+.ai-option-label {
+  color: var(--text-secondary);
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ai-option-buttons {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 8px;
+}
+
+.ai-option-button {
+  min-height: 36px;
+
+  padding: 8px 12px;
+
+  cursor: pointer;
+
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+
+  color: var(--text-secondary);
+
+  background:
+    rgba(255, 255, 255, 0.018);
+
+  font: inherit;
+  font-size: 11px;
+
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.ai-option-button:hover {
+  color: var(--text-primary);
+
+  border-color: rgba(66, 232, 255, 0.24);
+}
+
+.ai-option-button.active {
+  color: #b7f7ff;
+
+  border-color: rgba(66, 232, 255, 0.34);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(66, 232, 255, 0.1),
+      rgba(155, 108, 255, 0.07)
+    );
+}
+
+
+/* =========================================================
+   39.12 AI ACTION BUTTON
+========================================================= */
+
+.ai-process-button {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  min-height: 44px;
+
+  padding: 11px 18px;
+
+  overflow: hidden;
+
+  cursor: pointer;
+
+  border: 1px solid rgba(66, 232, 255, 0.3);
+  border-radius: 12px;
+
+  color: #dffcff;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(29, 162, 190, 0.9),
+      rgba(77, 101, 210, 0.92)
+    );
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.18);
+
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.ai-process-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+
+  filter: brightness(1.07);
+}
+
+.ai-process-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ai-process-button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.45;
+}
+
+
+/* =========================================================
+   39.13 AI PREVIEW
+========================================================= */
+
+.ai-preview-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 14px;
+}
+
+.ai-preview-card {
+  min-width: 0;
+
+  overflow: hidden;
+
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+
+  background:
+    rgba(255, 255, 255, 0.018);
+}
+
+.ai-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 11px 13px;
+
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ai-preview-header strong {
+  color: var(--text-primary);
+
+  font-size: 11px;
+}
+
+.ai-preview-header span {
+  color: var(--text-muted);
+
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+}
+
+.ai-preview-media {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  min-height: 280px;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.018) 25%,
+      transparent 25%
+    ),
+    linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.018) 25%,
+      transparent 25%
+    ),
+    linear-gradient(
+      45deg,
+      transparent 75%,
+      rgba(255, 255, 255, 0.018) 75%
+    ),
+    linear-gradient(
+      -45deg,
+      transparent 75%,
+      rgba(255, 255, 255, 0.018) 75%
+    );
+
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+
+  background-size:
+    16px 16px;
+}
+
+.ai-preview-media img,
+.ai-preview-media canvas {
+  display: block;
+
+  max-width: 100%;
+  max-height: 520px;
+
+  object-fit: contain;
+}
+
+
+/* =========================================================
+   39.14 AI RESULT
+========================================================= */
+
+.ai-result-panel {
+  display: grid;
+
+  gap: 14px;
+
+  padding: 16px;
+
+  border: 1px solid rgba(99, 245, 187, 0.15);
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(99, 245, 187, 0.035),
+      rgba(66, 232, 255, 0.025)
+    );
+}
+
+.ai-result-information {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 14px;
+}
+
+.ai-result-copy {
+  min-width: 0;
+}
+
+.ai-result-copy strong {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: var(--text-primary);
+
+  font-size: 13px;
+}
+
+.ai-result-copy p {
+  margin: 0;
+
+  color: var(--text-secondary);
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.ai-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 8px;
+}
+
+
+/* =========================================================
+   39.15 AI FALLBACK
+========================================================= */
+
+.ai-fallback-notice {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  padding: 13px 14px;
+
+  border: 1px solid rgba(255, 191, 92, 0.16);
+  border-radius: 13px;
+
+  background:
+    rgba(255, 191, 92, 0.035);
+}
+
+.ai-fallback-notice > i {
+  flex-shrink: 0;
+
+  margin-top: 2px;
+
+  color: #ffc36d;
+}
+
+.ai-fallback-notice p {
+  margin: 0;
+
+  color: var(--text-secondary);
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.ai-fallback-notice strong {
+  color: #ffd699;
+}
+
+
+/* =========================================================
+   39.16 AI DEVICE WARNING
+========================================================= */
+
+.ai-device-warning {
+  display: none;
+
+  gap: 10px;
+
+  padding: 13px 14px;
+
+  border: 1px solid rgba(255, 111, 127, 0.15);
+  border-radius: 13px;
+
+  background:
+    rgba(255, 111, 127, 0.035);
+}
+
+.ai-device-warning.show {
+  display: flex;
+}
+
+.ai-device-warning > i {
+  flex-shrink: 0;
+
+  margin-top: 2px;
+
+  color: #ff7d8c;
+}
+
+.ai-device-warning p {
+  margin: 0;
+
+  color: var(--text-secondary);
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   39.17 AI LOADING ANIMATION
+========================================================= */
+
+.ai-loading-spinner {
+  width: 16px;
+  height: 16px;
+
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  border-top-color: currentColor;
+  border-radius: 50%;
+
+  animation:
+    aiSpinner 0.75s linear infinite;
+}
+
+@keyframes aiSpinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes aiEnginePulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+
+/* =========================================================
+   39.18 AI HIDDEN STATE
+========================================================= */
+
+.ai-hidden {
+  display: none !important;
+}
+
+
+/* =========================================================
+   39.19 AI RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .ai-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-preview-media {
+    min-height: 230px;
+  }
+
+}
+
+
+@media (max-width: 640px) {
+
+  .ai-category-title {
+    gap: 6px;
+  }
+
+  .nav-beta-badge {
+    min-width: 32px;
+
+    padding-inline: 5px;
+
+    font-size: 7px;
+  }
+
+  .ai-beta-badge,
+  .tool-beta-badge {
+    font-size: 7px;
+  }
+
+  .ai-engine-status {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .ai-engine-badge {
+    align-self: flex-start;
+  }
+
+  .ai-upload-zone {
+    min-height: 185px;
+
+    padding: 22px 16px;
+  }
+
+  .ai-settings-panel {
+    padding: 15px;
+  }
+
+  .ai-option-buttons {
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .ai-option-button {
+    width: 100%;
+  }
+
+  .ai-preview-media {
+    min-height: 200px;
+  }
+
+  .ai-result-information {
+    flex-direction: column;
+  }
+
+  .ai-result-actions {
+    width: 100%;
+  }
+
+  .ai-result-actions > button,
+  .ai-result-actions > a {
+    flex: 1 1 auto;
+  }
+
+}
+
+
+@media (max-width: 420px) {
+
+  .ai-option-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-upload-icon {
+    width: 48px;
+    height: 48px;
+
+    border-radius: 14px;
+  }
+
+  .ai-preview-media {
+    min-height: 180px;
+  }
+
+}
+
+
+/* =========================================================
+   PART 7 AI UI FOUNDATION READY
+
+   UI:
+   ✓ AI sidebar
+   ✓ AI category
+   ✓ AI filter
+   ✓ AI tool cards
+   ✓ BETA badges
+   ✓ AI workspace
+   ✓ Engine status
+   ✓ Model progress
+   ✓ Upload zone
+   ✓ AI settings
+   ✓ AI preview
+   ✓ AI result
+   ✓ Device warning
+   ✓ Standard fallback UI
+   ✓ Responsive
+
+   NEXT:
+   script.js
+   SECTION 234
+   AI TOOLS BETA ENGINE
+========================================================= */
