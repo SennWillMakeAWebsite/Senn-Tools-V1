@@ -10,7 +10,7 @@
 
   <meta
     name="description"
-    content="Senn Tools V1 - kumpulan tools untuk image, video, document, converter, dan utility."
+    content="Senn Tools V1 - kumpulan tools untuk image, video, document, converter, utility, dan AI tools."
   >
 
   <meta name="theme-color" content="#08090d">
@@ -62,6 +62,7 @@
       <div class="sidebar-top">
 
         <a href="#" class="brand" data-page="home">
+
           <div class="brand-icon">
             <span>S</span>
           </div>
@@ -70,11 +71,13 @@
             <strong>SENN HUB</strong>
             <small>SENN TOOLS V1</small>
           </div>
+
         </a>
 
         <button
           class="sidebar-close"
           id="sidebarClose"
+          type="button"
           aria-label="Tutup menu"
         >
           <i class="fa-solid fa-xmark"></i>
@@ -83,10 +86,14 @@
       </div>
 
 
-      <!-- Navigation -->
+      <!-- ========================================
+           NAVIGATION
+      ========================================= -->
       <nav class="sidebar-nav">
 
-        <p class="nav-label">Workspace</p>
+        <p class="nav-label">
+          Workspace
+        </p>
 
         <button
           class="nav-item active"
@@ -174,19 +181,40 @@
           <span>Utility</span>
         </button>
 
+        <!-- AI TOOLS BETA -->
+        <button
+          class="nav-item ai-nav-item"
+          data-category-filter="ai"
+          type="button"
+        >
+          <i class="fa-solid fa-brain"></i>
+
+          <span>
+            AI Tools
+          </span>
+
+          <small class="nav-beta-badge">
+            BETA
+          </small>
+        </button>
+
       </nav>
 
 
-      <!-- Sidebar footer -->
+      <!-- ========================================
+           SIDEBAR FOOTER
+      ========================================= -->
       <div class="sidebar-footer">
 
         <div class="system-status">
+
           <span class="status-dot"></span>
 
           <div>
             <strong>System Online</strong>
             <small>Ready to process</small>
           </div>
+
         </div>
 
         <div class="version">
@@ -220,6 +248,7 @@
           <button
             class="menu-button"
             id="menuButton"
+            type="button"
             aria-label="Buka menu"
           >
             <i class="fa-solid fa-bars"></i>
@@ -238,6 +267,7 @@
           <button
             class="icon-button"
             id="searchToggle"
+            type="button"
             aria-label="Cari tools"
           >
             <i class="fa-solid fa-magnifying-glass"></i>
@@ -246,6 +276,7 @@
           <button
             class="icon-button"
             id="themeButton"
+            type="button"
             aria-label="Ubah tema"
           >
             <i class="fa-regular fa-moon"></i>
@@ -255,6 +286,7 @@
             class="profile-button"
             type="button"
           >
+
             <div class="profile-avatar">
               S
             </div>
@@ -263,6 +295,7 @@
               <strong>Senn</strong>
               <span>Owner</span>
             </div>
+
           </button>
 
         </div>
@@ -284,7 +317,9 @@
           data-page-section="home"
         >
 
-          <!-- HERO -->
+          <!-- ========================================
+               HERO
+          ========================================= -->
           <section class="hero">
 
             <div class="hero-badge">
@@ -412,11 +447,13 @@
               <div class="file-information">
 
                 <div class="detected-badge">
+
                   <i class="fa-solid fa-check"></i>
 
                   <span id="detectedType">
                     FILE DETECTED
                   </span>
+
                 </div>
 
                 <h3 id="detectedName">
@@ -484,8 +521,7 @@
                 <div
                   class="recommended-grid"
                   id="recommendedGrid"
-                >
-                </div>
+                ></div>
 
               </div>
 
@@ -493,7 +529,7 @@
 
   </section>
 
-                    <!-- ========================================
+           <!-- ========================================
                POPULAR TOOLS
           ========================================= -->
           <section class="section">
@@ -501,11 +537,15 @@
             <div class="section-heading">
 
               <div>
+
                 <span class="section-eyebrow">
                   GET STARTED
                 </span>
 
-                <h2>Popular Tools</h2>
+                <h2>
+                  Popular Tools
+                </h2>
+
               </div>
 
               <button
@@ -522,7 +562,9 @@
 
             <div class="featured-grid">
 
-              <!-- Photo Enhancer -->
+              <!-- ========================================
+                   PHOTO ENHANCER
+              ========================================= -->
               <article
                 class="featured-card tool-card"
                 data-tool="photo-enhancer"
@@ -539,12 +581,14 @@
                   <button
                     class="favorite-button"
                     data-favorite="photo-enhancer"
-                    aria-label="Favorite"
+                    type="button"
+                    aria-label="Favorite Photo Enhancer"
                   >
                     <i class="fa-regular fa-star"></i>
                   </button>
 
                 </div>
+
 
                 <div class="featured-content">
 
@@ -552,7 +596,9 @@
                     IMAGE
                   </span>
 
-                  <h3>Photo Enhancer</h3>
+                  <h3>
+                    Photo Enhancer
+                  </h3>
 
                   <p>
                     Improve clarity, sharpness and overall
@@ -560,6 +606,7 @@
                   </p>
 
                 </div>
+
 
                 <div class="tool-footer">
 
@@ -574,7 +621,9 @@
               </article>
 
 
-              <!-- Image Upscaler -->
+              <!-- ========================================
+                   IMAGE UPSCALER
+              ========================================= -->
               <article
                 class="featured-card tool-card"
                 data-tool="image-upscaler"
@@ -591,12 +640,14 @@
                   <button
                     class="favorite-button"
                     data-favorite="image-upscaler"
-                    aria-label="Favorite"
+                    type="button"
+                    aria-label="Favorite Image Upscaler"
                   >
                     <i class="fa-regular fa-star"></i>
                   </button>
 
                 </div>
+
 
                 <div class="featured-content">
 
@@ -612,7 +663,9 @@
 
                   </div>
 
-                  <h3>Image Upscaler</h3>
+                  <h3>
+                    Image Upscaler
+                  </h3>
 
                   <p>
                     Upscale images to 1080p, 2K or 4K
@@ -620,6 +673,7 @@
                   </p>
 
                 </div>
+
 
                 <div class="tool-footer">
 
@@ -634,7 +688,9 @@
               </article>
 
 
-              <!-- Video Upscaler -->
+              <!-- ========================================
+                   VIDEO UPSCALER
+              ========================================= -->
               <article
                 class="featured-card tool-card"
                 data-tool="video-upscaler"
@@ -651,12 +707,14 @@
                   <button
                     class="favorite-button"
                     data-favorite="video-upscaler"
-                    aria-label="Favorite"
+                    type="button"
+                    aria-label="Favorite Video Upscaler"
                   >
                     <i class="fa-regular fa-star"></i>
                   </button>
 
                 </div>
+
 
                 <div class="featured-content">
 
@@ -664,7 +722,9 @@
                     VIDEO
                   </span>
 
-                  <h3>Video Upscaler</h3>
+                  <h3>
+                    Video Upscaler
+                  </h3>
 
                   <p>
                     Increase video resolution and prepare
@@ -672,6 +732,7 @@
                   </p>
 
                 </div>
+
 
                 <div class="tool-footer">
 
@@ -686,7 +747,9 @@
               </article>
 
 
-              <!-- Compressor -->
+              <!-- ========================================
+                   SMART COMPRESSOR
+              ========================================= -->
               <article
                 class="featured-card tool-card"
                 data-tool="compressor"
@@ -703,12 +766,14 @@
                   <button
                     class="favorite-button"
                     data-favorite="compressor"
-                    aria-label="Favorite"
+                    type="button"
+                    aria-label="Favorite Smart Compressor"
                   >
                     <i class="fa-regular fa-star"></i>
                   </button>
 
                 </div>
+
 
                 <div class="featured-content">
 
@@ -716,7 +781,9 @@
                     CONVERTER
                   </span>
 
-                  <h3>Smart Compressor</h3>
+                  <h3>
+                    Smart Compressor
+                  </h3>
 
                   <p>
                     Reduce file size while keeping useful
@@ -724,6 +791,7 @@
                   </p>
 
                 </div>
+
 
                 <div class="tool-footer">
 
@@ -766,7 +834,9 @@
 
             <div class="category-grid">
 
-              <!-- Image -->
+              <!-- ========================================
+                   IMAGE
+              ========================================= -->
               <button
                 class="category-card"
                 data-category-filter="image"
@@ -798,7 +868,9 @@
               </button>
 
 
-              <!-- Video -->
+              <!-- ========================================
+                   VIDEO
+              ========================================= -->
               <button
                 class="category-card"
                 data-category-filter="video"
@@ -830,7 +902,9 @@
               </button>
 
 
-              <!-- Document -->
+              <!-- ========================================
+                   DOCUMENT
+              ========================================= -->
               <button
                 class="category-card"
                 data-category-filter="document"
@@ -862,7 +936,9 @@
               </button>
 
 
-              <!-- Converter -->
+              <!-- ========================================
+                   CONVERTER
+              ========================================= -->
               <button
                 class="category-card"
                 data-category-filter="converter"
@@ -894,7 +970,9 @@
               </button>
 
 
-              <!-- Utility -->
+              <!-- ========================================
+                   UTILITY
+              ========================================= -->
               <button
                 class="category-card"
                 data-category-filter="utility"
@@ -926,9 +1004,12 @@
               </button>
 
 
-              <!-- AI Tools Beta -->
+              <!-- ========================================
+                   AI TOOLS BETA
+              ========================================= -->
               <button
                 class="category-card ai-category-card"
+                data-category-filter="ai"
                 data-ai-tools
                 type="button"
               >
@@ -936,6 +1017,7 @@
                 <div class="category-icon ai-tool">
                   <i class="fa-solid fa-brain"></i>
                 </div>
+
 
                 <div class="category-content">
 
@@ -958,6 +1040,7 @@
 
                 </div>
 
+
                 <div class="category-count">
                   3 tools
                 </div>
@@ -968,9 +1051,10 @@
 
             </div>
 
-  </section>
+          </section>
 
-            <!-- ========================================
+
+          <!-- ========================================
                RECENT ACTIVITY
           ========================================= -->
           <section class="section">
@@ -978,11 +1062,15 @@
             <div class="section-heading">
 
               <div>
+
                 <span class="section-eyebrow">
                   HISTORY
                 </span>
 
-                <h2>Recent Activity</h2>
+                <h2>
+                  Recent Activity
+                </h2>
+
               </div>
 
               <button
@@ -1008,7 +1096,9 @@
                   <i class="fa-solid fa-clock-rotate-left"></i>
                 </div>
 
-                <h3>No activity yet</h3>
+                <h3>
+                  No activity yet
+                </h3>
 
                 <p>
                   Tools you've used will appear here.
@@ -1035,15 +1125,19 @@
           <div class="page-header">
 
             <div>
+
               <span class="section-eyebrow">
                 SENN TOOLS
               </span>
 
-              <h1>All Tools</h1>
+              <h1>
+                All Tools
+              </h1>
 
               <p>
                 Everything available inside Senn Tools V1.
               </p>
+
             </div>
 
 
@@ -1055,6 +1149,7 @@
                 type="text"
                 id="allToolsSearch"
                 placeholder="Search all tools..."
+                autocomplete="off"
               >
 
             </div>
@@ -1062,86 +1157,228 @@
           </div>
 
 
-          <!-- FILTER -->
-          <!-- FILTER -->
-<div
-  class="filter-row"
-  id="filterRow"
->
+          <!-- ========================================
+               FILTER
+          ========================================= -->
+          <div
+            class="filter-row"
+            id="filterRow"
+          >
 
-  <button
-    class="filter-button active"
-    data-filter="all"
-    type="button"
-  >
-    All
-  </button>
+            <button
+              class="filter-button active"
+              data-filter="all"
+              type="button"
+            >
+              All
+            </button>
 
-  <button
-    class="filter-button"
-    data-filter="image"
-    type="button"
-  >
-    Image
-  </button>
+            <button
+              class="filter-button"
+              data-filter="image"
+              type="button"
+            >
+              Image
+            </button>
 
-  <button
-    class="filter-button"
-    data-filter="video"
-    type="button"
-  >
-    Video
-  </button>
+            <button
+              class="filter-button"
+              data-filter="video"
+              type="button"
+            >
+              Video
+            </button>
 
-  <button
-    class="filter-button"
-    data-filter="document"
-    type="button"
-  >
-    Document
-  </button>
+            <button
+              class="filter-button"
+              data-filter="document"
+              type="button"
+            >
+              Document
+            </button>
 
-  <button
-    class="filter-button"
-    data-filter="converter"
-    type="button"
-  >
-    Converter
-  </button>
+            <button
+              class="filter-button"
+              data-filter="converter"
+              type="button"
+            >
+              Converter
+            </button>
 
-  <button
-    class="filter-button"
-    data-filter="utility"
-    type="button"
-  >
-    Utility
-  </button>
+            <button
+              class="filter-button"
+              data-filter="utility"
+              type="button"
+            >
+              Utility
+            </button>
 
-  <button
-    class="filter-button"
-    data-filter="ai"
-    type="button"
-  >
-    AI
+            <button
+              class="filter-button ai-filter-button"
+              data-filter="ai"
+              type="button"
+            >
+              <i class="fa-solid fa-brain"></i>
 
-    <span class="filter-beta-badge">
-      BETA
-    </span>
-  </button>
+              AI
 
-</div>
+              <span class="filter-beta-badge">
+                BETA
+              </span>
+            </button>
+
+          </div>
 
 
           <!-- ========================================
-               ALL TOOL CARDS
+               ALL TOOLS GRID
           ========================================= -->
           <div
             class="tools-grid"
             id="allToolsGrid"
           >
 
-            <!-- IMAGE -->
+                        <!-- ========================================
+                 AI TOOLS BETA
+            ========================================= -->
 
+            <!-- AI Image Upscaler -->
+            <article
+              class="mini-tool-card tool-card ai-tool-card"
+              data-tool="ai-image-upscaler"
+              data-category="ai"
+              data-search="ai image upscaler upscale artificial intelligence 2x 4x enhance super resolution beta"
+            >
+
+              <div class="mini-tool-icon ai-tool">
+                <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+              </div>
+
+              <div>
+
+                <div class="tool-title-row">
+
+                  <h3>
+                    AI Image Upscaler
+                  </h3>
+
+                  <span class="tool-beta-badge">
+                    BETA
+                  </span>
+
+                </div>
+
+                <p>
+                  Upscale images using local AI.
+                </p>
+
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="ai-image-upscaler"
+                type="button"
+                aria-label="Favorite AI Image Upscaler"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <!-- AI Photo Enhancer -->
+            <article
+              class="mini-tool-card tool-card ai-tool-card"
+              data-tool="ai-photo-enhancer"
+              data-category="ai"
+              data-search="ai photo enhancer image enhance clarity detail sharpen restore artificial intelligence beta"
+            >
+
+              <div class="mini-tool-icon ai-tool">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </div>
+
+              <div>
+
+                <div class="tool-title-row">
+
+                  <h3>
+                    AI Photo Enhancer
+                  </h3>
+
+                  <span class="tool-beta-badge">
+                    BETA
+                  </span>
+
+                </div>
+
+                <p>
+                  Enhance image detail with AI.
+                </p>
+
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="ai-photo-enhancer"
+                type="button"
+                aria-label="Favorite AI Photo Enhancer"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <!-- AI Image Restore -->
+            <article
+              class="mini-tool-card tool-card ai-tool-card"
+              data-tool="ai-image-restore"
+              data-category="ai"
+              data-search="ai image restore restoration old photo repair noise artifact recover artificial intelligence beta"
+            >
+
+              <div class="mini-tool-icon ai-tool">
+                <i class="fa-solid fa-wand-sparkles"></i>
+              </div>
+
+              <div>
+
+                <div class="tool-title-row">
+
+                  <h3>
+                    AI Image Restore
+                  </h3>
+
+                  <span class="tool-beta-badge">
+                    BETA
+                  </span>
+
+                </div>
+
+                <p>
+                  Restore degraded image quality with AI.
+                </p>
+
+              </div>
+
+              <button
+                class="favorite-button"
+                data-favorite="ai-image-restore"
+                type="button"
+                aria-label="Favorite AI Image Restore"
+              >
+                <i class="fa-regular fa-star"></i>
+              </button>
+
+            </article>
+
+
+            <!-- ========================================
+                 IMAGE
+            ========================================= -->
+
+            <!-- Photo Enhancer -->
             <article
               class="mini-tool-card tool-card"
               data-tool="photo-enhancer"
@@ -1154,14 +1391,22 @@
               </div>
 
               <div>
-                <h3>Photo Enhancer</h3>
-                <p>Improve image clarity.</p>
+
+                <h3>
+                  Photo Enhancer
+                </h3>
+
+                <p>
+                  Improve image clarity.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="photo-enhancer"
                 type="button"
+                aria-label="Favorite Photo Enhancer"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1169,6 +1414,7 @@
             </article>
 
 
+            <!-- Image Upscaler -->
             <article
               class="mini-tool-card tool-card"
               data-tool="image-upscaler"
@@ -1181,14 +1427,22 @@
               </div>
 
               <div>
-                <h3>Image Upscaler</h3>
-                <p>Upscale images up to 4K.</p>
+
+                <h3>
+                  Image Upscaler
+                </h3>
+
+                <p>
+                  Upscale images up to 4K.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="image-upscaler"
                 type="button"
+                aria-label="Favorite Image Upscaler"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1196,6 +1450,7 @@
             </article>
 
 
+            <!-- Image Compressor -->
             <article
               class="mini-tool-card tool-card"
               data-tool="image-compressor"
@@ -1208,14 +1463,22 @@
               </div>
 
               <div>
-                <h3>Image Compressor</h3>
-                <p>Reduce image file size.</p>
+
+                <h3>
+                  Image Compressor
+                </h3>
+
+                <p>
+                  Reduce image file size.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="image-compressor"
                 type="button"
+                aria-label="Favorite Image Compressor"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1223,11 +1486,12 @@
             </article>
 
 
+            <!-- Image Resizer -->
             <article
               class="mini-tool-card tool-card"
               data-tool="image-resizer"
               data-category="image"
-              data-search="image resize resizer width height"
+              data-search="image resize resizer width height dimensions"
             >
 
               <div class="mini-tool-icon image-tool">
@@ -1235,14 +1499,22 @@
               </div>
 
               <div>
-                <h3>Image Resizer</h3>
-                <p>Change image dimensions.</p>
+
+                <h3>
+                  Image Resizer
+                </h3>
+
+                <p>
+                  Change image dimensions.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="image-resizer"
                 type="button"
+                aria-label="Favorite Image Resizer"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1250,11 +1522,12 @@
             </article>
 
 
+            <!-- Image Converter -->
             <article
               class="mini-tool-card tool-card"
               data-tool="image-converter"
               data-category="image"
-              data-search="image converter jpg png webp convert"
+              data-search="image converter jpg jpeg png webp convert"
             >
 
               <div class="mini-tool-icon image-tool">
@@ -1262,14 +1535,22 @@
               </div>
 
               <div>
-                <h3>Image Converter</h3>
-                <p>JPG, PNG and WEBP.</p>
+
+                <h3>
+                  Image Converter
+                </h3>
+
+                <p>
+                  JPG, PNG and WEBP.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="image-converter"
                 type="button"
+                aria-label="Favorite Image Converter"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1277,6 +1558,7 @@
             </article>
 
 
+            <!-- Background Remover -->
             <article
               class="mini-tool-card tool-card"
               data-tool="background-remover"
@@ -1289,22 +1571,34 @@
               </div>
 
               <div>
-                <h3>Background Remover</h3>
-                <p>Remove image backgrounds.</p>
+
+                <h3>
+                  Background Remover
+                </h3>
+
+                <p>
+                  Remove image backgrounds.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="background-remover"
                 type="button"
+                aria-label="Favorite Background Remover"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
 
             </article>
 
-                        <!-- VIDEO -->
 
+            <!-- ========================================
+                 VIDEO
+            ========================================= -->
+
+            <!-- Video Upscaler -->
             <article
               class="mini-tool-card tool-card"
               data-tool="video-upscaler"
@@ -1317,14 +1611,22 @@
               </div>
 
               <div>
-                <h3>Video Upscaler</h3>
-                <p>Increase video resolution.</p>
+
+                <h3>
+                  Video Upscaler
+                </h3>
+
+                <p>
+                  Increase video resolution.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="video-upscaler"
                 type="button"
+                aria-label="Favorite Video Upscaler"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1332,6 +1634,7 @@
             </article>
 
 
+            <!-- Video Compressor -->
             <article
               class="mini-tool-card tool-card"
               data-tool="video-compressor"
@@ -1344,14 +1647,22 @@
               </div>
 
               <div>
-                <h3>Video Compressor</h3>
-                <p>Reduce video file size.</p>
+
+                <h3>
+                  Video Compressor
+                </h3>
+
+                <p>
+                  Reduce video file size.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="video-compressor"
                 type="button"
+                aria-label="Favorite Video Compressor"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1359,6 +1670,7 @@
             </article>
 
 
+            <!-- Video Trimmer -->
             <article
               class="mini-tool-card tool-card"
               data-tool="video-trimmer"
@@ -1371,14 +1683,22 @@
               </div>
 
               <div>
-                <h3>Video Trimmer</h3>
-                <p>Cut parts of a video.</p>
+
+                <h3>
+                  Video Trimmer
+                </h3>
+
+                <p>
+                  Cut parts of a video.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="video-trimmer"
                 type="button"
+                aria-label="Favorite Video Trimmer"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1386,6 +1706,7 @@
             </article>
 
 
+            <!-- Video to Audio -->
             <article
               class="mini-tool-card tool-card"
               data-tool="video-to-audio"
@@ -1398,14 +1719,22 @@
               </div>
 
               <div>
-                <h3>Video to Audio</h3>
-                <p>Extract audio from video.</p>
+
+                <h3>
+                  Video to Audio
+                </h3>
+
+                <p>
+                  Extract audio from video.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="video-to-audio"
                 type="button"
+                aria-label="Favorite Video to Audio"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1413,6 +1742,7 @@
             </article>
 
 
+            <!-- Thumbnail Extractor -->
             <article
               class="mini-tool-card tool-card"
               data-tool="video-thumbnail"
@@ -1425,14 +1755,22 @@
               </div>
 
               <div>
-                <h3>Thumbnail Extractor</h3>
-                <p>Capture frames from video.</p>
+
+                <h3>
+                  Thumbnail Extractor
+                </h3>
+
+                <p>
+                  Capture frames from video.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="video-thumbnail"
                 type="button"
+                aria-label="Favorite Thumbnail Extractor"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1440,8 +1778,11 @@
             </article>
 
 
-            <!-- DOCUMENT -->
+            <!-- ========================================
+                 DOCUMENT
+            ========================================= -->
 
+                        <!-- Image to PDF -->
             <article
               class="mini-tool-card tool-card"
               data-tool="image-to-pdf"
@@ -1454,14 +1795,22 @@
               </div>
 
               <div>
-                <h3>Image to PDF</h3>
-                <p>Turn images into PDF.</p>
+
+                <h3>
+                  Image to PDF
+                </h3>
+
+                <p>
+                  Turn images into PDF.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="image-to-pdf"
                 type="button"
+                aria-label="Favorite Image to PDF"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1469,6 +1818,7 @@
             </article>
 
 
+            <!-- Merge PDF -->
             <article
               class="mini-tool-card tool-card"
               data-tool="merge-pdf"
@@ -1481,14 +1831,22 @@
               </div>
 
               <div>
-                <h3>Merge PDF</h3>
-                <p>Combine multiple PDFs.</p>
+
+                <h3>
+                  Merge PDF
+                </h3>
+
+                <p>
+                  Combine multiple PDFs.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="merge-pdf"
                 type="button"
+                aria-label="Favorite Merge PDF"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1496,6 +1854,7 @@
             </article>
 
 
+            <!-- Split PDF -->
             <article
               class="mini-tool-card tool-card"
               data-tool="split-pdf"
@@ -1508,14 +1867,22 @@
               </div>
 
               <div>
-                <h3>Split PDF</h3>
-                <p>Separate PDF pages.</p>
+
+                <h3>
+                  Split PDF
+                </h3>
+
+                <p>
+                  Separate PDF pages.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="split-pdf"
                 type="button"
+                aria-label="Favorite Split PDF"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1523,6 +1890,7 @@
             </article>
 
 
+            <!-- Compress PDF -->
             <article
               class="mini-tool-card tool-card"
               data-tool="compress-pdf"
@@ -1535,14 +1903,22 @@
               </div>
 
               <div>
-                <h3>Compress PDF</h3>
-                <p>Reduce PDF file size.</p>
+
+                <h3>
+                  Compress PDF
+                </h3>
+
+                <p>
+                  Reduce PDF file size.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="compress-pdf"
                 type="button"
+                aria-label="Favorite Compress PDF"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1550,6 +1926,7 @@
             </article>
 
 
+            <!-- PDF to Image -->
             <article
               class="mini-tool-card tool-card"
               data-tool="pdf-to-image"
@@ -1562,14 +1939,22 @@
               </div>
 
               <div>
-                <h3>PDF to Image</h3>
-                <p>Export PDF pages as images.</p>
+
+                <h3>
+                  PDF to Image
+                </h3>
+
+                <p>
+                  Export PDF pages as images.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="pdf-to-image"
                 type="button"
+                aria-label="Favorite PDF to Image"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1577,8 +1962,11 @@
             </article>
 
 
-            <!-- CONVERTER -->
+            <!-- ========================================
+                 CONVERTER
+            ========================================= -->
 
+            <!-- Media Converter -->
             <article
               class="mini-tool-card tool-card"
               data-tool="media-converter"
@@ -1591,14 +1979,22 @@
               </div>
 
               <div>
-                <h3>Media Converter</h3>
-                <p>Convert common media formats.</p>
+
+                <h3>
+                  Media Converter
+                </h3>
+
+                <p>
+                  Convert common media formats.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="media-converter"
                 type="button"
+                aria-label="Favorite Media Converter"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1606,6 +2002,7 @@
             </article>
 
 
+            <!-- JSON / CSV -->
             <article
               class="mini-tool-card tool-card"
               data-tool="json-csv"
@@ -1618,14 +2015,22 @@
               </div>
 
               <div>
-                <h3>JSON / CSV</h3>
-                <p>Convert structured data.</p>
+
+                <h3>
+                  JSON / CSV
+                </h3>
+
+                <p>
+                  Convert structured data.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="json-csv"
                 type="button"
+                aria-label="Favorite JSON CSV Converter"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1633,6 +2038,7 @@
             </article>
 
 
+            <!-- Audio Converter -->
             <article
               class="mini-tool-card tool-card"
               data-tool="audio-converter"
@@ -1645,14 +2051,22 @@
               </div>
 
               <div>
-                <h3>Audio Converter</h3>
-                <p>Convert common audio formats.</p>
+
+                <h3>
+                  Audio Converter
+                </h3>
+
+                <p>
+                  Convert common audio formats.
+                </p>
+
               </div>
 
               <button
                 class="favorite-button"
                 data-favorite="audio-converter"
                 type="button"
+                aria-label="Favorite Audio Converter"
               >
                 <i class="fa-regular fa-star"></i>
               </button>
@@ -1660,8 +2074,11 @@
             </article>
 
 
-            <!-- UTILITY -->
+            <!-- ========================================
+                 UTILITY
+            ========================================= -->
 
+            <!-- QR Generator -->
             <article
               class="mini-tool-card tool-card"
               data-tool="qr-generator"
@@ -1674,8 +2091,15 @@
               </div>
 
               <div>
-                <h3>QR Generator</h3>
-                <p>Create QR codes.</p>
+
+                <h3>
+                  QR Generator
+                </h3>
+
+                <p>
+                  Create QR codes.
+                </p>
+
               </div>
 
               <button
@@ -1690,6 +2114,7 @@
             </article>
 
 
+            <!-- JSON Formatter -->
             <article
               class="mini-tool-card tool-card"
               data-tool="json-formatter"
@@ -1702,8 +2127,15 @@
               </div>
 
               <div>
-                <h3>JSON Formatter</h3>
-                <p>Format and validate JSON.</p>
+
+                <h3>
+                  JSON Formatter
+                </h3>
+
+                <p>
+                  Format and validate JSON.
+                </p>
+
               </div>
 
               <button
@@ -1718,6 +2150,7 @@
             </article>
 
 
+            <!-- Base64 -->
             <article
               class="mini-tool-card tool-card"
               data-tool="base64"
@@ -1730,8 +2163,15 @@
               </div>
 
               <div>
-                <h3>Base64</h3>
-                <p>Encode or decode Base64.</p>
+
+                <h3>
+                  Base64
+                </h3>
+
+                <p>
+                  Encode or decode Base64.
+                </p>
+
               </div>
 
               <button
@@ -1746,6 +2186,7 @@
             </article>
 
 
+            <!-- Metadata Viewer -->
             <article
               class="mini-tool-card tool-card"
               data-tool="metadata-viewer"
@@ -1758,8 +2199,15 @@
               </div>
 
               <div>
-                <h3>Metadata Viewer</h3>
-                <p>Inspect file information.</p>
+
+                <h3>
+                  Metadata Viewer
+                </h3>
+
+                <p>
+                  Inspect file information.
+                </p>
+
               </div>
 
               <button
@@ -1774,6 +2222,7 @@
             </article>
 
 
+            <!-- Password Generator -->
             <article
               class="mini-tool-card tool-card"
               data-tool="password-generator"
@@ -1786,13 +2235,19 @@
               </div>
 
               <div>
-                <h3>Password Generator</h3>
-                <p>Create random passwords.</p>
+
+                <h3>
+                  Password Generator
+                </h3>
+
+                <p>
+                  Create random passwords.
+                </p>
+
               </div>
 
               <button
-
-                  class="favorite-button"
+                class="favorite-button"
                 data-favorite="password-generator"
                 type="button"
                 aria-label="Favorite Password Generator"
@@ -1803,6 +2258,7 @@
             </article>
 
 
+            <!-- Word Counter -->
             <article
               class="mini-tool-card tool-card"
               data-tool="word-counter"
@@ -1815,8 +2271,15 @@
               </div>
 
               <div>
-                <h3>Word Counter</h3>
-                <p>Count words and characters.</p>
+
+                <h3>
+                  Word Counter
+                </h3>
+
+                <p>
+                  Count words and characters.
+                </p>
+
               </div>
 
               <button
@@ -1831,6 +2294,7 @@
             </article>
 
 
+            <!-- Color Converter -->
             <article
               class="mini-tool-card tool-card"
               data-tool="color-converter"
@@ -1843,8 +2307,15 @@
               </div>
 
               <div>
-                <h3>Color Converter</h3>
-                <p>Convert HEX, RGB and HSL.</p>
+
+                <h3>
+                  Color Converter
+                </h3>
+
+                <p>
+                  Convert HEX, RGB and HSL.
+                </p>
+
               </div>
 
               <button
@@ -1856,9 +2327,9 @@
                 <i class="fa-regular fa-star"></i>
               </button>
 
-            </article>
+                </article>
 
-
+                        <!-- Timestamp Converter -->
             <article
               class="mini-tool-card tool-card"
               data-tool="timestamp-converter"
@@ -1871,8 +2342,15 @@
               </div>
 
               <div>
-                <h3>Timestamp Converter</h3>
-                <p>Convert Unix timestamps and dates.</p>
+
+                <h3>
+                  Timestamp Converter
+                </h3>
+
+                <p>
+                  Convert Unix timestamps and dates.
+                </p>
+
               </div>
 
               <button
@@ -1887,6 +2365,7 @@
             </article>
 
 
+            <!-- UUID Generator -->
             <article
               class="mini-tool-card tool-card"
               data-tool="uuid-generator"
@@ -1899,8 +2378,15 @@
               </div>
 
               <div>
-                <h3>UUID Generator</h3>
-                <p>Generate unique UUID values.</p>
+
+                <h3>
+                  UUID Generator
+                </h3>
+
+                <p>
+                  Generate unique UUID values.
+                </p>
+
               </div>
 
               <button
@@ -1915,6 +2401,7 @@
             </article>
 
 
+            <!-- Hash Generator -->
             <article
               class="mini-tool-card tool-card"
               data-tool="hash-generator"
@@ -1927,8 +2414,15 @@
               </div>
 
               <div>
-                <h3>Hash Generator</h3>
-                <p>Generate hashes from text.</p>
+
+                <h3>
+                  Hash Generator
+                </h3>
+
+                <p>
+                  Generate hashes from text.
+                </p>
+
               </div>
 
               <button
@@ -1943,6 +2437,7 @@
             </article>
 
 
+            <!-- URL Parser -->
             <article
               class="mini-tool-card tool-card"
               data-tool="url-parser"
@@ -1955,8 +2450,15 @@
               </div>
 
               <div>
-                <h3>URL Parser</h3>
-                <p>Inspect parts of a URL.</p>
+
+                <h3>
+                  URL Parser
+                </h3>
+
+                <p>
+                  Inspect parts of a URL.
+                </p>
+
               </div>
 
               <button
@@ -1985,7 +2487,9 @@
               <i class="fa-solid fa-magnifying-glass"></i>
             </div>
 
-            <h3>No tools found</h3>
+            <h3>
+              No tools found
+            </h3>
 
             <p>
               Apparently even Senn Tools can't find
@@ -2014,7 +2518,9 @@
                 HISTORY
               </span>
 
-              <h1>Recent Activity</h1>
+              <h1>
+                Recent Activity
+              </h1>
 
               <p>
                 Files and tools you've recently used.
@@ -2046,7 +2552,9 @@
                 <i class="fa-solid fa-clock-rotate-left"></i>
               </div>
 
-              <h3>Your history is empty</h3>
+              <h3>
+                Your history is empty
+              </h3>
 
               <p>
                 Process something and it'll show up here.
@@ -2076,7 +2584,9 @@
                 YOUR TOOLS
               </span>
 
-              <h1>Favorites</h1>
+              <h1>
+                Favorites
+              </h1>
 
               <p>
                 Keep frequently used tools close.
@@ -2090,8 +2600,7 @@
           <div
             class="tools-grid"
             id="favoritesGrid"
-          >
-          </div>
+          ></div>
 
 
           <div
@@ -2103,7 +2612,9 @@
               <i class="fa-regular fa-star"></i>
             </div>
 
-            <h3>No favorites yet</h3>
+            <h3>
+              No favorites yet
+            </h3>
 
             <p>
               Tap the star on a tool to save it here.
@@ -2166,16 +2677,29 @@
 
 
           <!--
-            Isi setiap tool nanti dirender oleh script.js.
+            Tool interface dirender oleh script.js.
 
-            Contoh:
-            Image Upscaler
-            Video Upscaler
-            Compressor
-            QR Generator
-            Base64
-            dan seterusnya.
+            Existing tools:
+            - Photo Enhancer
+            - Image Upscaler
+            - Image Compressor
+            - Image Resizer
+            - Image Converter
+            - Background Remover
+            - Video tools
+            - Document tools
+            - Converter tools
+            - Utility tools
+
+            Part 7 AI Tools Beta:
+            - AI Image Upscaler
+            - AI Photo Enhancer
+            - AI Image Restore
+
+            AI interface tetap dirender melalui script.js
+            supaya workspace yang sama bisa dipakai semua tool.
           -->
+
 
           <div
             class="workspace-content"
@@ -2188,7 +2712,9 @@
                 <i class="fa-solid fa-code"></i>
               </div>
 
-              <h2>Tool workspace ready.</h2>
+              <h2>
+                Tool workspace ready.
+              </h2>
 
               <p>
                 Select a tool and its controls will
