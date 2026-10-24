@@ -26180,3 +26180,2732 @@ console.log(
    - Memory protection
 ========================================================= */
    
+/* =========================================================
+   234. PART 7
+   AI TOOLS BETA
+   CORE FOUNDATION
+========================================================= */
+
+const SENN_AI_TOOLS = {
+  "ai-image-upscaler": {
+    id: "ai-image-upscaler",
+    title: "AI Image Upscaler",
+    category: "AI TOOLS BETA",
+    description:
+      "Upscale images using local AI super-resolution.",
+    icon: "fa-solid fa-up-right-and-down-left-from-center",
+    type: "upscale"
+  },
+
+  "ai-photo-enhancer": {
+    id: "ai-photo-enhancer",
+    title: "AI Photo Enhancer",
+    category: "AI TOOLS BETA",
+    description:
+      "Enhance image clarity, texture and detail using AI.",
+    icon: "fa-solid fa-wand-magic-sparkles",
+    type: "enhance"
+  },
+
+  "ai-image-restore": {
+    id: "ai-image-restore",
+    title: "AI Image Restore",
+    category: "AI TOOLS BETA",
+    description:
+      "Restore degraded or soft images using AI.",
+    icon: "fa-solid fa-wand-sparkles",
+    type: "restore"
+  }
+};
+
+
+/* =========================================================
+   235. AI GLOBAL STATE
+========================================================= */
+
+const SENN_AI_STATE = {
+  activeTool: null,
+
+  file: null,
+  fileURL: null,
+
+  sourceImage: null,
+
+  outputBlob: null,
+  outputURL: null,
+
+  engine: {
+    initialized: false,
+    initializing: false,
+
+    backend: null,
+
+    webgpu: false,
+    wasm: false,
+
+    modelLoaded: false,
+    modelName: null,
+
+    session: null,
+
+    error: null
+  },
+
+  processing: false,
+
+  cancelled: false,
+
+  settings: {
+    scale: 2,
+    quality: "balanced",
+    format: "png"
+  }
+};
+
+
+/* =========================================================
+   236. AI CONSTANTS
+========================================================= */
+
+const SENN_AI_LIMITS = {
+  maxFileSize:
+    20 * 1024 * 1024,
+
+  maxSourcePixels:
+    20_000_000,
+
+  mobileMaxSourcePixels:
+    10_000_000,
+
+  previewMaxSide:
+    1400,
+
+  tileSize:
+    256,
+
+  tileOverlap:
+    16
+};
+
+
+const SENN_AI_SUPPORTED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp"
+];
+
+
+/* =========================================================
+   237. AI DOM HELPERS
+========================================================= */
+
+function getAIWorkspace() {
+  return document.getElementById(
+    "toolWorkspace"
+  );
+}
+
+
+function getAIWorkspaceContent() {
+  return document.getElementById(
+    "workspaceContent"
+  );
+}
+
+
+function getAIWorkspaceTitle() {
+  return document.getElementById(
+    "workspaceTitle"
+  );
+}
+
+
+function getAIWorkspaceDescription() {
+  return document.getElementById(
+    "workspaceDescription"
+  );
+}
+
+
+function getAIWorkspaceCategory() {
+  return document.getElementById(
+    "workspaceCategory"
+  );
+}
+
+
+function getAIWorkspaceIcon() {
+  return document.getElementById(
+    "workspaceIcon"
+  );
+}
+
+
+/* =========================================================
+   238. AI TOOL CHECK
+========================================================= */
+
+function isSennAITool(toolId) {
+  return Boolean(
+    SENN_AI_TOOLS[toolId]
+  );
+}
+
+
+/* =========================================================
+   239. AI DEVICE DETECTION
+========================================================= */
+
+function isSennMobileDevice() {
+  return (
+    window.matchMedia(
+      "(max-width: 768px)"
+    ).matches ||
+    /Android|iPhone|iPad|iPod/i.test(
+      navigator.userAgent
+    )
+  );
+}
+
+
+async function detectSennAICapabilities() {
+  const capability = {
+    webgpu: false,
+    wasm: false,
+
+    mobile:
+      isSennMobileDevice(),
+
+    deviceMemory:
+      navigator.deviceMemory || null,
+
+    hardwareConcurrency:
+      navigator.hardwareConcurrency || null
+  };
+
+
+  /* -----------------------------
+     WEBGPU
+  ----------------------------- */
+
+  try {
+
+    if (
+      "gpu" in navigator &&
+      navigator.gpu
+    ) {
+
+      const adapter =
+        await navigator.gpu.requestAdapter();
+
+      capability.webgpu =
+        Boolean(adapter);
+
+    }
+
+  } catch (error) {
+
+    console.warn(
+      "[Senn AI] WebGPU detection failed:",
+      error
+    );
+
+    capability.webgpu = false;
+
+  }
+
+
+  /* -----------------------------
+     WEBASSEMBLY
+  ----------------------------- */
+
+  try {
+
+    capability.wasm =
+      typeof WebAssembly === "object" &&
+      typeof WebAssembly.instantiate ===
+        "function";
+
+  } catch (error) {
+
+    capability.wasm = false;
+
+  }
+
+
+  SENN_AI_STATE.engine.webgpu =
+    capability.webgpu;
+
+  SENN_AI_STATE.engine.wasm =
+    capability.wasm;
+
+
+  return capability;
+}
+
+
+/* =========================================================
+   240. AI BACKEND SELECTION
+========================================================= */
+
+function selectSennAIBackend(
+  capability
+) {
+
+  if (capability.webgpu) {
+    return "webgpu";
+  }
+
+
+  if (capability.wasm) {
+    return "wasm";
+  }
+
+
+  return null;
+}
+
+
+/* =========================================================
+   241. AI OBJECT URL CLEANUP
+========================================================= */
+
+function revokeSennAIURL(url) {
+
+  if (!url) {
+    return;
+  }
+
+
+  try {
+
+    URL.revokeObjectURL(url);
+
+  } catch (error) {
+
+    console.warn(
+      "[Senn AI] Failed to revoke object URL:",
+      error
+    );
+
+  }
+
+}
+
+
+function clearSennAIFileURL() {
+
+  revokeSennAIURL(
+    SENN_AI_STATE.fileURL
+  );
+
+  SENN_AI_STATE.fileURL = null;
+
+}
+
+
+function clearSennAIOutputURL() {
+
+  revokeSennAIURL(
+    SENN_AI_STATE.outputURL
+  );
+
+  SENN_AI_STATE.outputURL = null;
+
+}
+
+
+/* =========================================================
+   242. AI STATE RESET
+========================================================= */
+
+function resetSennAIFileState() {
+
+  clearSennAIFileURL();
+  clearSennAIOutputURL();
+
+
+  SENN_AI_STATE.file = null;
+
+  SENN_AI_STATE.sourceImage = null;
+
+  SENN_AI_STATE.outputBlob = null;
+
+  SENN_AI_STATE.processing = false;
+
+  SENN_AI_STATE.cancelled = false;
+
+}
+
+
+function resetSennAISettings() {
+
+  SENN_AI_STATE.settings = {
+    scale: 2,
+    quality: "balanced",
+    format: "png"
+  };
+
+}
+
+
+/* =========================================================
+   243. AI FILE VALIDATION
+========================================================= */
+
+function validateSennAIFile(file) {
+
+  if (!file) {
+
+    return {
+      valid: false,
+      message:
+        "No image selected."
+    };
+
+  }
+
+
+  if (
+    !SENN_AI_SUPPORTED_TYPES.includes(
+      file.type
+    )
+  ) {
+
+    return {
+      valid: false,
+      message:
+        "AI Tools currently supports JPG, PNG and WEBP."
+    };
+
+  }
+
+
+  if (
+    file.size >
+    SENN_AI_LIMITS.maxFileSize
+  ) {
+
+    return {
+      valid: false,
+      message:
+        "Image is too large. Maximum file size is 20 MB."
+    };
+
+  }
+
+
+  return {
+    valid: true,
+    message: ""
+  };
+}
+
+
+/* =========================================================
+   244. AI IMAGE LOADER
+========================================================= */
+
+function loadSennAIImage(url) {
+
+  return new Promise(
+    (resolve, reject) => {
+
+      const image =
+        new Image();
+
+
+      image.onload = () => {
+
+        resolve(image);
+
+      };
+
+
+      image.onerror = () => {
+
+        reject(
+          new Error(
+            "Failed to decode the selected image."
+          )
+        );
+
+      };
+
+
+      image.src = url;
+
+    }
+  );
+}
+
+
+/* =========================================================
+   245. AI IMAGE DIMENSION VALIDATION
+========================================================= */
+
+function validateSennAIImageDimensions(
+  image
+) {
+
+  const width =
+    image.naturalWidth ||
+    image.width;
+
+  const height =
+    image.naturalHeight ||
+    image.height;
+
+  const pixels =
+    width * height;
+
+
+  const maxPixels =
+    isSennMobileDevice()
+      ? SENN_AI_LIMITS
+          .mobileMaxSourcePixels
+      : SENN_AI_LIMITS
+          .maxSourcePixels;
+
+
+  if (
+    !width ||
+    !height
+  ) {
+
+    return {
+      valid: false,
+
+      message:
+        "Image dimensions could not be detected."
+    };
+
+  }
+
+
+  if (
+    pixels >
+    maxPixels
+  ) {
+
+    return {
+      valid: false,
+
+      message:
+        isSennMobileDevice()
+          ? "This image is too large for AI processing on this device."
+          : "This image is too large for local AI processing."
+    };
+
+  }
+
+
+  return {
+    valid: true,
+
+    width,
+    height,
+    pixels
+  };
+}
+
+
+/* =========================================================
+   246. AI ENGINE STATUS UI
+========================================================= */
+
+function updateSennAIEngineStatus(
+  status,
+  title,
+  description,
+  badge
+) {
+
+  const statusElement =
+    document.getElementById(
+      "aiEngineStatus"
+    );
+
+
+  if (!statusElement) {
+    return;
+  }
+
+
+  statusElement.dataset.status =
+    status;
+
+
+  const titleElement =
+    statusElement.querySelector(
+      "[data-ai-engine-title]"
+    );
+
+
+  const descriptionElement =
+    statusElement.querySelector(
+      "[data-ai-engine-description]"
+    );
+
+
+  const badgeElement =
+    statusElement.querySelector(
+      "[data-ai-engine-badge]"
+    );
+
+
+  if (titleElement) {
+
+    titleElement.textContent =
+      title || "AI Engine";
+
+  }
+
+
+  if (descriptionElement) {
+
+    descriptionElement.textContent =
+      description || "";
+
+  }
+
+
+  if (badgeElement) {
+
+    badgeElement.textContent =
+      badge || "BETA";
+
+  }
+
+}
+
+
+/* =========================================================
+   247. AI MODEL PROGRESS UI
+========================================================= */
+
+function updateSennAIModelProgress(
+  percent,
+  label
+) {
+
+  const progress =
+    document.getElementById(
+      "aiModelProgress"
+    );
+
+
+  if (!progress) {
+    return;
+  }
+
+
+  const safePercent =
+    Math.max(
+      0,
+      Math.min(
+        100,
+        Number(percent) || 0
+      )
+    );
+
+
+  const bar =
+    progress.querySelector(
+      "[data-ai-model-progress-bar]"
+    );
+
+
+  const percentElement =
+    progress.querySelector(
+      "[data-ai-model-progress-percent]"
+    );
+
+
+  const labelElement =
+    progress.querySelector(
+      "[data-ai-model-progress-label]"
+    );
+
+
+  if (bar) {
+
+    bar.style.width =
+      `${safePercent}%`;
+
+  }
+
+
+  if (percentElement) {
+
+    percentElement.textContent =
+      `${Math.round(
+        safePercent
+      )}%`;
+
+  }
+
+
+  if (
+    labelElement &&
+    label
+  ) {
+
+    labelElement.textContent =
+      label;
+
+  }
+
+}
+
+
+/* =========================================================
+   248. AI DEVICE WARNING UI
+========================================================= */
+
+function updateSennAIDeviceWarning(
+  capability
+) {
+
+  const warning =
+    document.getElementById(
+      "aiDeviceWarning"
+    );
+
+
+  if (!warning) {
+    return;
+  }
+
+
+  const message =
+    warning.querySelector(
+      "[data-ai-device-warning-message]"
+    );
+
+
+  let warningText = "";
+
+
+  if (
+    !capability.webgpu &&
+    capability.wasm
+  ) {
+
+    warningText =
+      "WebGPU is unavailable. AI processing will use the slower WebAssembly fallback.";
+
+  }
+
+
+  if (
+    capability.mobile &&
+    capability.deviceMemory &&
+    capability.deviceMemory <= 4
+  ) {
+
+    warningText =
+      "This device has limited memory. Large AI images may be processed with smaller tiles and can take longer.";
+
+  }
+
+
+  if (
+    !capability.webgpu &&
+    !capability.wasm
+  ) {
+
+    warningText =
+      "This browser does not provide a supported local AI backend.";
+
+  }
+
+
+  if (!warningText) {
+
+    warning.classList.remove(
+      "show"
+    );
+
+    return;
+
+  }
+
+
+  if (message) {
+
+    message.textContent =
+      warningText;
+
+  }
+
+
+  warning.classList.add(
+    "show"
+  );
+
+}
+
+
+/* =========================================================
+   249. AI WORKSPACE TEMPLATE
+========================================================= */
+
+function createSennAIWorkspaceTemplate(
+  tool
+) {
+
+  const upscaleSettings =
+    tool.type === "upscale"
+      ? `
+        <div class="ai-option-group">
+
+          <span class="ai-option-label">
+            Upscale
+          </span>
+
+          <div
+            class="ai-option-buttons"
+            data-ai-option-group="scale"
+          >
+
+            <button
+              class="ai-option-button active"
+              data-ai-scale="2"
+              type="button"
+            >
+              2x
+            </button>
+
+            <button
+              class="ai-option-button"
+              data-ai-scale="4"
+              type="button"
+            >
+              4x
+            </button>
+
+          </div>
+
+        </div>
+      `
+      : "";
+
+
+  return `
+    <div
+      class="ai-workspace"
+      data-ai-tool="${tool.id}"
+    >
+
+      <div class="ai-beta-notice">
+
+        <i class="fa-solid fa-flask"></i>
+
+        <div class="ai-beta-notice-content">
+
+          <strong>
+            AI Tools Beta
+          </strong>
+
+          <p>
+            AI processing is designed to run locally
+            in your browser when supported.
+            Your image does not need to be uploaded
+            to Senn Tools.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="ai-engine-status"
+        id="aiEngineStatus"
+        data-status="loading"
+      >
+
+        <div class="ai-engine-information">
+
+          <span class="ai-engine-dot"></span>
+
+          <div class="ai-engine-copy">
+
+            <strong
+              data-ai-engine-title
+            >
+              Checking AI Engine
+            </strong>
+
+            <span
+              data-ai-engine-description
+            >
+              Detecting browser capabilities...
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <span
+          class="ai-engine-badge"
+          data-ai-engine-badge
+        >
+          BETA
+        </span>
+
+      </div>
+
+
+      <div
+        class="ai-model-progress ai-hidden"
+        id="aiModelProgress"
+      >
+
+        <div
+          class="ai-model-progress-information"
+        >
+
+          <strong
+            data-ai-model-progress-label
+          >
+            Loading AI model
+          </strong>
+
+          <span
+            data-ai-model-progress-percent
+          >
+            0%
+          </span>
+
+        </div>
+
+
+        <div
+          class="ai-model-progress-track"
+        >
+
+          <div
+            class="ai-model-progress-bar"
+            data-ai-model-progress-bar
+          ></div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="ai-device-warning"
+        id="aiDeviceWarning"
+      >
+
+        <i
+          class="fa-solid fa-triangle-exclamation"
+        ></i>
+
+        <p
+          data-ai-device-warning-message
+        ></p>
+
+      </div>
+
+
+      <input
+        type="file"
+        id="aiImageInput"
+        accept="image/jpeg,image/png,image/webp"
+        hidden
+      >
+
+
+      <div
+        class="ai-upload-zone"
+        id="aiUploadZone"
+        role="button"
+        tabindex="0"
+        aria-label="Choose an image"
+      >
+
+        <div class="ai-upload-content">
+
+          <div class="ai-upload-icon">
+
+            <i
+              class="fa-regular fa-image"
+            ></i>
+
+          </div>
+
+          <h3>
+            Drop an image here
+          </h3>
+
+          <p>
+            or tap to choose an image
+            from your device.
+          </p>
+
+          <span class="ai-upload-support">
+            JPG · PNG · WEBP · MAX 20 MB
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="ai-settings-panel ai-hidden"
+        id="aiSettingsPanel"
+      >
+
+        <div class="ai-settings-heading">
+
+          <h3>
+            AI Settings
+          </h3>
+
+          <span>
+            LOCAL PROCESSING
+          </span>
+
+        </div>
+
+
+        ${upscaleSettings}
+
+
+        <div class="ai-option-group">
+
+          <span class="ai-option-label">
+            Processing Mode
+          </span>
+
+          <div
+            class="ai-option-buttons"
+            data-ai-option-group="quality"
+          >
+
+            <button
+              class="ai-option-button"
+              data-ai-quality="fast"
+              type="button"
+            >
+              Fast
+            </button>
+
+            <button
+              class="ai-option-button active"
+              data-ai-quality="balanced"
+              type="button"
+            >
+              Balanced
+            </button>
+
+            <button
+              class="ai-option-button"
+              data-ai-quality="quality"
+              type="button"
+            >
+              Quality
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div class="ai-option-group">
+
+          <span class="ai-option-label">
+            Output
+          </span>
+
+          <div
+            class="ai-option-buttons"
+            data-ai-option-group="format"
+          >
+
+            <button
+              class="ai-option-button active"
+              data-ai-format="png"
+              type="button"
+            >
+              PNG
+            </button>
+
+            <button
+              class="ai-option-button"
+              data-ai-format="webp"
+              type="button"
+            >
+              WEBP
+            </button>
+
+            <button
+              class="ai-option-button"
+              data-ai-format="jpg"
+              type="button"
+            >
+              JPG
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <button
+          class="ai-process-button"
+          id="aiProcessButton"
+          type="button"
+          disabled
+        >
+
+          <i
+            class="fa-solid fa-brain"
+          ></i>
+
+          <span>
+            Run AI
+          </span>
+
+        </button>
+
+      </div>
+
+
+      <div
+        class="ai-preview-grid ai-hidden"
+        id="aiPreviewGrid"
+      >
+
+        <div class="ai-preview-card">
+
+          <div class="ai-preview-header">
+
+            <strong>
+              Original
+            </strong>
+
+            <span
+              id="aiOriginalDimensions"
+            >
+              -
+            </span>
+
+          </div>
+
+          <div class="ai-preview-media">
+
+            <img
+              id="aiOriginalPreview"
+              alt="Original image preview"
+            >
+
+          </div>
+
+        </div>
+
+
+        <div class="ai-preview-card">
+
+          <div class="ai-preview-header">
+
+            <strong>
+              AI Result
+            </strong>
+
+            <span
+              id="aiResultDimensions"
+            >
+              Waiting
+            </span>
+
+          </div>
+
+          <div
+            class="ai-preview-media"
+            id="aiResultPreview"
+          >
+
+            <div
+              class="workspace-placeholder"
+              id="aiResultPlaceholder"
+            >
+
+              <div
+                class="workspace-placeholder-icon"
+              >
+
+                <i
+                  class="fa-solid fa-brain"
+                ></i>
+
+              </div>
+
+              <p>
+                AI result will appear here.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="ai-result-panel ai-hidden"
+        id="aiResultPanel"
+      >
+
+        <div class="ai-result-information">
+
+          <div class="ai-result-copy">
+
+            <strong>
+              AI processing complete
+            </strong>
+
+            <p
+              id="aiResultInformation"
+            >
+              Your processed image is ready.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="ai-result-actions">
+
+          <button
+            class="secondary-button"
+            id="aiProcessAnotherButton"
+            type="button"
+          >
+
+            <i
+              class="fa-solid fa-rotate"
+            ></i>
+
+            Another Image
+
+          </button>
+
+
+          <button
+            class="ai-process-button"
+            id="aiDownloadButton"
+            type="button"
+          >
+
+            <i
+              class="fa-solid fa-download"
+            ></i>
+
+            Download Result
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="ai-fallback-notice ai-hidden"
+        id="aiFallbackNotice"
+      >
+
+        <i
+          class="fa-solid fa-circle-info"
+        ></i>
+                <p>
+
+          <strong>
+            Standard fallback:
+          </strong>
+
+          AI acceleration is unavailable.
+          Senn Tools can fall back to the
+          standard image processor, but the
+          result will not be labeled as AI.
+
+        </p>
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   250. RENDER AI WORKSPACE
+========================================================= */
+
+async function renderSennAITool(
+  toolId
+) {
+
+  const tool =
+    SENN_AI_TOOLS[toolId];
+
+
+  if (!tool) {
+    return false;
+  }
+
+
+  const workspace =
+    getAIWorkspace();
+
+
+  const content =
+    getAIWorkspaceContent();
+
+
+  if (
+    !workspace ||
+    !content
+  ) {
+
+    console.error(
+      "[Senn AI] Workspace elements were not found."
+    );
+
+    return false;
+  }
+
+
+  resetSennAIFileState();
+  resetSennAISettings();
+
+
+  SENN_AI_STATE.activeTool =
+    toolId;
+
+
+  workspace.dataset.aiWorkspace =
+    "true";
+
+
+  const title =
+    getAIWorkspaceTitle();
+
+
+  const description =
+    getAIWorkspaceDescription();
+
+
+  const category =
+    getAIWorkspaceCategory();
+
+
+  const icon =
+    getAIWorkspaceIcon();
+
+
+  if (title) {
+
+    title.textContent =
+      tool.title;
+
+  }
+
+
+  if (description) {
+
+    description.textContent =
+      tool.description;
+
+  }
+
+
+  if (category) {
+
+    category.textContent =
+      tool.category;
+
+  }
+
+
+  if (icon) {
+
+    icon.className =
+      "workspace-icon ai-tool";
+
+    icon.innerHTML =
+      `<i class="${tool.icon}"></i>`;
+
+  }
+
+
+  content.innerHTML =
+    createSennAIWorkspaceTemplate(
+      tool
+    );
+
+
+  bindSennAIWorkspaceEvents(
+    tool
+  );
+
+
+  const capability =
+    await detectSennAICapabilities();
+
+
+  const backend =
+    selectSennAIBackend(
+      capability
+    );
+
+
+  SENN_AI_STATE.engine.backend =
+    backend;
+
+
+  updateSennAIDeviceWarning(
+    capability
+  );
+
+
+  if (backend === "webgpu") {
+
+    updateSennAIEngineStatus(
+      "ready",
+      "AI Engine Ready",
+      "WebGPU acceleration is available.",
+      "WEBGPU"
+    );
+
+  } else if (backend === "wasm") {
+
+    updateSennAIEngineStatus(
+      "ready",
+      "AI Engine Ready",
+      "Using WebAssembly compatibility mode.",
+      "WASM"
+    );
+
+  } else {
+
+    updateSennAIEngineStatus(
+      "error",
+      "AI Engine Unavailable",
+      "No supported local AI backend was detected.",
+      "OFFLINE"
+    );
+
+
+    const fallback =
+      document.getElementById(
+        "aiFallbackNotice"
+      );
+
+
+    if (fallback) {
+
+      fallback.classList.remove(
+        "ai-hidden"
+      );
+
+    }
+
+  }
+
+
+  return true;
+}
+
+
+/* =========================================================
+   251. AI WORKSPACE EVENT BINDING
+========================================================= */
+
+function bindSennAIWorkspaceEvents(
+  tool
+) {
+
+  const input =
+    document.getElementById(
+      "aiImageInput"
+    );
+
+
+  const uploadZone =
+    document.getElementById(
+      "aiUploadZone"
+    );
+
+
+  const processButton =
+    document.getElementById(
+      "aiProcessButton"
+    );
+
+
+  const anotherButton =
+    document.getElementById(
+      "aiProcessAnotherButton"
+    );
+
+
+  const downloadButton =
+    document.getElementById(
+      "aiDownloadButton"
+    );
+
+
+  if (
+    !input ||
+    !uploadZone
+  ) {
+
+    return;
+
+  }
+
+
+  /* -----------------------------
+     CLICK UPLOAD
+  ----------------------------- */
+
+  uploadZone.addEventListener(
+    "click",
+    () => {
+
+      input.click();
+
+    }
+  );
+
+
+  /* -----------------------------
+     KEYBOARD UPLOAD
+  ----------------------------- */
+
+  uploadZone.addEventListener(
+    "keydown",
+    (event) => {
+
+      if (
+        event.key === "Enter" ||
+        event.key === " "
+      ) {
+
+        event.preventDefault();
+
+        input.click();
+
+      }
+
+    }
+  );
+
+
+  /* -----------------------------
+     FILE INPUT
+  ----------------------------- */
+
+  input.addEventListener(
+    "change",
+    async () => {
+
+      const file =
+        input.files?.[0];
+
+
+      if (!file) {
+        return;
+      }
+
+
+      await handleSennAIFile(
+        file,
+        tool
+      );
+
+    }
+  );
+
+
+  /* -----------------------------
+     DRAG ENTER
+  ----------------------------- */
+
+  uploadZone.addEventListener(
+    "dragenter",
+    (event) => {
+
+      event.preventDefault();
+
+      uploadZone.classList.add(
+        "dragging"
+      );
+
+    }
+  );
+
+
+  /* -----------------------------
+     DRAG OVER
+  ----------------------------- */
+
+  uploadZone.addEventListener(
+    "dragover",
+    (event) => {
+
+      event.preventDefault();
+
+      uploadZone.classList.add(
+        "dragging"
+      );
+
+    }
+  );
+
+
+  /* -----------------------------
+     DRAG LEAVE
+  ----------------------------- */
+
+  uploadZone.addEventListener(
+    "dragleave",
+    () => {
+
+      uploadZone.classList.remove(
+        "dragging"
+      );
+
+    }
+  );
+
+
+  /* -----------------------------
+     DROP
+  ----------------------------- */
+
+  uploadZone.addEventListener(
+    "drop",
+    async (event) => {
+
+      event.preventDefault();
+
+      uploadZone.classList.remove(
+        "dragging"
+      );
+
+
+      const file =
+        event.dataTransfer
+          ?.files?.[0];
+
+
+      if (!file) {
+        return;
+      }
+
+
+      await handleSennAIFile(
+        file,
+        tool
+      );
+
+    }
+  );
+
+
+  /* -----------------------------
+     OPTION BUTTONS
+  ----------------------------- */
+
+  document
+    .querySelectorAll(
+      "[data-ai-scale]"
+    )
+    .forEach(
+      (button) => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            setSennAIOptionActive(
+              button,
+              "[data-ai-scale]"
+            );
+
+
+            SENN_AI_STATE.settings.scale =
+              Number(
+                button.dataset.aiScale
+              ) || 2;
+
+          }
+        );
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-ai-quality]"
+    )
+    .forEach(
+      (button) => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            setSennAIOptionActive(
+              button,
+              "[data-ai-quality]"
+            );
+
+
+            SENN_AI_STATE.settings.quality =
+              button.dataset.aiQuality ||
+              "balanced";
+
+          }
+        );
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-ai-format]"
+    )
+    .forEach(
+      (button) => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            setSennAIOptionActive(
+              button,
+              "[data-ai-format]"
+            );
+
+
+            SENN_AI_STATE.settings.format =
+              button.dataset.aiFormat ||
+              "png";
+
+          }
+        );
+
+      }
+    );
+
+
+  /* -----------------------------
+     PROCESS
+  ----------------------------- */
+
+  if (processButton) {
+
+    processButton.addEventListener(
+      "click",
+      () => {
+
+        startSennAIProcessing(
+          tool
+        );
+
+      }
+    );
+
+  }
+
+
+  /* -----------------------------
+     ANOTHER IMAGE
+  ----------------------------- */
+
+  if (anotherButton) {
+
+    anotherButton.addEventListener(
+      "click",
+      () => {
+
+        resetSennAISelectedImage();
+
+      }
+    );
+
+  }
+
+
+  /* -----------------------------
+     DOWNLOAD
+  ----------------------------- */
+
+  if (downloadButton) {
+
+    downloadButton.addEventListener(
+      "click",
+      () => {
+
+        downloadSennAIResult(
+          tool
+        );
+
+      }
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   252. AI OPTION ACTIVE STATE
+========================================================= */
+
+function setSennAIOptionActive(
+  button,
+  selector
+) {
+
+  const group =
+    button.closest(
+      ".ai-option-group"
+    );
+
+
+  if (!group) {
+    return;
+  }
+
+
+  group
+    .querySelectorAll(
+      selector
+    )
+    .forEach(
+      (item) => {
+
+        item.classList.remove(
+          "active"
+        );
+
+      }
+    );
+
+
+  button.classList.add(
+    "active"
+  );
+
+             }
+}
+
+
+/* =========================================================
+   253. AI FILE HANDLER
+========================================================= */
+
+async function handleSennAIFile(
+  file,
+  tool
+) {
+
+  const validation =
+    validateSennAIFile(
+      file
+    );
+
+
+  if (!validation.valid) {
+
+    if (
+      typeof showToast ===
+      "function"
+    ) {
+
+      showToast(
+        validation.message,
+        "error"
+      );
+
+    } else {
+
+      alert(
+        validation.message
+      );
+
+    }
+
+
+    return;
+
+  }
+
+
+  clearSennAIFileURL();
+  clearSennAIOutputURL();
+
+
+  const fileURL =
+    URL.createObjectURL(
+      file
+    );
+
+
+  SENN_AI_STATE.file =
+    file;
+
+  SENN_AI_STATE.fileURL =
+    fileURL;
+
+
+  try {
+
+    const image =
+      await loadSennAIImage(
+        fileURL
+      );
+
+
+    const dimensionCheck =
+      validateSennAIImageDimensions(
+        image
+      );
+
+
+    if (!dimensionCheck.valid) {
+
+      throw new Error(
+        dimensionCheck.message
+      );
+
+    }
+
+
+    SENN_AI_STATE.sourceImage =
+      image;
+
+
+    renderSennAISelectedImage(
+      file,
+      image,
+      dimensionCheck,
+      tool
+    );
+
+  } catch (error) {
+
+    console.error(
+      "[Senn AI] Image load failed:",
+      error
+    );
+
+
+    resetSennAIFileState();
+
+
+    if (
+      typeof showToast ===
+      "function"
+    ) {
+
+      showToast(
+        error.message ||
+          "Failed to load image.",
+        "error"
+      );
+
+    } else {
+
+      alert(
+        error.message ||
+          "Failed to load image."
+      );
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   254. RENDER SELECTED AI IMAGE
+========================================================= */
+
+function renderSennAISelectedImage(
+  file,
+  image,
+  dimension,
+  tool
+) {
+
+  const uploadZone =
+    document.getElementById(
+      "aiUploadZone"
+    );
+
+
+  const settings =
+    document.getElementById(
+      "aiSettingsPanel"
+    );
+
+
+  const previewGrid =
+    document.getElementById(
+      "aiPreviewGrid"
+    );
+
+
+  const preview =
+    document.getElementById(
+      "aiOriginalPreview"
+    );
+
+
+  const dimensions =
+    document.getElementById(
+      "aiOriginalDimensions"
+    );
+
+
+  const processButton =
+    document.getElementById(
+      "aiProcessButton"
+    );
+
+
+  const resultPanel =
+    document.getElementById(
+      "aiResultPanel"
+    );
+
+
+  if (uploadZone) {
+
+    uploadZone.classList.add(
+      "ai-hidden"
+    );
+
+  }
+
+
+  if (settings) {
+
+    settings.classList.remove(
+      "ai-hidden"
+    );
+
+  }
+
+
+  if (previewGrid) {
+
+    previewGrid.classList.remove(
+      "ai-hidden"
+    );
+
+  }
+
+
+  if (resultPanel) {
+
+    resultPanel.classList.add(
+      "ai-hidden"
+    );
+
+  }
+
+
+  if (preview) {
+
+    preview.src =
+      SENN_AI_STATE.fileURL;
+
+  }
+
+
+  if (dimensions) {
+
+    dimensions.textContent =
+      `${dimension.width} × ${dimension.height}`;
+
+  }
+
+
+  if (processButton) {
+
+    processButton.disabled =
+      !SENN_AI_STATE.engine.backend;
+
+
+    const label =
+      processButton.querySelector(
+        "span"
+      );
+
+
+    if (label) {
+
+      if (
+        tool.type === "upscale"
+      ) {
+
+        label.textContent =
+          "Run AI Upscaler";
+
+      } else if (
+        tool.type === "enhance"
+      ) {
+
+        label.textContent =
+          "Run AI Enhancer";
+
+      } else {
+
+        label.textContent =
+          "Run AI Restore";
+
+      }
+
+    }
+
+  }
+
+
+  resetSennAIResultPreview();
+
+
+  console.info(
+    "[Senn AI] Image selected:",
+    {
+      name:
+        file.name,
+
+      size:
+        file.size,
+
+      width:
+        image.naturalWidth,
+
+      height:
+        image.naturalHeight,
+
+      tool:
+        tool.id
+    }
+  );
+
+}
+
+
+/* =========================================================
+   255. RESET AI RESULT PREVIEW
+========================================================= */
+
+function resetSennAIResultPreview() {
+
+  clearSennAIOutputURL();
+
+
+  SENN_AI_STATE.outputBlob =
+    null;
+
+
+  const resultPreview =
+    document.getElementById(
+      "aiResultPreview"
+    );
+
+
+  const resultDimensions =
+    document.getElementById(
+      "aiResultDimensions"
+    );
+
+
+  const resultPanel =
+    document.getElementById(
+      "aiResultPanel"
+    );
+
+
+  if (resultPreview) {
+
+    resultPreview.innerHTML = `
+      <div
+        class="workspace-placeholder"
+        id="aiResultPlaceholder"
+      >
+
+        <div
+          class="workspace-placeholder-icon"
+        >
+          <i
+            class="fa-solid fa-brain"
+          ></i>
+        </div>
+
+        <p>
+          AI result will appear here.
+        </p>
+
+      </div>
+    `;
+
+  }
+
+
+  if (resultDimensions) {
+
+    resultDimensions.textContent =
+      "Waiting";
+
+  }
+
+
+  if (resultPanel) {
+
+    resultPanel.classList.add(
+      "ai-hidden"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   256. RESET SELECTED AI IMAGE
+========================================================= */
+
+function resetSennAISelectedImage() {
+
+  resetSennAIFileState();
+
+
+  const input =
+    document.getElementById(
+      "aiImageInput"
+    );
+
+
+  const uploadZone =
+    document.getElementById(
+      "aiUploadZone"
+    );
+
+
+  const settings =
+    document.getElementById(
+      "aiSettingsPanel"
+    );
+
+
+  const previewGrid =
+    document.getElementById(
+      "aiPreviewGrid"
+    );
+
+
+  const resultPanel =
+    document.getElementById(
+      "aiResultPanel"
+    );
+
+
+  if (input) {
+
+    input.value = "";
+
+  }
+
+
+  if (uploadZone) {
+
+    uploadZone.classList.remove(
+      "ai-hidden"
+    );
+
+  }
+
+
+  if (settings) {
+
+    settings.classList.add(
+      "ai-hidden"
+    );
+
+  }
+
+
+  if (previewGrid) {
+
+    previewGrid.classList.add(
+      "ai-hidden"
+    );
+
+  }
+
+
+  if (resultPanel) {
+
+    resultPanel.classList.add(
+      "ai-hidden"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   257. AI PROCESSING PLACEHOLDER
+
+   IMPORTANT:
+   Real model inference is connected in the next section.
+   This function DOES NOT fake an AI result.
+========================================================= */
+
+async function startSennAIProcessing(
+  tool
+) {
+
+  if (
+    SENN_AI_STATE.processing
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    !SENN_AI_STATE.file ||
+    !SENN_AI_STATE.sourceImage
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    !SENN_AI_STATE.engine.backend
+  ) {
+
+    if (
+      typeof showToast ===
+      "function"
+    ) {
+
+      showToast(
+        "Local AI is not supported by this browser.",
+        "error"
+      );
+
+    }
+
+
+    return;
+
+  }
+
+
+  /*
+    Real inference gets connected in
+    SECTION 265+.
+
+    We intentionally stop here instead
+    of generating a normal canvas resize
+    and pretending it came from AI.
+  */
+
+
+  updateSennAIEngineStatus(
+    "loading",
+    "AI Model Required",
+    "The AI runtime and verified model will be loaded next.",
+    SENN_AI_STATE.engine.backend
+      .toUpperCase()
+  );
+
+
+  const modelProgress =
+    document.getElementById(
+      "aiModelProgress"
+    );
+
+
+  if (modelProgress) {
+
+    modelProgress.classList.remove(
+      "ai-hidden"
+    );
+
+  }
+
+
+  updateSennAIModelProgress(
+    0,
+    "Waiting for AI model"
+  );
+
+
+  if (
+    typeof showToast ===
+    "function"
+  ) {
+
+    showToast(
+      "AI workspace is ready. Model engine is the next step.",
+      "info"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   258. AI DOWNLOAD RESULT
+========================================================= */
+
+function downloadSennAIResult(
+  tool
+) {
+
+  if (
+    !SENN_AI_STATE.outputBlob ||
+    !SENN_AI_STATE.outputURL
+  ) {
+
+    if (
+      typeof showToast ===
+      "function"
+    ) {
+
+      showToast(
+        "No AI result is available yet.",
+        "error"
+      );
+
+    }
+
+
+    return;
+
+  }
+
+
+  const extension =
+    SENN_AI_STATE.settings.format ===
+      "jpg"
+      ? "jpg"
+      : SENN_AI_STATE.settings.format;
+
+
+  const originalName =
+    SENN_AI_STATE.file
+      ?.name
+      ?.replace(
+        /\.[^/.]+$/,
+        ""
+      ) ||
+    "image";
+
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+
+  link.href =
+    SENN_AI_STATE.outputURL;
+
+
+  link.download =
+    `${originalName}-${tool.id}.${extension}`;
+
+
+  document.body.appendChild(
+    link
+  );
+
+
+  link.click();
+
+
+  link.remove();
+
+}
+
+
+/* =========================================================
+   259. AI ROUTER BRIDGE
+========================================================= */
+
+const previousSennAIRouter =
+  typeof renderTool === "function"
+    ? renderTool
+    : null;
+
+
+async function renderToolWithSennAI(
+  toolId,
+  ...args
+) {
+
+  if (
+    isSennAITool(
+      toolId
+    )
+  ) {
+
+    return renderSennAITool(
+      toolId
+    );
+
+  }
+
+
+  const workspace =
+    getAIWorkspace();
+
+
+  if (workspace) {
+
+    delete workspace.dataset
+      .aiWorkspace;
+
+  }
+
+
+  if (
+    previousSennAIRouter
+  ) {
+
+    return previousSennAIRouter(
+      toolId,
+      ...args
+    );
+
+  }
+
+
+  return false;
+}
+
+
+/* =========================================================
+   260. INSTALL AI ROUTER
+========================================================= */
+
+if (
+  typeof window.renderTool ===
+  "function"
+) {
+
+  window.renderTool =
+    renderToolWithSennAI;
+
+}
+
+
+/* =========================================================
+   261. AI CATEGORY NAVIGATION
+========================================================= */
+
+document
+  .querySelectorAll(
+    '[data-category-filter="ai"]'
+  )
+  .forEach(
+    (button) => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const allToolsNavigation =
+            document.querySelector(
+              '[data-page="tools"]'
+            );
+
+
+          if (
+            allToolsNavigation &&
+            typeof allToolsNavigation
+              .click === "function"
+          ) {
+
+            allToolsNavigation.click();
+
+          }
+
+
+          window.setTimeout(
+            () => {
+
+              const aiFilter =
+                document.querySelector(
+                  '[data-filter="ai"]'
+                );
+
+
+              if (aiFilter) {
+
+                aiFilter.click();
+
+              }
+
+            },
+            30
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   262. AI TOOL DIRECT CLICK BRIDGE
+========================================================= */
+
+document
+  .querySelectorAll(
+    '.tool-card[data-category="ai"]'
+  )
+  .forEach(
+    (card) => {
+
+      card.addEventListener(
+        "click",
+        (event) => {
+
+          if (
+            event.target.closest(
+              ".favorite-button"
+            )
+          ) {
+
+            return;
+
+          }
+
+
+          const toolId =
+            card.dataset.tool;
+
+
+          if (
+            !isSennAITool(
+              toolId
+            )
+          ) {
+
+            return;
+
+          }
+
+
+          window.setTimeout(
+            () => {
+
+              renderSennAITool(
+                toolId
+              );
+
+            },
+            0
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   263. AI CLEANUP
+========================================================= */
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+
+    clearSennAIFileURL();
+    clearSennAIOutputURL();
+
+  }
+);
+
+
+/* =========================================================
+   264. PART 7A STATUS
+========================================================= */
+
+console.info(
+  "[Senn Tools] Part 7 AI Tools Beta foundation loaded."
+);
+
+
+/* =========================================================
+   PART 7A COMPLETE
+
+   READY:
+   ✓ AI tool registry
+   ✓ AI global state
+   ✓ AI file validation
+   ✓ JPG / PNG / WEBP support
+   ✓ 20 MB limit
+   ✓ Mobile pixel protection
+   ✓ WebGPU detection
+   ✓ WASM detection
+   ✓ Automatic backend selection
+   ✓ AI workspace renderer
+   ✓ Drag & drop
+   ✓ File picker
+   ✓ Original preview
+   ✓ 2x / 4x options
+   ✓ Fast / Balanced / Quality
+   ✓ PNG / WEBP / JPG
+   ✓ Engine status
+   ✓ Device warning
+   ✓ Model progress UI
+   ✓ Result state
+   ✓ Download foundation
+   ✓ Object URL cleanup
+   ✓ AI routing bridge
+
+   IMPORTANT:
+   No fake AI processing is used.
+
+   NEXT:
+   SECTION 265+
+   ONNX RUNTIME WEB
+   REAL AI MODEL LOADER
+   REAL INFERENCE
+   TILED PROCESSING
+========================================================= */
