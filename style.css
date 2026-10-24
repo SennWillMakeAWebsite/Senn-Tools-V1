@@ -3360,3 +3360,1103 @@ body.light-theme .confirmation-card {
     transition-duration: 0.01ms !important;
   }
 }
+/* =========================================================
+   38. PART 6 UI REPAIR
+   SENN TOOLS V1
+========================================================= */
+
+
+/* =========================================================
+   38.1 RECOMMENDED TOOLS
+========================================================= */
+
+.recommended-tools {
+  min-width: 0;
+}
+
+.recommended-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(190px, 1fr)
+    );
+
+  gap: 10px;
+}
+
+.recommended-tool {
+  appearance: none;
+  -webkit-appearance: none;
+
+  position: relative;
+
+  min-width: 0;
+  min-height: 74px;
+
+  display: grid;
+
+  grid-template-columns:
+    42px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 13px 14px;
+
+  overflow: hidden;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 15px;
+
+  outline: none;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.045),
+      rgba(255, 255, 255, 0.018)
+    ),
+    rgba(10, 13, 18, 0.92);
+
+  color: var(--text);
+
+  text-align: left;
+
+  font: inherit;
+
+  cursor: pointer;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(255, 255, 255, 0.025);
+
+  transition:
+    transform var(--transition),
+    border-color var(--transition),
+    background var(--transition),
+    box-shadow var(--transition);
+}
+
+.recommended-tool::before {
+  content: "";
+
+  position: absolute;
+
+  top: -60px;
+  right: -45px;
+
+  width: 90px;
+  height: 90px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(104, 228, 255, 0.055);
+
+  filter: blur(20px);
+
+  pointer-events: none;
+
+  transition:
+    transform var(--transition),
+    opacity var(--transition);
+}
+
+.recommended-tool:hover {
+  transform: translateY(-2px);
+
+  border-color:
+    rgba(104, 228, 255, 0.22);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(104, 228, 255, 0.07),
+      rgba(157, 124, 255, 0.035)
+    ),
+    rgba(10, 13, 18, 0.96);
+
+  box-shadow:
+    0
+    14px
+    32px
+    rgba(0, 0, 0, 0.2);
+}
+
+.recommended-tool:hover::before {
+  transform: scale(1.4);
+
+  opacity: 0.9;
+}
+
+.recommended-tool:active {
+  transform:
+    translateY(0)
+    scale(0.985);
+}
+
+.recommended-tool:focus-visible {
+  border-color:
+    rgba(104, 228, 255, 0.6);
+
+  box-shadow:
+    0
+    0
+    0
+    3px
+    rgba(104, 228, 255, 0.08);
+}
+
+
+/* =========================================================
+   38.2 RECOMMENDED TOOL ICON
+========================================================= */
+
+.recommended-tool .mini-tool-icon {
+  position: relative;
+
+  z-index: 2;
+
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  border:
+    1px solid
+    rgba(104, 228, 255, 0.13);
+
+  border-radius: 12px;
+
+  background:
+    rgba(104, 228, 255, 0.075);
+
+  color: var(--accent);
+
+  font-size: 0.82rem;
+}
+
+
+/* Image */
+
+.recommended-tool .image-tool {
+  color: var(--accent);
+
+  background:
+    rgba(104, 228, 255, 0.075);
+
+  border-color:
+    rgba(104, 228, 255, 0.15);
+}
+
+
+/* Video */
+
+.recommended-tool .video-tool {
+  color: var(--purple);
+
+  background:
+    rgba(157, 124, 255, 0.08);
+
+  border-color:
+    rgba(157, 124, 255, 0.15);
+}
+
+
+/* Document */
+
+.recommended-tool .document-tool {
+  color: var(--yellow);
+
+  background:
+    rgba(255, 214, 107, 0.07);
+
+  border-color:
+    rgba(255, 214, 107, 0.14);
+}
+
+
+/* Converter */
+
+.recommended-tool .converter-tool {
+  color: var(--green);
+
+  background:
+    rgba(98, 230, 167, 0.07);
+
+  border-color:
+    rgba(98, 230, 167, 0.14);
+}
+
+
+/* Utility */
+
+.recommended-tool .utility-tool {
+  color: var(--blue);
+
+  background:
+    rgba(120, 169, 255, 0.07);
+
+  border-color:
+    rgba(120, 169, 255, 0.14);
+}
+
+
+/* =========================================================
+   38.3 RECOMMENDED TOOL CONTENT
+========================================================= */
+
+.recommended-tool
+> div:nth-child(2) {
+  position: relative;
+
+  z-index: 2;
+
+  min-width: 0;
+
+  display: grid;
+
+  gap: 4px;
+}
+
+.recommended-tool strong {
+  display: block;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: var(--text);
+
+  font-size: 0.75rem;
+  font-weight: 700;
+
+  line-height: 1.35;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.recommended-tool span {
+  display: block;
+
+  color: var(--muted);
+
+  font-size: 0.62rem;
+  font-weight: 500;
+
+  line-height: 1.4;
+}
+
+.recommended-tool
+> .fa-arrow-right {
+  position: relative;
+
+  z-index: 2;
+
+  color:
+    rgba(255, 255, 255, 0.34);
+
+  font-size: 0.65rem;
+
+  transition:
+    transform var(--transition),
+    color var(--transition);
+}
+
+.recommended-tool:hover
+> .fa-arrow-right {
+  color: var(--accent);
+
+  transform:
+    translateX(3px);
+}
+
+
+/* =========================================================
+   38.4 FILE DETECTION REPAIR
+========================================================= */
+
+.file-detection {
+  overflow: hidden;
+}
+
+.file-information {
+  min-width: 0;
+}
+
+.file-information h3 {
+  max-width: 100%;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.file-meta {
+  row-gap: 5px;
+}
+
+
+/* =========================================================
+   38.5 TOOL WORKSPACE SAFETY
+========================================================= */
+
+.tool-interface,
+.tool-panel,
+.tool-upload-panel,
+.tool-status-panel,
+.tool-preview-card,
+.tool-control {
+  min-width: 0;
+}
+
+.tool-controls {
+  align-items: start;
+}
+
+.tool-control label {
+  line-height: 1.45;
+}
+
+.tool-input,
+.tool-select,
+.tool-textarea {
+  max-width: 100%;
+}
+
+.tool-select {
+  cursor: pointer;
+}
+
+.tool-select option {
+  background: #11151c;
+
+  color: #f3f5f7;
+}
+
+.tool-button {
+  max-width: 100%;
+}
+
+.tool-button:disabled {
+  opacity: 0.45;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+.tool-button:disabled:hover {
+  transform: none;
+}
+
+.tool-notice {
+  max-width: 100%;
+}
+
+.tool-notice span {
+  min-width: 0;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   38.6 PREVIEW REPAIR
+========================================================= */
+
+.tool-preview-card {
+  overflow: hidden;
+}
+
+.tool-preview-card img,
+.tool-preview-card video,
+.tool-preview-card canvas {
+  max-width: 100%;
+}
+
+.tool-output-info {
+  min-width: 0;
+}
+
+.tool-output-info span {
+  max-width: 100%;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   38.7 PHOTO ENHANCER LIVE PREVIEW
+========================================================= */
+
+.enhancer-live-stage {
+  width: 100%;
+
+  display: grid;
+
+  gap: 14px;
+
+  margin-top: 20px;
+}
+
+.enhancer-comparison {
+  position: relative;
+
+  width: 100%;
+
+  min-height: 260px;
+
+  aspect-ratio: 16 / 10;
+
+  overflow: hidden;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 18px;
+
+  background: #090a0d;
+
+  user-select: none;
+
+  touch-action: none;
+}
+
+.enhancer-before,
+.enhancer-after {
+  position: absolute;
+
+  inset: 0;
+
+  overflow: hidden;
+}
+
+.enhancer-before {
+  z-index: 1;
+}
+
+.enhancer-after {
+  z-index: 2;
+
+  width: 50%;
+
+  border-right:
+    2px solid
+    rgba(104, 228, 255, 0.9);
+}
+
+.enhancer-before img,
+.enhancer-after canvas {
+  position: absolute;
+
+  inset: 0;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  background: #090a0d;
+}
+
+.enhancer-after canvas {
+  max-width: none;
+  max-height: none;
+}
+
+.enhancer-comparison-label {
+  position: absolute;
+
+  z-index: 4;
+
+  top: 12px;
+
+  padding: 6px 9px;
+
+  border:
+    1px solid var(--border-strong);
+
+  border-radius: 999px;
+
+  background:
+    rgba(5, 8, 12, 0.72);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  color:
+    rgba(255, 255, 255, 0.82);
+
+  font-family:
+    "JetBrains Mono",
+    monospace;
+
+  font-size: 0.58rem;
+  font-weight: 700;
+
+  letter-spacing: 0.08em;
+
+  pointer-events: none;
+}
+
+.enhancer-label-before {
+  left: 12px;
+}
+
+.enhancer-label-after {
+  right: 12px;
+
+  color: var(--accent);
+}
+
+.enhancer-divider {
+  position: absolute;
+
+  z-index: 5;
+
+  top: 0;
+  bottom: 0;
+  left: 50%;
+
+  width: 2px;
+
+  transform:
+    translateX(-1px);
+
+  background:
+    rgba(104, 228, 255, 0.95);
+
+  box-shadow:
+    0
+    0
+    18px
+    rgba(104, 228, 255, 0.35);
+
+  pointer-events: none;
+}
+
+.enhancer-divider::after {
+  content: "↔";
+
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  width: 36px;
+  height: 36px;
+
+  display: grid;
+  place-items: center;
+
+  transform:
+    translate(-50%, -50%);
+
+  border:
+    1px solid
+    rgba(104, 228, 255, 0.45);
+
+  border-radius: 50%;
+
+  background:
+    rgba(8, 12, 17, 0.92);
+
+  color: var(--accent);
+
+  font-size: 0.9rem;
+
+  box-shadow:
+    0
+    8px
+    25px
+    rgba(0, 0, 0, 0.3);
+}
+
+.enhancer-compare-range {
+  width: 100%;
+
+  accent-color: var(--accent);
+}
+
+.enhancer-preview-meta {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  flex-wrap: wrap;
+
+  gap: 8px;
+
+  color: var(--muted);
+
+  font-size: 0.66rem;
+}
+
+.enhancer-preview-meta strong {
+  color: var(--text-soft);
+
+  font-weight: 700;
+}
+
+.enhancer-reset-button {
+  margin-left: auto;
+}
+
+
+/* =========================================================
+   38.8 UPSCALER
+========================================================= */
+
+.upscale-detail-note {
+  margin-top: 4px;
+}
+
+
+/* =========================================================
+   38.9 METADATA VIEWER
+========================================================= */
+
+.metadata-grid,
+.metadata-result-grid,
+.metadata-list,
+.metadata-viewer-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 10px;
+}
+
+.metadata-item,
+.metadata-row,
+.metadata-card {
+  min-width: 0;
+
+  padding: 14px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 14px;
+
+  background:
+    rgba(255, 255, 255, 0.025);
+}
+
+.metadata-item span,
+.metadata-row span,
+.metadata-card span,
+.metadata-item small,
+.metadata-row small,
+.metadata-card small {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: var(--muted);
+
+  font-size: 0.62rem;
+}
+
+.metadata-item strong,
+.metadata-row strong,
+.metadata-card strong {
+  display: block;
+
+  min-width: 0;
+
+  color: var(--text);
+
+  font-size: 0.72rem;
+  font-weight: 650;
+
+  line-height: 1.45;
+
+  overflow-wrap: anywhere;
+}
+
+.metadata-grid
+> :last-child:nth-child(odd),
+.metadata-result-grid
+> :last-child:nth-child(odd),
+.metadata-list
+> :last-child:nth-child(odd),
+.metadata-viewer-grid
+> :last-child:nth-child(odd) {
+  grid-column:
+    1 / -1;
+}
+
+
+/* =========================================================
+   38.10 LONG TEXT PROTECTION
+========================================================= */
+
+.featured-card,
+.tool-card,
+.search-result-item,
+.history-item {
+  min-width: 0;
+}
+
+.featured-content h3,
+.tool-card h3,
+.search-result-content strong {
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   38.11 LIGHT THEME FIX
+========================================================= */
+
+body.light-theme
+.recommended-tool {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.95),
+      rgba(245, 248, 252, 0.92)
+    );
+
+  border-color:
+    rgba(20, 30, 45, 0.09);
+
+  box-shadow:
+    0
+    8px
+    25px
+    rgba(30, 45, 65, 0.045);
+}
+
+body.light-theme
+.recommended-tool:hover {
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      rgba(104, 228, 255, 0.055)
+    );
+
+  border-color:
+    rgba(25, 145, 175, 0.18);
+}
+
+body.light-theme
+.recommended-tool
+> .fa-arrow-right {
+  color:
+    rgba(20, 30, 45, 0.35);
+}
+
+body.light-theme
+.enhancer-comparison,
+body.light-theme
+.enhancer-before img,
+body.light-theme
+.enhancer-after canvas {
+  background: #11151c;
+}
+
+
+/* =========================================================
+   38.12 PART 6 TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .recommended-grid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+  .tool-controls {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+  .tool-stat-grid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+}
+
+
+/* =========================================================
+   38.13 PART 6 MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
+
+  .recommended-heading {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 4px;
+  }
+
+  .recommended-grid {
+    grid-template-columns: 1fr;
+
+    gap: 8px;
+  }
+
+  .recommended-tool {
+    min-height: 68px;
+
+    grid-template-columns:
+      40px
+      minmax(0, 1fr)
+      auto;
+
+    gap: 11px;
+
+    padding: 12px 13px;
+
+    border-radius: 14px;
+  }
+
+  .recommended-tool
+  .mini-tool-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .recommended-tool strong {
+    font-size: 0.72rem;
+  }
+
+  .recommended-tool span {
+    font-size: 0.6rem;
+  }
+
+  .tool-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-control.full {
+    grid-column: auto;
+  }
+
+  .tool-actions {
+    width: 100%;
+
+    flex-wrap: wrap;
+  }
+
+  .tool-actions
+  .tool-button {
+    flex:
+      1 1
+      150px;
+  }
+
+  .tool-panel,
+  .tool-upload-panel,
+  .tool-status-panel {
+    padding: 16px;
+
+    border-radius: 18px;
+  }
+
+  .workspace-current-file {
+    align-items: flex-start;
+
+    padding: 11px 12px;
+  }
+
+  .tool-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metadata-grid,
+  .metadata-result-grid,
+  .metadata-list,
+  .metadata-viewer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metadata-grid
+  > :last-child:nth-child(odd),
+  .metadata-result-grid
+  > :last-child:nth-child(odd),
+  .metadata-list
+  > :last-child:nth-child(odd),
+  .metadata-viewer-grid
+  > :last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+
+  .enhancer-comparison {
+    min-height: 210px;
+  }
+
+  .enhancer-comparison-label {
+    top: 9px;
+
+    padding: 5px 7px;
+
+    font-size: 0.54rem;
+  }
+
+  .enhancer-label-before {
+    left: 9px;
+  }
+
+  .enhancer-label-after {
+    right: 9px;
+  }
+
+  .enhancer-preview-meta {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .enhancer-reset-button {
+    width: 100%;
+
+    margin-left: 0;
+  }
+
+}
+
+
+/* =========================================================
+   38.14 VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+  .recommended-tool {
+    min-height: 66px;
+  }
+
+  .tool-actions {
+    display: grid;
+
+    grid-template-columns: 1fr;
+  }
+
+  .tool-actions
+  .tool-button {
+    width: 100%;
+  }
+
+  .tool-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-range-row {
+    gap: 8px;
+  }
+
+  .tool-range-value {
+    min-width: 44px;
+  }
+
+  .enhancer-comparison {
+    min-height: 190px;
+
+    aspect-ratio: 1 / 1;
+  }
+
+}
+
+
+/* =========================================================
+   38.15 TOUCH DEVICES
+========================================================= */
+
+@media (hover: none) {
+
+  .recommended-tool:hover {
+    transform: none;
+
+    box-shadow:
+      inset
+      0
+      1px
+      0
+      rgba(255, 255, 255, 0.025);
+  }
+
+  .recommended-tool:active {
+    border-color:
+      rgba(104, 228, 255, 0.28);
+
+    background:
+      rgba(104, 228, 255, 0.055);
+  }
+
+}
+
+
+/* =========================================================
+   PART 6 CSS COMPLETE
+
+   FIXED:
+   ✓ Recommended Tools dark theme
+   ✓ Recommended Tools readable text
+   ✓ Cyan / purple / green category icons
+   ✓ Desktop hover
+   ✓ Mobile tap state
+   ✓ Keyboard focus state
+   ✓ Responsive Recommended Tools
+   ✓ File detection overflow
+   ✓ Long filenames
+   ✓ Tool workspace overflow
+   ✓ Controls responsive
+   ✓ Preview overflow
+   ✓ Photo Enhancer live preview styling
+   ✓ Before / After styling
+   ✓ Metadata Viewer layout
+   ✓ Light theme compatibility
+   ✓ Tablet layout
+   ✓ Mobile layout
+   ✓ Small mobile layout
+========================================================= */
