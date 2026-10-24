@@ -24375,3 +24375,1808 @@ console.log(
    - Final JS syntax/runtime audit
    - Prepare AI Tools Beta entry point
 ========================================================= */
+/* =========================================================
+   SENN TOOLS V1
+   PART 6B
+   UI REPAIR + RESPONSIVE CLEANUP + FINAL POLISH
+========================================================= */
+
+
+/* =========================================================
+   220. PART 6B UI STYLES
+========================================================= */
+
+function installPart6BStyles() {
+  if (
+    document.getElementById(
+      "senn-part6b-styles"
+    )
+  ) {
+    return;
+  }
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+  style.id =
+    "senn-part6b-styles";
+
+  style.textContent = `
+
+    /* =====================================================
+       RECOMMENDED TOOLS
+    ===================================================== */
+
+    .recommended-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(
+          auto-fit,
+          minmax(190px, 1fr)
+        );
+      gap: 10px;
+      width: 100%;
+    }
+
+
+    .recommended-tool {
+      appearance: none;
+      -webkit-appearance: none;
+
+      position: relative;
+
+      min-width: 0;
+      min-height: 74px;
+
+      display: grid;
+
+      grid-template-columns:
+        42px
+        minmax(0, 1fr)
+        auto;
+
+      align-items: center;
+
+      gap: 12px;
+
+      padding:
+        13px 14px;
+
+      overflow: hidden;
+
+      text-align: left;
+
+      border:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          .075
+        );
+
+      border-radius: 15px;
+
+      outline: none;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(
+            255,
+            255,
+            255,
+            .045
+          ),
+          rgba(
+            255,
+            255,
+            255,
+            .018
+          )
+        ),
+        rgba(
+          10,
+          13,
+          18,
+          .92
+        );
+
+      color:
+        var(
+          --text,
+          #f3f5f7
+        );
+
+      font: inherit;
+
+      cursor: pointer;
+
+      box-shadow:
+        inset
+        0
+        1px
+        0
+        rgba(
+          255,
+          255,
+          255,
+          .025
+        );
+
+      transition:
+        transform .2s ease,
+        border-color .2s ease,
+        background .2s ease,
+        box-shadow .2s ease;
+    }
+
+
+    .recommended-tool::before {
+      content: "";
+
+      position: absolute;
+
+      width: 90px;
+      height: 90px;
+
+      top: -60px;
+      right: -45px;
+
+      border-radius: 50%;
+
+      background:
+        rgba(
+          104,
+          228,
+          255,
+          .055
+        );
+
+      filter:
+        blur(20px);
+
+      pointer-events: none;
+
+      transition:
+        transform .25s ease,
+        opacity .25s ease;
+    }
+
+
+    .recommended-tool:hover {
+      transform:
+        translateY(-2px);
+
+      border-color:
+        rgba(
+          104,
+          228,
+          255,
+          .22
+        );
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(
+            104,
+            228,
+            255,
+            .07
+          ),
+          rgba(
+            157,
+            124,
+            255,
+            .035
+          )
+        ),
+        rgba(
+          10,
+          13,
+          18,
+          .96
+        );
+
+      box-shadow:
+        0
+        14px
+        32px
+        rgba(
+          0,
+          0,
+          0,
+          .2
+        );
+    }
+
+
+    .recommended-tool:hover::before {
+      transform:
+        scale(1.4);
+
+      opacity: .9;
+    }
+
+
+    .recommended-tool:active {
+      transform:
+        translateY(0)
+        scale(.985);
+    }
+
+
+    .recommended-tool:focus-visible {
+      border-color:
+        rgba(
+          104,
+          228,
+          255,
+          .6
+        );
+
+      box-shadow:
+        0
+        0
+        0
+        3px
+        rgba(
+          104,
+          228,
+          255,
+          .08
+        );
+    }
+
+
+    .recommended-tool
+    .mini-tool-icon {
+      position: relative;
+      z-index: 2;
+
+      width: 42px;
+      height: 42px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 12px;
+
+      font-size: 14px;
+
+      background:
+        rgba(
+          104,
+          228,
+          255,
+          .075
+        );
+
+      color:
+        var(
+          --accent,
+          #68e4ff
+        );
+
+      border:
+        1px solid
+        rgba(
+          104,
+          228,
+          255,
+          .13
+        );
+    }
+
+
+    .recommended-tool
+    > div:nth-child(2) {
+      position: relative;
+      z-index: 2;
+
+      min-width: 0;
+
+      display: grid;
+
+      gap: 4px;
+    }
+
+
+    .recommended-tool strong {
+      display: block;
+
+      min-width: 0;
+
+      overflow: hidden;
+
+      color:
+        var(
+          --text,
+          #f3f5f7
+        );
+
+      font-size: 12px;
+      font-weight: 700;
+
+      line-height: 1.35;
+
+      text-overflow:
+        ellipsis;
+
+      white-space:
+        nowrap;
+    }
+
+
+    .recommended-tool span {
+      color:
+        var(
+          --muted,
+          rgba(
+            255,
+            255,
+            255,
+            .55
+          )
+        );
+
+      font-size: 10px;
+      font-weight: 500;
+
+      line-height: 1.4;
+    }
+
+
+    .recommended-tool
+    > .fa-arrow-right {
+      position: relative;
+      z-index: 2;
+
+      color:
+        rgba(
+          255,
+          255,
+          255,
+          .34
+        );
+
+      font-size: 10px;
+
+      transition:
+        transform .2s ease,
+        color .2s ease;
+    }
+
+
+    .recommended-tool:hover
+    > .fa-arrow-right {
+      color:
+        var(
+          --accent,
+          #68e4ff
+        );
+
+      transform:
+        translateX(3px);
+    }
+
+
+    /* =====================================================
+       RECOMMENDED CATEGORY COLORS
+    ===================================================== */
+
+    .recommended-tool
+    .image-tool {
+      color:
+        var(
+          --accent,
+          #68e4ff
+        );
+
+      background:
+        rgba(
+          104,
+          228,
+          255,
+          .075
+        );
+
+      border-color:
+        rgba(
+          104,
+          228,
+          255,
+          .15
+        );
+    }
+
+
+    .recommended-tool
+    .video-tool {
+      color:
+        var(
+          --purple,
+          #9d7cff
+        );
+
+      background:
+        rgba(
+          157,
+          124,
+          255,
+          .08
+        );
+
+      border-color:
+        rgba(
+          157,
+          124,
+          255,
+          .15
+        );
+    }
+
+
+    .recommended-tool
+    .document-tool {
+      color:
+        var(
+          --yellow,
+          #ffd66b
+        );
+
+      background:
+        rgba(
+          255,
+          214,
+          107,
+          .07
+        );
+
+      border-color:
+        rgba(
+          255,
+          214,
+          107,
+          .14
+        );
+    }
+
+
+    .recommended-tool
+    .converter-tool {
+      color:
+        var(
+          --green,
+          #62e6a7
+        );
+
+      background:
+        rgba(
+          98,
+          230,
+          167,
+          .07
+        );
+
+      border-color:
+        rgba(
+          98,
+          230,
+          167,
+          .14
+        );
+    }
+
+
+    .recommended-tool
+    .utility-tool {
+      color:
+        var(
+          --blue,
+          #78a9ff
+        );
+
+      background:
+        rgba(
+          120,
+          169,
+          255,
+          .07
+        );
+
+      border-color:
+        rgba(
+          120,
+          169,
+          255,
+          .14
+        );
+    }
+
+
+    /* =====================================================
+       FILE DETECTION CLEANUP
+    ===================================================== */
+
+    .file-detection {
+      overflow: hidden;
+    }
+
+
+    .file-information {
+      min-width: 0;
+    }
+
+
+    .file-information h3 {
+      overflow: hidden;
+
+      text-overflow:
+        ellipsis;
+
+      white-space:
+        nowrap;
+    }
+
+
+    .file-meta {
+      row-gap: 5px;
+    }
+
+
+    .recommended-tools {
+      min-width: 0;
+    }
+
+
+    /* =====================================================
+       TOOL WORKSPACE CLEANUP
+    ===================================================== */
+
+    .tool-interface {
+      min-width: 0;
+    }
+
+
+    .tool-panel,
+    .tool-upload-panel,
+    .tool-status-panel,
+    .tool-preview-card {
+      min-width: 0;
+    }
+
+
+    .tool-controls {
+      align-items: start;
+    }
+
+
+    .tool-control {
+      min-width: 0;
+    }
+
+
+    .tool-control label {
+      line-height: 1.45;
+    }
+
+
+    .tool-input,
+    .tool-select,
+    .tool-textarea {
+      max-width: 100%;
+    }
+
+
+    .tool-select {
+      cursor: pointer;
+    }
+
+
+    .tool-select option {
+      background:
+        #11151c;
+
+      color:
+        #f3f5f7;
+    }
+
+
+    .tool-button {
+      max-width: 100%;
+    }
+
+
+    .tool-button:disabled {
+      opacity: .45;
+
+      cursor: not-allowed;
+
+      transform: none;
+    }
+
+
+    .tool-button:disabled:hover {
+      transform: none;
+
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          .055
+        );
+    }
+
+
+    .tool-notice {
+      max-width: 100%;
+    }
+
+
+    .tool-notice span {
+      min-width: 0;
+
+      overflow-wrap:
+        anywhere;
+    }
+
+
+    /* =====================================================
+       PREVIEW CLEANUP
+    ===================================================== */
+
+    .tool-preview-card {
+      overflow: hidden;
+    }
+
+
+    .tool-preview-card img,
+    .tool-preview-card video,
+    .tool-preview-card canvas {
+      max-width: 100%;
+    }
+
+
+    .tool-output-info {
+      min-width: 0;
+    }
+
+
+    .tool-output-info span {
+      max-width: 100%;
+
+      overflow: hidden;
+
+      text-overflow:
+        ellipsis;
+
+      white-space:
+        nowrap;
+    }
+
+
+    /* =====================================================
+       METADATA VIEWER NORMALIZATION
+    ===================================================== */
+
+    .metadata-grid,
+    .metadata-result-grid,
+    .metadata-list,
+    .metadata-viewer-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0, 1fr)
+        );
+
+      gap: 10px;
+
+      width: 100%;
+    }
+
+
+    .metadata-item,
+    .metadata-row,
+    .metadata-card {
+      min-width: 0;
+
+      padding: 14px;
+
+      border:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          .075
+        );
+
+      border-radius: 14px;
+
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          .025
+        );
+    }
+
+
+    .metadata-item span,
+    .metadata-row span,
+    .metadata-card span,
+    .metadata-item small,
+    .metadata-row small,
+    .metadata-card small {
+      display: block;
+
+      margin-bottom: 5px;
+
+      color:
+        rgba(
+          255,
+          255,
+          255,
+          .48
+        );
+
+      font-size: 10px;
+    }
+
+
+    .metadata-item strong,
+    .metadata-row strong,
+    .metadata-card strong {
+      display: block;
+
+      min-width: 0;
+
+      overflow-wrap:
+        anywhere;
+
+      color:
+        var(
+          --text,
+          #f3f5f7
+        );
+
+      font-size: 12px;
+      font-weight: 650;
+
+      line-height: 1.45;
+    }
+
+
+    .metadata-grid
+    > :last-child:nth-child(odd),
+    .metadata-result-grid
+    > :last-child:nth-child(odd),
+    .metadata-list
+    > :last-child:nth-child(odd),
+    .metadata-viewer-grid
+    > :last-child:nth-child(odd) {
+      grid-column:
+        1 / -1;
+    }
+
+
+    /* =====================================================
+       LONG TEXT PROTECTION
+    ===================================================== */
+
+    .featured-card,
+    .tool-card,
+    .search-result-item,
+    .history-item {
+      min-width: 0;
+    }
+
+
+    .featured-content h3,
+    .tool-card h3,
+    .search-result-content strong {
+      overflow-wrap:
+        anywhere;
+    }
+
+
+    /* =====================================================
+       TABLET
+    ===================================================== */
+
+    @media (
+      max-width: 900px
+    ) {
+
+      .recommended-grid {
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0, 1fr)
+          );
+      }
+
+
+      .tool-controls {
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0, 1fr)
+          );
+      }
+
+
+      .tool-stat-grid {
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0, 1fr)
+          );
+      }
+
+    }
+
+
+    /* =====================================================
+       MOBILE
+    ===================================================== */
+
+    @media (
+      max-width: 720px
+    ) {
+
+      .file-detection {
+        grid-template-columns:
+          58px
+          minmax(0, 1fr);
+
+        gap: 13px;
+
+        padding: 14px;
+      }
+
+
+      .file-preview {
+        width: 58px;
+        height: 58px;
+
+        border-radius: 12px;
+      }
+
+
+      .file-actions {
+        grid-column:
+          1 / -1;
+
+        width: 100%;
+
+        justify-content:
+          flex-end;
+      }
+
+
+      .recommended-tools {
+        grid-column:
+          1 / -1;
+
+        width: 100%;
+
+        margin-top: 2px;
+
+        padding-top: 14px;
+      }
+
+
+      .recommended-heading {
+        align-items:
+          flex-start;
+
+        flex-direction:
+          column;
+
+        gap: 4px;
+      }
+
+
+      .recommended-grid {
+        grid-template-columns:
+          1fr;
+
+        gap: 8px;
+      }
+
+
+      .recommended-tool {
+        min-height: 68px;
+
+        grid-template-columns:
+          40px
+          minmax(0, 1fr)
+          auto;
+
+        gap: 11px;
+
+        padding:
+          12px 13px;
+
+        border-radius: 14px;
+      }
+
+
+      .recommended-tool
+      .mini-tool-icon {
+        width: 40px;
+        height: 40px;
+      }
+
+
+      .recommended-tool strong {
+        font-size: 12px;
+      }
+
+
+      .recommended-tool span {
+        font-size: 10px;
+      }
+
+
+      .tool-controls {
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .tool-control.full {
+        grid-column: auto;
+      }
+
+
+      .tool-actions {
+        width: 100%;
+      }
+
+
+      .tool-actions
+      .tool-button {
+        flex:
+          1 1
+          150px;
+      }
+
+
+      .tool-panel,
+      .tool-upload-panel,
+      .tool-status-panel {
+        padding: 16px;
+
+        border-radius: 18px;
+      }
+
+
+      .workspace-current-file {
+        align-items:
+          flex-start;
+
+        padding: 11px 12px;
+      }
+
+
+      .tool-preview-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .metadata-grid,
+      .metadata-result-grid,
+      .metadata-list,
+      .metadata-viewer-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .metadata-grid
+      > :last-child:nth-child(odd),
+      .metadata-result-grid
+      > :last-child:nth-child(odd),
+      .metadata-list
+      > :last-child:nth-child(odd),
+      .metadata-viewer-grid
+      > :last-child:nth-child(odd) {
+        grid-column: auto;
+      }
+
+
+      .enhancer-comparison {
+        min-height: 210px;
+      }
+
+
+      .enhancer-comparison-label {
+        top: 9px;
+
+        padding: 5px 7px;
+
+        font-size: 9px;
+      }
+
+
+      .enhancer-label-before {
+        left: 9px;
+      }
+
+
+      .enhancer-label-after {
+        right: 9px;
+      }
+
+    }
+
+
+    /* =====================================================
+       SMALL MOBILE
+    ===================================================== */
+
+    @media (
+      max-width: 430px
+    ) {
+
+      .file-detection {
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .file-preview {
+        width: 64px;
+        height: 64px;
+      }
+
+
+      .file-information {
+        width: 100%;
+      }
+
+
+      .file-actions {
+        grid-column: auto;
+
+        justify-content:
+          flex-start;
+
+        flex-wrap: wrap;
+      }
+
+
+      .recommended-tools {
+        grid-column: auto;
+      }
+
+
+      .recommended-tool {
+        min-height: 66px;
+      }
+
+
+      .tool-actions {
+        display: grid;
+
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .tool-actions
+      .tool-button {
+        width: 100%;
+      }
+
+
+      .tool-stat-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .tool-range-row {
+        gap: 8px;
+      }
+
+
+      .tool-range-value {
+        min-width: 44px;
+      }
+
+
+      .enhancer-comparison {
+        min-height: 190px;
+
+        aspect-ratio: 1 / 1;
+      }
+
+    }
+
+
+    /* =====================================================
+       TOUCH DEVICES
+    ===================================================== */
+
+    @media (
+      hover: none
+    ) {
+
+      .recommended-tool:hover {
+        transform: none;
+
+        box-shadow: none;
+      }
+
+
+      .recommended-tool:active {
+        border-color:
+          rgba(
+            104,
+            228,
+            255,
+            .28
+          );
+
+        background:
+          rgba(
+            104,
+            228,
+            255,
+            .055
+          );
+      }
+
+    }
+
+
+    /* =====================================================
+       REDUCED MOTION
+    ===================================================== */
+
+    @media (
+      prefers-reduced-motion:
+        reduce
+    ) {
+
+      .recommended-tool,
+      .recommended-tool::before,
+      .recommended-tool
+      > .fa-arrow-right {
+        transition: none;
+      }
+
+    }
+
+  `;
+
+  document.head.appendChild(
+    style
+  );
+}
+
+
+installPart6BStyles();
+
+
+/* =========================================================
+   221. RECOMMENDED TOOL ACCESSIBILITY
+========================================================= */
+
+function repairRecommendedToolCards() {
+  const cards =
+    document.querySelectorAll(
+      ".recommended-tool"
+    );
+
+  cards.forEach(
+    (card) => {
+      const toolId =
+        card.dataset
+          .recommendedTool;
+
+      const tool =
+        tools[
+          toolId
+        ];
+
+      if (!tool) {
+        return;
+      }
+
+      card.setAttribute(
+        "aria-label",
+        `Open ${tool.name}`
+      );
+
+      card.setAttribute(
+        "title",
+        tool.name
+      );
+    }
+  );
+}
+
+
+/* =========================================================
+   222. RECOMMENDED TOOL OBSERVER
+========================================================= */
+
+let recommendedToolObserver =
+  null;
+
+
+function installRecommendedToolObserver() {
+  if (
+    recommendedToolObserver ||
+    !recommendedGrid
+  ) {
+    return;
+  }
+
+  recommendedToolObserver =
+    new MutationObserver(
+      () => {
+        repairRecommendedToolCards();
+      }
+    );
+
+  recommendedToolObserver.observe(
+    recommendedGrid,
+    {
+      childList: true,
+      subtree: true
+    }
+  );
+
+  repairRecommendedToolCards();
+}
+
+
+installRecommendedToolObserver();
+
+
+/* =========================================================
+   223. RESPONSIVE TEXT SAFETY
+========================================================= */
+
+function installResponsiveTextSafety() {
+  const selectors = [
+    ".featured-content h3",
+    ".tool-card h3",
+    ".search-result-content strong",
+    ".workspace-current-file strong",
+    ".workspace-current-file span"
+  ];
+
+  selectors.forEach(
+    (selector) => {
+      document
+        .querySelectorAll(
+          selector
+        )
+        .forEach(
+          (element) => {
+            element.setAttribute(
+              "title",
+              element.textContent
+                .trim()
+            );
+          }
+        );
+    }
+  );
+}
+
+
+installResponsiveTextSafety();
+
+
+/* =========================================================
+   224. TOOL WORKSPACE SAFETY
+========================================================= */
+
+function repairWorkspaceAccessibility() {
+  if (!workspaceContent) {
+    return;
+  }
+
+  workspaceContent
+    .querySelectorAll(
+      'button:not([type])'
+    )
+    .forEach(
+      (button) => {
+        button.type =
+          "button";
+      }
+    );
+
+  workspaceContent
+    .querySelectorAll(
+      "img:not([alt])"
+    )
+    .forEach(
+      (image) => {
+        image.alt =
+          "";
+      }
+    );
+
+  workspaceContent
+    .querySelectorAll(
+      "input, select, textarea"
+    )
+    .forEach(
+      (input) => {.forEach(
+  (input) => {
+    if (
+      input.disabled
+    ) {
+      input.setAttribute(
+        "aria-disabled",
+        "true"
+      );
+    }
+  }
+);
+}
+
+
+/* =========================================================
+   225. WORKSPACE OBSERVER
+========================================================= */
+
+let part6WorkspaceObserver =
+  null;
+
+
+function installPart6WorkspaceObserver() {
+  if (
+    part6WorkspaceObserver ||
+    !workspaceContent
+  ) {
+    return;
+  }
+
+  part6WorkspaceObserver =
+    new MutationObserver(
+      () => {
+        repairWorkspaceAccessibility();
+      }
+    );
+
+  part6WorkspaceObserver.observe(
+    workspaceContent,
+    {
+      childList: true,
+      subtree: true
+    }
+  );
+
+  repairWorkspaceAccessibility();
+}
+
+
+installPart6WorkspaceObserver();
+
+
+/* =========================================================
+   226. IMAGE OUTPUT SAFETY CHECK
+========================================================= */
+
+function validateImageOutputDimensions(
+  width,
+  height
+) {
+  const safeWidth =
+    Math.round(
+      Number(width)
+    );
+
+  const safeHeight =
+    Math.round(
+      Number(height)
+    );
+
+  if (
+    !Number.isFinite(
+      safeWidth
+    ) ||
+    !Number.isFinite(
+      safeHeight
+    ) ||
+    safeWidth < 1 ||
+    safeHeight < 1
+  ) {
+    throw new Error(
+      "Invalid image dimensions."
+    );
+  }
+
+  if (
+    safeWidth *
+      safeHeight >
+    SENN_IMAGE_LIMITS
+      .maxOutputPixels
+  ) {
+    throw new Error(
+      "Image output exceeds the safe browser processing limit."
+    );
+  }
+
+  return {
+    width:
+      safeWidth,
+
+    height:
+      safeHeight
+  };
+}
+
+
+/* =========================================================
+   227. SAFE OBJECT URL REGISTRY
+========================================================= */
+
+const part6ObjectURLs =
+  new Set();
+
+
+function createPart6ObjectURL(
+  value
+) {
+  const url =
+    URL.createObjectURL(
+      value
+    );
+
+  part6ObjectURLs.add(
+    url
+  );
+
+  return url;
+}
+
+
+function revokePart6ObjectURL(
+  url
+) {
+  if (!url) {
+    return;
+  }
+
+  try {
+    URL.revokeObjectURL(
+      url
+    );
+  } catch {
+    // URL may already be gone.
+  }
+
+  part6ObjectURLs.delete(
+    url
+  );
+}
+
+
+function clearPart6ObjectURLs() {
+  part6ObjectURLs
+    .forEach(
+      (url) => {
+        try {
+          URL.revokeObjectURL(
+            url
+          );
+        } catch {
+          // Ignore cleanup errors.
+        }
+      }
+    );
+
+  part6ObjectURLs.clear();
+}
+
+
+window.addEventListener(
+  "pagehide",
+  clearPart6ObjectURLs
+);
+
+
+/* =========================================================
+   228. DEVICE CAPABILITY SNAPSHOT
+========================================================= */
+
+function getSennDeviceCapabilities() {
+  const navigatorObject =
+    window.navigator || {};
+
+  const memory =
+    Number(
+      navigatorObject
+        .deviceMemory
+    ) || null;
+
+  const processors =
+    Number(
+      navigatorObject
+        .hardwareConcurrency
+    ) || null;
+
+  const webGPU =
+    Boolean(
+      navigatorObject.gpu
+    );
+
+  const webAssembly =
+    typeof WebAssembly !==
+    "undefined";
+
+  return {
+    memory,
+    processors,
+    webGPU,
+    webAssembly
+  };
+}
+
+
+/* =========================================================
+   229. FUTURE AI ENGINE SUPPORT CHECK
+========================================================= */
+
+function getAIToolsBetaSupport() {
+  const capabilities =
+    getSennDeviceCapabilities();
+
+  let level =
+    "limited";
+
+  if (
+    capabilities.webGPU
+  ) {
+    level =
+      "webgpu";
+  } else if (
+    capabilities.webAssembly
+  ) {
+    level =
+      "wasm";
+  }
+
+  return {
+    level,
+
+    webGPU:
+      capabilities.webGPU,
+
+    webAssembly:
+      capabilities.webAssembly,
+
+    memory:
+      capabilities.memory,
+
+    processors:
+      capabilities.processors
+  };
+}
+
+
+/* =========================================================
+   230. PART 6 HEALTH CHECK
+========================================================= */
+
+function getPart6HealthCheck() {
+  const requiredFunctions = {
+    liveEnhancer:
+      "renderPhotoEnhancerV2",
+
+    standardUpscaler:
+      "renderImageUpscalerV2",
+
+    upscaleTarget:
+      "calculateStandardUpscaleTarget",
+
+    progressiveUpscale:
+      "createProgressiveUpscaleCanvas",
+
+    recommendedRepair:
+      "repairRecommendedToolCards",
+
+    outputValidation:
+      "validateImageOutputDimensions",
+
+    aiSupport:
+      "getAIToolsBetaSupport"
+  };
+
+  const functions = {};
+
+  Object.entries(
+    requiredFunctions
+  ).forEach(
+    ([
+      key,
+      functionName
+    ]) => {
+      functions[key] =
+        typeof window[
+          functionName
+        ] ===
+        "function" ||
+        typeof globalThis[
+          functionName
+        ] ===
+        "function";
+    }
+  );
+
+  return {
+    functions,
+
+    recommendedCards:
+      document
+        .querySelectorAll(
+          ".recommended-tool"
+        )
+        .length,
+
+    workspaceReady:
+      Boolean(
+        workspaceContent
+      ),
+
+    device:
+      getSennDeviceCapabilities()
+  };
+}
+
+
+/* =========================================================
+   231. PART 6 CONSOLE REPORT
+========================================================= */
+
+function printPart6Report() {
+  const report =
+    getPart6HealthCheck();
+
+  console.groupCollapsed(
+    "[SENN TOOLS] Part 6 report"
+  );
+
+  console.log(
+    "Functions:",
+    report.functions
+  );
+
+  console.log(
+    "Recommended cards:",
+    report.recommendedCards
+  );
+
+  console.log(
+    "Workspace:",
+    report.workspaceReady
+  );
+
+  console.log(
+    "Device:",
+    report.device
+  );
+
+  console.log(
+    "AI Tools Beta support:",
+    getAIToolsBetaSupport()
+  );
+
+  console.groupEnd();
+
+  return report;
+}
+
+
+/* =========================================================
+   232. FINAL PART 6 ROUTER WRAPPER
+========================================================= */
+
+const previousPart6BRenderToolWorkspace =
+  renderToolWorkspace;
+
+
+renderToolWorkspace =
+  function (
+    toolId
+  ) {
+    previousPart6BRenderToolWorkspace(
+      toolId
+    );
+
+    window.requestAnimationFrame(
+      () => {
+        repairWorkspaceAccessibility();
+
+        repairRecommendedToolCards();
+      }
+    );
+  };
+
+
+/* =========================================================
+   233. PART 6 READY
+========================================================= */
+
+window.requestAnimationFrame(
+  () => {
+    repairRecommendedToolCards();
+
+    repairWorkspaceAccessibility();
+
+    printPart6Report();
+  }
+);
+
+
+console.log(
+  "[SENN TOOLS] Part 6B ready."
+);
+
+
+/* =========================================================
+   PART 6 COMPLETE
+
+   FIXED:
+   ✓ Recommended Tools dark glass cards
+   ✓ Recommended Tools readable text
+   ✓ Recommended Tools mobile layout
+   ✓ Category icon colors
+   ✓ Hover / active / keyboard states
+   ✓ File Detection responsive layout
+   ✓ Long filename protection
+   ✓ Workspace mobile cleanup
+   ✓ Tool control responsive cleanup
+   ✓ Preview overflow protection
+   ✓ Metadata grid normalization
+   ✓ Odd metadata row normalization
+   ✓ Disabled button styling
+   ✓ Select option dark theme
+   ✓ Accessibility cleanup
+   ✓ Object URL cleanup helpers
+   ✓ Device capability detection
+   ✓ WebGPU detection
+   ✓ WebAssembly detection
+   ✓ AI Tools Beta support detector
+   ✓ Part 6 health report
+
+   PART 6 STATUS:
+   6A ✓
+   6B ✓
+
+   NEXT:
+   PART 7
+   AI TOOLS BETA
+
+   PLANNED:
+   - AI Tools Beta section
+   - AI Image Upscaler
+   - WebGPU first
+   - WASM fallback
+   - Model loading state
+   - Device compatibility state
+   - 2× / 4× AI upscale
+   - Before / After AI preview
+   - Memory protection
+========================================================= */
+   
