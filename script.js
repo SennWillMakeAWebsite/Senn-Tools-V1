@@ -21524,5 +21524,1593 @@ console.log(
    - Smart Drop media polish
    - Final Part 5 integration
 ========================================================= */
-            
-       
+/* =========================================================
+   193. MEDIA MEMORY SAFETY
+========================================================= */
+
+const SENN_MEDIA_LIMITS = {
+  maxInputBytes:
+    700 * 1024 * 1024,
+
+  warningBytes:
+    250 * 1024 * 1024,
+
+  maxUpscalePixels:
+    3840 * 2160,
+
+  maxUpscaleDuration:
+    20 * 60
+};
+
+
+function validateMediaMemory(
+  file,
+  options = {}
+) {
+  if (!file) {
+    throw new Error(
+      "No media file selected."
+    );
+  }
+
+  const maxBytes =
+    Number(
+      options.maxBytes
+    ) ||
+    SENN_MEDIA_LIMITS
+      .maxInputBytes;
+
+  if (
+    file.size >
+    maxBytes
+  ) {
+    throw new Error(
+      `This file is too large for browser processing. ` +
+      `Maximum recommended size is ${formatBytes(
+        maxBytes
+      )}.`
+    );
+  }
+
+  return true;
+}
+
+
+function shouldWarnLargeMedia(
+  file
+) {
+  return Boolean(
+    file &&
+    file.size >
+      SENN_MEDIA_LIMITS
+        .warningBytes
+  );
+}
+
+
+/* =========================================================
+   194. FFMPEG ENGINE RESET
+========================================================= */
+
+async function resetFFmpegEngine() {
+  const current =
+    sennMediaEngine.ffmpeg;
+
+  if (current) {
+    try {
+      if (
+        typeof current.terminate ===
+        "function"
+      ) {
+        current.terminate();
+      }
+    } catch (error) {
+      console.warn(
+        "[SENN TOOLS] FFmpeg terminate:",
+        error
+      );
+    }
+  }
+
+  sennMediaEngine.ffmpeg =
+    null;
+
+  sennMediaEngine.loadingPromise =
+    null;
+
+  sennMediaEngine.loaded =
+    false;
+
+  sennMediaEngine.activeTask =
+    false;
+
+  sennMediaEngine.progressHandler =
+    null;
+
+  return true;
+}
+
+
+/* =========================================================
+   195. HARD MEDIA CANCELLATION
+========================================================= */
+
+let sennMediaCancellationRequested =
+  false;
+
+
+async function cancelActiveMediaTask() {
+  sennMediaCancellationRequested =
+    true;
+
+  state.processingCancelled =
+    true;
+
+  const ffmpeg =
+    sennMediaEngine.ffmpeg;
+
+  if (
+    ffmpeg &&
+    sennMediaEngine.activeTask
+  ) {
+    try {
+      if (
+        typeof ffmpeg.terminate ===
+        "function"
+      ) {
+        ffmpeg.terminate();
+      }
+    } catch (error) {
+      console.warn(
+        "[SENN TOOLS] Media cancellation:",
+        error
+      );
+    }
+  }
+
+  sennMediaEngine.ffmpeg =
+    null;
+
+  sennMediaEngine.loadingPromise =
+    null;
+
+  sennMediaEngine.loaded =
+    false;
+
+  sennMediaEngine.activeTask =
+    false;
+
+  sennMediaEngine.progressHandler =
+    null;
+
+  hideProcessingOverlay();
+
+  showToast(
+    "Processing cancelled",
+    "The media task was stopped.",
+    "info"
+  );
+}
+
+
+/* =========================================================
+   196. CONNECT HARD CANCEL BUTTON
+========================================================= */
+
+if (processingCancelButton) {
+  processingCancelButton.addEventListener(
+    "click",
+    () => {
+      if (
+        sennMediaEngine.activeTask
+      ) {
+        cancelActiveMediaTask();
+      }
+    }
+  );
+}
+
+
+/* =========================================================
+   197. MEDIA CANCELLATION ERROR
+========================================================= */
+
+function createMediaCancelledError() {
+  const error =
+    new Error(
+      "Media processing was cancelled."
+    );
+
+  error.name =
+    "SennProcessingCancelled";
+
+  return error;
+}
+
+
+/* =========================================================
+   198. SAFE MEDIA TASK RUNNER
+========================================================= */
+
+async function runSafeMediaTask(
+  task,
+  options = {}
+) {
+  if (
+    typeof task !==
+    "function"
+  ) {
+    throw new Error(
+      "Invalid media task."
+    );
+  }
+
+  if (
+    sennMediaEngine.activeTask
+  ) {
+    throw new Error(
+      "Another media task is already running."
+    );
+  }
+
+  sennMediaCancellationRequested =
+    false;
+
+  state.processingCancelled =
+    false;
+
+  const file =
+    options.file ||
+    null;
+
+  if (file) {
+    validateMediaMemory(
+      file,
+      {
+        maxBytes:
+          options.maxBytes
+      }
+    );
+  }
+
+  if (
+    file &&
+    shouldWarnLargeMedia(
+      file
+    )
+  ) {
+    showToast(
+      "Large media file",
+      "Processing may use significant memory and can take longer on mobile devices.",
+      "warning"
+    );
+  }
+
+  showProcessingOverlay(
+    options.title ||
+      "Processing Media",
+
+    options.message ||
+      "Preparing media..."
+  );
+
+  updateProcessingProgress(
+    2,
+    options.message ||
+      "Preparing media..."
+  );
+
+  sennMediaEngine.activeTask =
+    true;
+
+  try {
+    const ffmpeg =
+      await ensureFFmpegEngine();
+
+    if (
+      sennMediaCancellationRequested ||
+      state.processingCancelled
+    ) {
+      throw createMediaCancelledError();
+    }
+
+    const update =
+      (
+        percentage,
+        message
+      ) => {
+        if (
+          sennMediaCancellationRequested ||
+          state.processingCancelled
+        ) {
+          return;
+        }
+
+        updateProcessingProgress(
+          Math.max(
+            0,
+            Math.min(
+              100,
+              Number(
+                percentage
+              ) || 0
+            )
+          ),
+          message ||
+            options.progressMessage ||
+            "Processing media..."
+        );
+      };
+
+    const throwIfCancelled =
+      () => {
+        if (
+          sennMediaCancellationRequested ||
+          state.processingCancelled
+        ) {
+          throw createMediaCancelledError();
+        }
+      };
+
+    const result =
+      await task(
+        ffmpeg,
+        {
+          update,
+          throwIfCancelled
+        }
+      );
+
+    throwIfCancelled();
+
+    update(
+      100,
+      options.completeMessage ||
+        "Processing complete"
+    );
+
+    return result;
+  } catch (error) {
+    if (
+      sennMediaCancellationRequested ||
+      state.processingCancelled ||
+      error?.name ===
+        "SennProcessingCancelled"
+    ) {
+      throw createMediaCancelledError();
+    }
+
+    const message =
+      String(
+        error?.message ||
+        ""
+      ).toLowerCase();
+
+    if (
+      message.includes(
+        "terminated"
+      ) ||
+      message.includes(
+        "worker"
+      ) ||
+      message.includes(
+        "memory"
+      )
+    ) {
+      await resetFFmpegEngine();
+    }
+
+    throw error;
+  } finally {
+    sennMediaEngine.activeTask =
+      false;
+
+    sennMediaEngine.progressHandler =
+      null;
+
+    if (
+      !sennMediaCancellationRequested &&
+      !state.processingCancelled
+    ) {
+      hideProcessingOverlay();
+    }
+  }
+}
+
+
+/* =========================================================
+   199. VIDEO UPSCALE PRESETS
+========================================================= */
+
+const videoUpscalePresets = {
+  "720p": {
+    label:
+      "720p HD",
+
+    width:
+      1280,
+
+    height:
+      720
+  },
+
+  "1080p": {
+    label:
+      "1080p Full HD",
+
+    width:
+      1920,
+
+    height:
+      1080
+  },
+
+  "1440p": {
+    label:
+      "1440p 2K",
+
+    width:
+      2560,
+
+    height:
+      1440
+  },
+
+  "2160p": {
+    label:
+      "2160p 4K",
+
+    width:
+      3840,
+
+    height:
+      2160
+  }
+};
+
+
+/* =========================================================
+   200. VIDEO UPSCALE TARGET
+========================================================= */
+
+function calculateVideoUpscaleTarget(
+  metadata,
+  preset
+) {
+  const config =
+    videoUpscalePresets[
+      preset
+    ];
+
+  if (!config) {
+    throw new Error(
+      "Invalid video resolution preset."
+    );
+  }
+
+  const sourceWidth =
+    Math.max(
+      1,
+      Number(
+        metadata?.width
+      ) || 1
+    );
+
+  const sourceHeight =
+    Math.max(
+      1,
+      Number(
+        metadata?.height
+      ) || 1
+    );
+
+  /*
+   * Never downscale.
+   *
+   * If the source is already larger
+   * than the selected preset, keep
+   * the original dimensions.
+   */
+
+  if (
+    sourceWidth >=
+      config.width ||
+    sourceHeight >=
+      config.height
+  ) {
+    return {
+      width:
+        sourceWidth,
+
+      height:
+        sourceHeight,
+
+      changed:
+        false
+    };
+  }
+
+  const ratio =
+    Math.min(
+      config.width /
+        sourceWidth,
+
+      config.height /
+        sourceHeight
+    );
+
+  let width =
+    Math.round(
+      sourceWidth *
+        ratio
+    );
+
+  let height =
+    Math.round(
+      sourceHeight *
+        ratio
+    );
+
+  /*
+   * H.264 generally behaves better
+   * with even dimensions.
+   */
+
+  if (
+    width % 2 !==
+    0
+  ) {
+    width += 1;
+  }
+
+  if (
+    height % 2 !==
+    0
+  ) {
+    height += 1;
+  }
+
+  return {
+    width,
+    height,
+    changed:
+      width !==
+        sourceWidth ||
+      height !==
+        sourceHeight
+  };
+}
+
+
+/* =========================================================
+   201. VIDEO UPSCALER UI
+========================================================= */
+
+function renderVideoUpscaler() {
+  workspaceContent.innerHTML = `
+    <div class="tool-interface">
+
+      <div class="tool-upload-panel">
+
+        <div
+          class="workspace-placeholder-icon"
+        >
+          <i class="fa-solid fa-expand"></i>
+        </div>
+
+        <h2>
+          Video Upscaler
+        </h2>
+
+        <p>
+          Increase video resolution using
+          high-quality browser scaling and
+          controlled detail enhancement.
+        </p>
+
+        <input
+          class="video-upscale-input"
+          type="file"
+          accept="video/*,.mp4,.webm,.mov,.m4v"
+          hidden
+        >
+
+        <button
+          class="tool-button primary video-upscale-select"
+          type="button"
+        >
+          <i class="fa-solid fa-file-arrow-up"></i>
+          Choose Video
+        </button>
+
+      </div>
+
+      <div
+        class="tool-panel video-upscale-panel"
+        hidden
+      >
+
+        <div
+          class="video-upscale-file"
+        ></div>
+
+        <div
+          class="video-upscale-preview"
+          style="margin-top: 18px;"
+        ></div>
+
+        <div
+          class="tool-controls"
+          style="margin-top: 18px;"
+        >
+
+          <div class="tool-control">
+
+            <label>
+              Target Resolution
+            </label>
+
+            <select
+              class="tool-select video-upscale-resolution"
+            >
+              <option value="720p">
+                720p HD
+              </option>
+
+              <option
+                value="1080p"
+                selected
+              >
+                1080p Full HD
+              </option>
+
+              <option value="1440p">
+                1440p 2K
+              </option>
+
+              <option value="2160p">
+                2160p 4K
+              </option>
+            </select>
+
+          </div>
+
+          <div class="tool-control">
+
+            <label>
+              Detail Enhancement
+            </label>
+
+            <select
+              class="tool-select video-upscale-detail"
+            >
+              <option value="soft">
+                Soft
+              </option>
+
+              <option
+                value="balanced"
+                selected
+              >
+                Balanced
+              </option>
+
+              <option value="strong">
+                Strong
+              </option>
+            </select>
+
+          </div>
+
+        </div>
+
+        <div
+          class="video-upscale-summary tool-notice"
+          style="margin-top: 18px;"
+        >
+
+          <i class="fa-solid fa-circle-info"></i>
+
+          <span>
+            Select a video to calculate
+            the output resolution.
+          </span>
+
+        </div>
+
+        <div
+          class="tool-notice"
+          style="margin-top: 12px;"
+        >
+
+          <i class="fa-solid fa-microchip"></i>
+
+          <span>
+            This uses standard video scaling
+            and sharpening, not AI reconstruction.
+            2K and 4K can be heavy on mobile devices.
+          </span>
+
+        </div>
+
+        <div
+          class="tool-actions"
+          style="margin-top: 18px;"
+        >
+
+          <button
+            class="tool-button primary video-upscale-run"
+            type="button"
+          >
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            Upscale Video
+          </button>
+
+          <button
+            class="tool-button video-upscale-clear"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+        <div
+          class="video-upscale-result"
+        ></div>
+
+      </div>
+
+    </div>
+  `;
+
+  const input =
+    workspaceContent.querySelector(
+      ".video-upscale-input"
+    );
+
+  const selectButton =
+    workspaceContent.querySelector(
+      ".video-upscale-select"
+    );
+
+  const panel =
+    workspaceContent.querySelector(
+      ".video-upscale-panel"
+    );
+
+  const fileContainer =
+    workspaceContent.querySelector(
+      ".video-upscale-file"
+    );
+
+  const previewContainer =
+    workspaceContent.querySelector(
+      ".video-upscale-preview"
+    );
+
+  const resolutionSelect =
+    workspaceContent.querySelector(
+      ".video-upscale-resolution"
+    );
+
+  const detailSelect =
+    workspaceContent.querySelector(
+      ".video-upscale-detail"
+    );
+
+  const summary =
+    workspaceContent.querySelector(
+      ".video-upscale-summary span"
+    );
+
+  const runButton =
+    workspaceContent.querySelector(
+      ".video-upscale-run"
+    );
+
+  const clearButton =
+    workspaceContent.querySelector(
+      ".video-upscale-clear"
+    );
+
+  const result =
+    workspaceContent.querySelector(
+      ".video-upscale-result"
+    );
+
+  let selectedVideo =
+    null;
+
+  let metadata =
+    null;
+
+
+  function updateSummary() {
+    if (!metadata) {
+      return;
+    }
+
+    const target =
+      calculateVideoUpscaleTarget(
+        metadata,
+        resolutionSelect.value
+      );
+
+    const source =
+      `${metadata.width}×${metadata.height}`;
+
+    const output =
+      `${target.width}×${target.height}`;
+
+    if (!target.changed) {
+      summary.textContent =
+        `Source ${source} • ` +
+        `Output ${output} • ` +
+        `Source is already equal to or larger than this preset.`;
+    } else {
+      summary.textContent =
+        `Source ${source} • ` +
+        `Output ${output}`;
+    }
+  }
+
+
+  async function loadVideo(
+    file
+  ) {
+    if (
+      !isVideoFile(file)
+    ) {
+      showToast(
+        "Invalid video",
+        "Choose a supported video file.",
+        "warning"
+      );
+
+      return;
+    }
+
+    try {
+      validateMediaMemory(
+        file
+      );
+    } catch (error) {
+      showToast(
+        "Video too large",
+        error.message,
+        "warning"
+      );
+
+      return;
+    }
+
+    selectedVideo =
+      file;
+
+    metadata =
+      null;
+
+    panel.hidden =
+      false;
+
+    result.innerHTML =
+      "";
+
+    fileContainer.innerHTML =
+      createVideoFileCardHTML(
+        file
+      );
+
+    createVideoPreview(
+      file,
+      previewContainer
+    );
+
+    try {
+      metadata =
+        await readVideoMetadata(
+          file
+        );
+
+      if (
+        selectedVideo !==
+        file
+      ) {
+        return;
+      }
+
+      fileContainer.innerHTML =
+        createVideoFileCardHTML(
+          file,
+          metadata
+        );
+
+      updateSummary();
+
+      if (
+        metadata.duration >
+        SENN_MEDIA_LIMITS
+          .maxUpscaleDuration
+      ) {
+        showToast(
+          "Long video",
+          "Very long videos may be too heavy for browser upscaling.",
+          "warning"
+        );
+      }
+    } catch (error) {
+      showToast(
+        "Metadata unavailable",
+        getFriendlyToolError(
+          error,
+          "Unable to read this video."
+        ),
+        "warning"
+      );
+    }
+  }
+
+
+  selectButton.addEventListener(
+    "click",
+    () => input.click()
+  );
+
+
+  input.addEventListener(
+    "change",
+    () => {
+      const file =
+        input.files?.[0];
+
+      if (file) {
+        loadVideo(
+          file
+        );
+      }
+    }
+  );
+
+
+  resolutionSelect.addEventListener(
+    "change",
+    updateSummary
+  );
+
+
+  clearButton.addEventListener(
+    "click",
+    () => {
+      selectedVideo =
+        null;
+
+      metadata =
+        null;
+
+      input.value =
+        "";
+
+      panel.hidden =
+        true;
+
+      fileContainer.innerHTML =
+        "";
+
+      result.innerHTML =
+        "";
+
+      const oldURL =
+        previewContainer.dataset
+          .videoObjectUrl;
+
+      if (oldURL) {
+        URL.revokeObjectURL(
+          oldURL
+        );
+
+        delete previewContainer
+          .dataset
+          .videoObjectUrl;
+      }
+
+      previewContainer.innerHTML =
+        "";
+    }
+  );
+
+
+  runButton.addEventListener(
+    "click",
+    async () => {
+      if (
+        !selectedVideo ||
+        !metadata
+      ) {
+        return;
+      }
+
+      const target =
+        calculateVideoUpscaleTarget(
+          metadata,
+          resolutionSelect.value
+        );
+
+      if (!target.changed) {
+        showToast(
+          "Upscale not needed",
+          "The source video is already equal to or larger than the selected resolution.",
+          "info"
+        );
+
+        return;
+      }
+
+      const outputPixels =
+        target.width *
+        target.height;
+
+      if (
+        outputPixels >
+        SENN_MEDIA_LIMITS
+          .maxUpscalePixels
+      ) {
+        showToast(
+          "Resolution too large",
+          "This output resolution is too heavy for safe browser processing.",
+          "warning"
+        );
+
+        return;
+      }
+
+      const originalHTML =
+        runButton.innerHTML;
+
+      runButton.disabled =
+        true;
+
+      runButton.innerHTML = `
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Upscaling...
+      `;
+
+      try {
+        const output =
+          await upscaleVideoFile(
+            selectedVideo,
+            {
+              width:
+                target.width,
+
+              height:
+                target.height,
+
+              detail:
+                detailSelect.value
+            }
+          );
+
+        const baseName =
+          getBaseFileName(
+            selectedVideo.name
+          );
+
+        downloadBlob(
+          output,
+          `${baseName}-${resolutionSelect.value}.mp4`
+        );
+
+        result.innerHTML = `
+          <div
+            class="tool-notice success"
+            style="margin-top: 18px;"
+          >
+
+            <i class="fa-solid fa-circle-check"></i>
+
+            <span>
+              Video upscaled to
+              ${escapeHTML(
+                `${target.width}×${target.height}`
+              )}
+              •
+              ${escapeHTML(
+                formatBytes(
+                  output.size
+                )
+              )}
+            </span>
+
+          </div>
+        `;
+
+        addHistory(
+          "video-upscaler",
+          {
+            fileName:
+              selectedVideo.name
+          }
+        );
+
+        showToast(
+          "Video upscaled",
+          `${target.width}×${target.height} video ready.`,
+          "success"
+        );
+      } catch (error) {
+        if (
+          error?.name ===
+          "SennProcessingCancelled"
+        ) {
+          return;
+        }
+
+        console.error(
+          "[SENN TOOLS] Video Upscaler:",
+          error
+        );
+
+        showToast(
+          "Upscale failed",
+          getFriendlyToolError(
+            error,
+            "Unable to upscale this video."
+          ),
+          "error"
+        );
+      } finally {
+        runButton.disabled =
+          false;
+
+        runButton.innerHTML =
+          originalHTML;
+      }
+    }
+  );
+
+
+  const smartFile =
+    getCurrentSelectedFile();
+
+  if (
+    smartFile &&
+    isVideoFile(
+      smartFile
+    )
+  ) {
+    loadVideo(
+      smartFile
+    );
+  }
+}
+
+
+/* =========================================================
+   202. VIDEO UPSCALE ENGINE
+========================================================= */
+
+async function upscaleVideoFile(
+  file,
+  options = {}
+) {
+  validateMediaMemory(
+    file
+  );
+
+  const width =
+    Math.max(
+      2,
+      Math.round(
+        Number(          options.width
+        ) || 1920
+      )
+    );
+
+  const height =
+    Math.max(
+      2,
+      Math.round(
+        Number(
+          options.height
+        ) || 1080
+      )
+    );
+
+  const detail =
+    String(
+      options.detail ||
+      "balanced"
+    );
+
+  const sharpenMap = {
+    soft:
+      "unsharp=5:5:0.25:5:5:0.0",
+
+    balanced:
+      "unsharp=5:5:0.45:5:5:0.0",
+
+    strong:
+      "unsharp=5:5:0.70:5:5:0.0"
+  };
+
+  const sharpen =
+    sharpenMap[
+      detail
+    ] ||
+    sharpenMap.balanced;
+
+  return runSafeMediaTask(
+    async (
+      ffmpeg,
+      {
+        update,
+        throwIfCancelled
+      }
+    ) => {
+      const inputExtension =
+        getMediaExtension(
+          file,
+          "mp4"
+        );
+
+      const inputName =
+        createMediaTempName(
+          "upscale-input",
+          inputExtension
+        );
+
+      const outputName =
+        createMediaTempName(
+          "upscale-output",
+          "mp4"
+        );
+
+      try {
+        update(
+          5,
+          "Loading video..."
+        );
+
+        await ffmpeg.writeFile(
+          inputName,
+          await mediaFileToUint8Array(
+            file
+          )
+        );
+
+        throwIfCancelled();
+
+        update(
+          10,
+          "Upscaling video..."
+        );
+
+        const filter =
+          [
+            `scale=${width}:${height}:flags=lanczos`,
+            sharpen
+          ].join(",");
+
+        await ffmpeg.exec([
+          "-i",
+          inputName,
+
+          "-map",
+          "0:v:0",
+
+          "-map",
+          "0:a?",
+
+          "-vf",
+          filter,
+
+          "-c:v",
+          "libx264",
+
+          "-preset",
+          "veryfast",
+
+          "-crf",
+          "20",
+
+          "-c:a",
+          "aac",
+
+          "-b:a",
+          "128k",
+
+          "-pix_fmt",
+          "yuv420p",
+
+          "-movflags",
+          "+faststart",
+
+          outputName
+        ]);
+
+        throwIfCancelled();
+
+        update(
+          96,
+          "Preparing upscaled video..."
+        );
+
+        const data =
+          await ffmpeg.readFile(
+            outputName
+          );
+
+        return new Blob(
+          [data],
+          {
+            type:
+              "video/mp4"
+          }
+        );
+      } finally {
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          inputName
+        );
+
+        await deleteFFmpegFileSafe(
+          ffmpeg,
+          outputName
+        );
+      }
+    },
+    {
+      file,
+
+      title:
+        "Upscaling Video",
+
+      message:
+        "Preparing video...",
+
+      progressMessage:
+        "Upscaling video...",
+
+      completeMessage:
+        "Video upscale complete"
+    }
+  );
+}
+
+
+/* =========================================================
+   203. SMART DROP MEDIA POLISH
+========================================================= */
+
+function getSmartDropMediaLabel(
+  file
+) {
+  if (!file) {
+    return "File";
+  }
+
+  if (
+    isVideoFile(
+      file
+    )
+  ) {
+    return "Video";
+  }
+
+  if (
+    typeof isAudioFile ===
+      "function" &&
+    isAudioFile(
+      file
+    )
+  ) {
+    return "Audio";
+  }
+
+  if (
+    String(
+      file.type ||
+      ""
+    ).startsWith(
+      "image/"
+    )
+  ) {
+    return "Image";
+  }
+
+  if (
+    String(
+      file.type ||
+      ""
+    ) ===
+      "application/pdf" ||
+    String(
+      file.name ||
+      ""
+    )
+      .toLowerCase()
+      .endsWith(
+        ".pdf"
+      )
+  ) {
+    return "PDF";
+  }
+
+  return "File";
+}
+
+
+/* =========================================================
+   204. SMART DROP MEDIA RECOMMENDATIONS
+========================================================= */
+
+function getMediaToolRecommendations(
+  file
+) {
+  if (!file) {
+    return [];
+  }
+
+  if (
+    isVideoFile(
+      file
+    )
+  ) {
+    return [
+      "video-compressor",
+      "video-trimmer",
+      "video-to-audio",
+      "video-thumbnail",
+      "video-upscaler",
+      "media-converter"
+    ];
+  }
+
+  if (
+    typeof isAudioFile ===
+      "function" &&
+    isAudioFile(
+      file
+    )
+  ) {
+    return [
+      "audio-converter",
+      "metadata-viewer"
+    ];
+  }
+
+  return [];
+}
+
+
+/* =========================================================
+   205. FINAL PART 5 RENDERERS
+========================================================= */
+
+const part5CRenderers = {
+  "video-upscaler":
+    renderVideoUpscaler
+};
+
+
+/* =========================================================
+   206. FINAL PART 5 ROUTER
+========================================================= */
+
+const previousPart5BRenderToolWorkspace =
+  renderToolWorkspace;
+
+renderToolWorkspace =
+  function (
+    toolId
+  ) {
+    const renderer =
+      part5CRenderers[
+        toolId
+      ];
+
+    if (renderer) {
+      renderer();
+
+      return;
+    }
+
+    previousPart5BRenderToolWorkspace(
+      toolId
+    );
+  };
+
+
+/* =========================================================
+   207. PART 5 STATUS
+========================================================= */
+
+function getPart5Status() {
+  return {
+    ffmpeg:
+      typeof ensureFFmpegEngine ===
+      "function",
+
+    engineRecovery:
+      typeof resetFFmpegEngine ===
+      "function",
+
+    hardCancellation:
+      typeof cancelActiveMediaTask ===
+      "function",
+
+    memoryProtection:
+      typeof validateMediaMemory ===
+      "function",
+
+    videoCompressor:
+      typeof renderVideoCompressor ===
+      "function",
+
+    videoTrimmer:
+      typeof renderVideoTrimmer ===
+      "function",
+
+    videoToAudio:
+      typeof renderVideoToAudio ===
+      "function",
+
+    audioConverter:
+      typeof renderAudioConverter ===
+      "function",
+
+    mediaConverter:
+      typeof renderMediaConverter ===
+      "function",
+
+    videoUpscaler:
+      typeof renderVideoUpscaler ===
+      "function"
+  };
+}
+
+
+/* =========================================================
+   208. PART 5 READY
+========================================================= */
+
+console.log(
+  "[SENN TOOLS] Part 5 complete.",
+  getPart5Status()
+);
+
+
+/* =========================================================
+   PART 5C END
+
+   ADDED:
+   ✓ Browser media memory protection
+   ✓ Large-file warning
+   ✓ FFmpeg engine reset / recovery
+   ✓ Hard media cancellation
+   ✓ Video Upscaler
+   ✓ 720p / 1080p / 1440p / 2160p
+   ✓ Never intentionally downscales source
+   ✓ Lanczos scaling
+   ✓ Controlled detail enhancement
+   ✓ Smart Drop media helpers
+   ✓ Video tool recommendations
+   ✓ Audio tool recommendations
+   ✓ Final Part 5 router
+
+   IMPORTANT:
+   Video Upscaler uses standard scaling
+   and sharpening. It does NOT claim
+   AI reconstruction.
+
+   NEXT:
+   PART 6
+   - Full project audit
+   - Photo Enhancer LIVE preview
+   - Recommended Tools color fix
+   - Image Upscaler visible enhancement
+   - Responsive UI cleanup
+   - Final syntax/runtime cleanup
+========================================================= */
+ 
