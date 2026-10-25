@@ -940,16 +940,43 @@ if (sidebarOverlay) {
 ========================================================= */
 
 navItems.forEach((item) => {
+
   item.addEventListener(
     "click",
     () => {
+
       const page =
         item.dataset.page;
 
       const category =
+        item.dataset.categoryFilter ||
         item.dataset.category;
 
+
+      /* =========================
+         NORMAL PAGE NAVIGATION
+      ========================= */
+
+      if (page) {
+
+        navigateTo(
+          page,
+          {
+            navPage: page
+          }
+        );
+
+        return;
+
+      }
+
+
+      /* =========================
+         CATEGORY NAVIGATION
+      ========================= */
+
       if (category) {
+
         navigateTo(
           "all-tools",
           {
@@ -957,18 +984,19 @@ navItems.forEach((item) => {
           }
         );
 
+
         applyCategoryFilter(
           category
         );
 
+
         return;
+
       }
 
-      if (page) {
-        navigateTo(page);
-      }
     }
   );
+
 });
 
 
