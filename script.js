@@ -3032,24 +3032,35 @@ function formatDuration(seconds) {
 ========================================================= */
 
 function renderVideoPreview(url) {
-  if (!filePreview) {
-    return;
+
+  if (
+    filePreviewImage
+  ) {
+
+    filePreviewImage.src =
+      "";
+
+    filePreviewImage.hidden =
+      true;
+
   }
 
-  filePreview.innerHTML = `
-    <video
-      src="${url}"
-      muted
-      playsinline
-      preload="metadata"
-    ></video>
 
-    <div class="file-preview-overlay">
+  if (
+    filePreviewPlaceholder
+  ) {
+
+    filePreviewPlaceholder.hidden =
+      false;
+
+    filePreviewPlaceholder.innerHTML = `
       <i
-        class="fa-solid fa-play"
+        class="fa-solid fa-film"
       ></i>
-    </div>
-  `;
+    `;
+
+  }
+
 }
 
 
