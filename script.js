@@ -2261,12 +2261,12 @@ document.addEventListener(
 
 
 /* =========================================================
-   27. SMART DROP REFERENCES
+   27. SMART DROP DOM REFERENCES
 ========================================================= */
 
 const smartDrop =
-  document.querySelector(
-    ".smart-drop"
+  document.getElementById(
+    "smartDrop"
   );
 
 const globalFileInput =
@@ -2284,34 +2284,39 @@ const fileDetection =
     "fileDetection"
   );
 
-const filePreview =
+const filePreviewPlaceholder =
   document.getElementById(
-    "filePreview"
+    "filePreviewPlaceholder"
+  );
+
+const filePreviewImage =
+  document.getElementById(
+    "filePreviewImage"
   );
 
 const detectedFileType =
   document.getElementById(
-    "detectedFileType"
+    "detectedType"
   );
 
 const detectedFileName =
   document.getElementById(
-    "detectedFileName"
+    "detectedName"
   );
 
 const detectedFileSize =
   document.getElementById(
-    "detectedFileSize"
+    "detectedSize"
   );
 
 const detectedFileFormat =
   document.getElementById(
-    "detectedFileFormat"
+    "detectedFormat"
   );
 
 const detectedFileDimensions =
   document.getElementById(
-    "detectedFileDimensions"
+    "detectedDimensions"
   );
 
 const changeFileButton =
@@ -2328,7 +2333,6 @@ const recommendedGrid =
   document.getElementById(
     "recommendedGrid"
   );
-
 
 /* =========================================================
    28. FILE TYPE DETECTION
