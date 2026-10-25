@@ -1992,7 +1992,7 @@ const globalSearchResults =
 
 const globalSearchButton =
   document.querySelector(
-    "#globalSearchButton, [data-global-search]"
+    "#searchToggle, #globalSearchButton, [data-global-search]"
   );
 
 const searchClose =
