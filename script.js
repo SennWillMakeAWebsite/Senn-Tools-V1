@@ -3281,70 +3281,141 @@ document.addEventListener(
 ========================================================= */
 
 function removeSelectedFile() {
+
   clearSelectedFileURL();
+
 
   state.selectedFile =
     null;
 
-  if (globalFileInput) {
-    globalFileInput.value = "";
+
+  if (
+    globalFileInput
+  ) {
+
+    globalFileInput.value =
+      "";
+
   }
 
-  if (fileDetection) {
+
+  if (
+    fileDetection
+  ) {
+
     fileDetection.classList.add(
       "hidden"
     );
+
   }
 
-  if (filePreview) {
-    filePreview.innerHTML = `
+
+  if (
+    filePreviewImage
+  ) {
+
+    filePreviewImage.src =
+      "";
+
+    filePreviewImage.hidden =
+      true;
+
+  }
+
+
+  if (
+    filePreviewPlaceholder
+  ) {
+
+    filePreviewPlaceholder.hidden =
+      false;
+
+    filePreviewPlaceholder.innerHTML = `
       <i
-        class="fa-solid fa-file"
+        class="fa-regular fa-file"
       ></i>
     `;
+
   }
 
-  if (detectedFileType) {
+
+  if (
+    detectedFileType
+  ) {
+
     detectedFileType.textContent =
-      "File detected";
+      "FILE DETECTED";
+
   }
 
-  if (detectedFileName) {
+
+  if (
+    detectedFileName
+  ) {
+
     detectedFileName.textContent =
-      "No file selected";
+      "filename.jpg";
+
   }
 
-  if (detectedFileSize) {
+
+  if (
+    detectedFileSize
+  ) {
+
     detectedFileSize.textContent =
-      "—";
+      "0 MB";
+
   }
 
-  if (detectedFileFormat) {
+
+  if (
+    detectedFileFormat
+  ) {
+
     detectedFileFormat.textContent =
-      "—";
+      "UNKNOWN";
+
   }
 
-  if (detectedFileDimensions) {
+
+  if (
+    detectedFileDimensions
+  ) {
+
     detectedFileDimensions.textContent =
-      "—";
+      "";
+
   }
 
-  if (recommendedGrid) {
-    recommendedGrid.innerHTML = "";
+
+  if (
+    recommendedGrid
+  ) {
+
+    recommendedGrid.innerHTML =
+      "";
+
   }
+
 
   showToast(
     "File removed",
     "Smart Drop has been reset."
   );
+
 }
 
 
-if (removeFileButton) {
+if (
+  removeFileButton
+) {
+
   removeFileButton.addEventListener(
     "click",
     removeSelectedFile
   );
+
 }
 
 
