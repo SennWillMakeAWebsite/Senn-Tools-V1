@@ -2775,6 +2775,7 @@ function clearSelectedFileURL() {
 function loadImageMetadata(file) {
   return new Promise(
     (resolve, reject) => {
+
       const image =
         new Image();
 
@@ -2783,23 +2784,41 @@ function loadImageMetadata(file) {
           file
         );
 
+
       image.onload = () => {
+
         if (
           detectedFileDimensions
         ) {
-          detectedFileDimensions
-            .textContent =
+
+          detectedFileDimensions.textContent =
             `${image.naturalWidth} × ${image.naturalHeight}`;
+
         }
 
-        if (filePreview) {
-          filePreview.innerHTML = `
-            <img
-              src="${url}"
-              alt="Selected image preview"
-            >
-          `;
+
+        if (
+          filePreviewPlaceholder
+        ) {
+
+          filePreviewPlaceholder.hidden =
+            true;
+
         }
+
+
+        if (
+          filePreviewImage
+        ) {
+
+          filePreviewImage.src =
+            url;
+
+          filePreviewImage.hidden =
+            false;
+
+        }
+
 
         resolve({
           width:
@@ -2808,17 +2827,24 @@ function loadImageMetadata(file) {
           height:
             image.naturalHeight
         });
+
       };
 
+
       image.onerror = () => {
+
         reject(
           new Error(
             "Unable to read image."
           )
         );
+
       };
 
-      image.src = url;
+
+      image.src =
+        url;
+
     }
   );
 }
