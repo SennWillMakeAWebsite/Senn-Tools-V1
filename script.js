@@ -25689,9 +25689,11 @@ installResponsiveTextSafety();
 ========================================================= */
 
 function repairWorkspaceAccessibility() {
+
   if (!workspaceContent) {
     return;
   }
+
 
   workspaceContent
     .querySelectorAll(
@@ -25699,10 +25701,13 @@ function repairWorkspaceAccessibility() {
     )
     .forEach(
       (button) => {
+
         button.type =
           "button";
+
       }
     );
+
 
   workspaceContent
     .querySelectorAll(
@@ -25710,28 +25715,41 @@ function repairWorkspaceAccessibility() {
     )
     .forEach(
       (image) => {
+
         image.alt =
           "";
+
       }
     );
+
 
   workspaceContent
     .querySelectorAll(
       "input, select, textarea"
     )
     .forEach(
-      (input) => {.forEach(
-  (input) => {
-    if (
-      input.disabled
-    ) {
-      input.setAttribute(
-        "aria-disabled",
-        "true"
-      );
-    }
-  }
-);
+      (input) => {
+
+        if (
+          input.disabled
+        ) {
+
+          input.setAttribute(
+            "aria-disabled",
+            "true"
+          );
+
+        } else {
+
+          input.removeAttribute(
+            "aria-disabled"
+          );
+
+        }
+
+      }
+    );
+
 }
 
 
