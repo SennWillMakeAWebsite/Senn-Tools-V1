@@ -3071,28 +3071,50 @@ function renderVideoPreview(url) {
 function renderGenericFilePreview(
   type
 ) {
-  if (!filePreview) {
-    return;
+
+  if (
+    filePreviewImage
+  ) {
+
+    filePreviewImage.src =
+      "";
+
+    filePreviewImage.hidden =
+      true;
+
   }
 
-  filePreview.innerHTML = `
-    <i
-      class="${getFileIcon(
-        type
-      )}"
-    ></i>
-  `;
+
+  if (
+    filePreviewPlaceholder
+  ) {
+
+    filePreviewPlaceholder.hidden =
+      false;
+
+    filePreviewPlaceholder.innerHTML = `
+      <i
+        class="${getFileIcon(
+          type
+        )}"
+      ></i>
+    `;
+
+  }
+
 
   if (
     detectedFileDimensions &&
     detectedFileDimensions.textContent ===
       "Reading metadata..."
   ) {
+
     detectedFileDimensions.textContent =
       capitalize(type);
-  }
-}
 
+  }
+
+}
 
 /* =========================================================
    41. RECOMMENDED TOOLS
