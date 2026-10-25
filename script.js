@@ -27976,6 +27976,8 @@ function bindSennAIWorkspaceEvents(
 
 /* =========================================================
    252. AI OPTION ACTIVE STATE
+/* =========================================================
+   252. AI OPTION ACTIVE STATE
 ========================================================= */
 
 function setSennAIOptionActive(
@@ -28013,7 +28015,6 @@ function setSennAIOptionActive(
     "active"
   );
 
-             }
 }
 
 
